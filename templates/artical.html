@@ -1,0 +1,530 @@
+<script>
+    function readAll() {
+        // bootbox.alert({title:"错误提示",message:"注册邮箱不正确或密码少于5位"})
+        {%
+            if article.paid == "false" %}
+        var parm = "articleid={{article.articleid}}"
+        $.post("/readAll", parm, function (data) {
+            if (data == "1") {
+                return false
+            }
+        })
+        {%
+            endif %
+        }
+
+        // function test(){
+        //     bootbox.alert({title:"错误提示",message:"注册邮箱不正确或密码少于5位"})
+        //     //
+        // }
+    }
+</script>
+<script>
+    function add_favorite(articleid) {
+        $.post("/favorite", "articleid=" + articleid, function (data) {
+            if (data == "not-login") {
+                bootbox.alert({title: "错误提示", message: "请先登录本界面"})
+            } else if (data == "favorite-pass") {
+                bootbox.alert({title: "信息提示", message: "本文收藏成功，可在我的收藏中查看"})
+                //    菜单名称改为感谢收藏
+                $(".favorite-btn").html('<span class=\"oi oi-heart \" aria-hidden=\"true\" ></span> 感谢收藏')
+                //    取消收藏按钮的单击事件
+                $(".favorite-btn").attr("onclick", "").unbind("click");
+            } else {
+                bootbox.alert({title: "错误提示", message: "收藏失败，请联系管理员"})
+            }
+        })
+    }
+</script>
+<script>
+    function cancel_favorite(articleid) {
+        $.ajax({
+            url: "/favorite/" + articleid,
+            type: "delete",
+            success: function (data) {
+                if (data == "not-login") {
+                    bootbox.alert({title: "错误提示", message: "请先登录本界面"})
+                } else if (data == "cancel-pass") {
+                    bootbox.alert({title: "信息提示", message: "取消收藏成功"})
+                    //    菜单名称改为感谢收藏
+                    $(".favorite-btn").html('<span class=\"oi oi-heart \" aria-hidden=\"true\" ></span> 欢迎再来')
+                    //    取消收藏按钮的单击事件
+                    $(".favorite-btn").attr("onclick", "").unbind("click");
+                } else {
+                    bootbox.alert({title: "错误提示", message: "取消收藏失败，请联系管理员"})
+                }
+            }
+        })
+    }
+
+</script>
+<script>
+    function addCommnet(articleid) {
+        var content = $.trim($("#comment").val());
+        if (content.length < 5 || content.length > 1000) {
+            bootbox.alert({title: "错误提示", message: "评论内容在5~1000字之间"});
+            return false
+        }
+        var param = "articleid=" + articleid + "&content=" + content;
+        $.post("/comment", param, function (data) {
+            if (data == "not-login") {
+                bootbox.alert({title: "错误提示", message: "请先登录再评论"});
+            } else if (data == "add-limit") {
+                bootbox.alert({title: "错误提示", message: "您当天最多只能评论五次"});
+
+            } else if (data == "add-pass") {
+                location.reload();
+            } else {
+                bootbox.alert({title: "错误提示", message: "发表评论出错，请联系管理员"});
+
+            }
+        })
+    }
+
+</script>
+<script>
+    var COMMENTID = 0;
+
+    function gotoReply(commentid) {
+        $("#replyBtn").show();
+        $("#submitBtn").hide();
+        $("#nickname").val("请在此回复编号为" + commentid + "的评论");
+        $("#comment").focus();
+        COMMENTID = commentid;
+    }
+
+    function replyComment(articleid) {
+        var content = $.trim($("#comment").val());
+        if (content.length < 5 || content.length > 1000) {
+            bootbox.alert({title: "错误提示", message: "评论内容再5~1000字之间"});
+            return false
+        }
+        var param = "articleid=" + articleid;
+        param += "&content=" + content;
+        param += "&commentid=" + COMMENTID;
+        $.post("/reply", param, function (data) {
+            if (data == "not-login") {
+                bootbox.alert({title: "错误提示", message: "请先登录"});
+            } else if (data == "reply-limit") {
+                bootbox.alert({title: "错误提示", message: "当天已用完五次评论的限额"});
+            } else if (data == "reply-pass") {
+                location.reload();
+            } else if (data == "reply-fail") {
+                bootbox.alert({title: "错误提示", message: "回复评论错误，请联系管理员"});
+            }
+        })
+
+    }
+</script>
+<!--分页代码-->
+<script>
+    var PAGE = 1;
+    var TOTAL = {
+    {
+        total
+    }
+    }
+    ;
+
+    //    添加gotoPage对应的代码
+    function gotoPage(articleid, type) {
+        // page=1 total=3    type=2
+        // bootbox.alert({title:PAGE,message:type})
+        //    如果当前是第一页，那么上一页还是第一页
+        if (type === "prev") {
+            if (PAGE > 1) {
+                PAGE -= 1;
+                // bootbox.alert({title:PAGE,message:"2"})
+            }
+        } else if (type == "next") {
+            if (PAGE < TOTAL) {
+                PAGE += 1;
+                // bootbox.alert({title:PAGE,message:"2"})
+            }
+        } else {
+            PAGE = parseInt(type);
+            // bootbox.alert({title:PAGE,message:"4"})
+        }
+        // bootbox.alert({title:PAGE,message:"5"})
+        fillComment(articleid, PAGE)
+    }
+</script>
+<!--填充前端分页-->
+<script>
+    function fillComment(articleid, pageid) {
+        $("#commentDiv").empty();  // 清空现有评论
+        var content = "";
+        $.get("/comment/" + articleid + "-" + pageid, function (data) {
+            var comment = data;
+            for (var i in comment) {
+                content += '<div class="col-12 list row">';
+                content += '<div class="col-2 icon">';
+                content += '<img src="/static/img/avatar/' + comment[i]['avatar'] + '"class="img-fluid" style="width: 70px;"/>';
+                content += '</div>'
+                content += '<div class="col-10 comment">'
+                content += '<div class="col-12 row" style="padding: 0px">'
+                content += '<div class="col-sm-6 col-12 commenter">';
+                content += comment[i]["nickname"];
+                content += '&nbsp;&nbsp;&nbsp;' + comment[i]["createtime"];
+                content += '</div>';
+                content += '<div class="col-sm-6 col-12 reply">';
+
+                if ("{{article.userid}}" === "{{session.get('userid')}}" ||
+                    "{{session.get('role')}}" == "admin" || comment[i]['userid'] + "" == "{{session.get('userid')}}") {
+
+                    content += '<label onclick="gotoReply(' + comment[i]['commentid'] + ')"';
+                    content += '<span class="oi oi-arrow-circle-right"aria-hidden="true"></span> ';
+                    content += '回复</label>&nbsp;&nbsp;&nbsp;'
+                    content += '<label onclick="hideComment(this,' + comment[i]['commentid'] + ')"';
+                    content += '<span class="oi oi-delete"aria-hidden="true"></span>隐藏</label> ';
+                } else {
+                    content += '<lable onclick="gotoReply(' + comment[i]['commentid'] + ')" style="color:#337ab7;">'
+                    // <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>回复
+                    content += '<span class="oi oi-arrow-circle-right" aria-hidden="true" style="color:#337ab7;"></span>回复';
+                    content += '</label>&nbsp;&nbsp;';
+                    content += '<label onclick="agreeComment(this,' + comment[i]["commentid"] + ')">';
+                    content += '<span class="oi oi-chevron-bottom" aria-hidden="true" ></span>赞成(<span>' + comment[i]["agreecount"] + "</span>)"
+                    content += '</label>&nbsp;&nbsp;&nbsp;';
+                    content += '<label onclick="opposeComment(this,' + comment[i]["commentid"] + ')">';
+                    content += '<span class="oi oi-x" aria-hidden="true"></span>反对(<span>' + comment[i]["opposecount"] + '</span>)';
+                    content += '</label>';
+
+                }
+                content += '</div>';
+                content += '</div>';
+                content += '<div class="col-12 content">';
+                content += comment[i]["content"];
+                content += '</div>';
+                content += '</div>';
+                content += '</div>';
+
+                //    在当前评论下面填充回复评论
+                if (comment[i]["reply_list"].length > 0) {
+                    var reply = comment[i]["reply_list"];
+                    for (var j in reply) {
+                        content += '<div class="col-12 list row">';
+                        content += '<div class="col-2 icon">';
+                        content += '<img src="/static/img/avatar/' + reply[j]["avatar"] + '"class="img-fluid" style="width:45px;"/>';
+                        content += '</div>';
+                        content += '<div class="col-10 comment" style="border: solid 1px #ccc;">';
+                        content += '<div class="col-12 row" style="color: #337AB7;">';
+                        content += '<div class="col-sm-7 col-12 commenter" style="color:#337AB7;">';
+
+                        //    填充用户昵称
+                        content += reply[j]["nickname"]
+                        content += "回复";
+                        content += comment[i]["nickname"];
+                        content += '&nbsp;&nbsp;&nbsp;';
+                        content += reply[j]["createtime"];
+                        content += '</div>';
+                        content += '<div class="col-sm-5 col-12 reply">';
+
+                        //    回复的评论不呢个继续评论，但可以隐藏和点赞
+                        if ("{{article.userid}}" == "{{session.get('userid')}}" ||
+                            "{{session.get('role')}}" == "admin" || reply[j]["userid"] + "" == "{{session.get('userid')}}") {
+                            content += '<label onclick="hideComment(this,' + reply[j]["commentid"] + ')">';
+                            content += '<span class="oi oi-delete" aria-hideen="true"></span>隐藏';
+                            content += '</label>&nbsp;&nbsp;';
+                        }
+                        content += '<label onclick="agreeComment(this,' + reply[j]["commentid"] + ')">';
+                        content += '<span class="oi oi-chevron-bottom" aria-hidden="true"></span>赞成(<span>' + reply[j]["agreecount"] + "</span>)";
+                        content += '</label>&nbsp;&nbsp;';
+                        content += '<label onclick="opposeComment(this,' + reply[j]["commentid"] + ')">';
+                        content += '<span clas="oi oi-x" aria-hidden:"true"></span>反对(<span>' + reply[j]["opposecount"] + '</span>)';
+                        content += '</label>';
+                        content += '</div>';
+                        content += '</div>';
+                        content += '<div class="col-12">';
+                        content += '回复内容' + reply[j]["content"];
+                        content += '</div>';
+                        content += '</div>';
+                        content += '</div>';
+
+
+                    }
+                }
+            }
+            $("#commentDiv").html(content);  //填充到评论区
+
+        });
+    }
+</script>
+
+<style>
+    .article-detail .content_t {
+        padding: 10px 12px 48px;
+        font-size: 18px;
+        color: #2b2b2b;
+        line-height: 1.7em;
+        height: 700px; /*初始要显示的高度*/
+        overflow: hidden; /*关键样式：内容会被修剪，并且其余内容是不可见的。*/
+        position: relative;
+    }
+
+    .article-detail .get_ct_more button {
+        height: 45px;
+        background-color: #337ab7;
+        border: 0;
+        border-radius: 5px;
+        color: white;
+        font-weight: bold;
+    }
+
+    .article-detail .get_ct_more {
+        height: 78px;
+        position: absolute;
+        bottom: 0px;
+        width: 100%;
+        background: linear-gradient(to top, #fff, rgba(255, 255, 255, 0) 70%);
+        margin: 0px;
+        margin-right: 10px
+    }
+
+    .article-detail .readall {
+        margin: 20px 35px;
+        text-align: center;
+    }
+
+    .article-detail .readall button {
+        height: 45px;
+        background-color: #337ab7;
+        border: 0;
+        border-radius: 5px;
+        color: white;
+        font-weight: bold;
+    }
+
+    /*    */
+
+</style>
+{%  extends "base.html" %}
+{%  block artical %}
+<div class="col-lg-9 col-sm-12" style="padding-top:11px ">
+    <div class="col-12 row article-detail">
+        <div class="col-9 title">
+            {{article.headline}}
+        </div>
+        <div class="col-3 favorite" onclick="test()">
+            {% if is_favorite==True %}
+            <label class="favorite-btn" onclick="cancel_favorite({{article.articleid}})"><span class="oi oi-heart"
+                                                                                               aria-hidden="true"></span>
+                取消收藏</label>
+            {%else%}
+            <label class="favorite-btn" onclick="add_favorite({{article.articleid}})"><span class="oi oi-heart "
+                                                                                            aria-hidden="true"></span>
+                收藏文章</label>
+            {%endif%}
+        </div>
+        <div class="col-12 info">
+            作者：{{article.nickname}} 类别：{{article_type[article.type | string]}}
+            日期：{{article.createtime}}
+            阅读：{{article.readcount}} 次 消耗积分：{{article.credit}} 分
+        </div>
+        <div class="col-12 content_t" id="content_t">
+            {{article.content | safe}}
+            <!--        展开全文按钮-->
+            <!--            <div class="col-12 readall ">-->
+            <!--                <button class="col-sm-10 col-12 get_ct_more" id="get_ct_more">-->
+            <!--                    <span class="oi oi-data-transfer-download" aria-hidden="true"></span> 阅读全文 消耗积分：分-->
+            <!--                </button>-->
+            <!--            </div>-->
+
+
+        </div>
+
+        <div class="col-12 readall ">
+            {% if session.get("islogin")=="true" %}
+            <div onclick="readAll()">
+                <button class="col-sm-10 col-12 get_ct_more" id="get_ct_more" style="display:block;">
+                    {% if article.credit==0 or article.paid=="true" %}
+                    <span class="oi oi-data-transfer-download" aria-hidden="true"></span> 点击阅读全文
+                    {% else %}
+                    <span class="oi oi-data-transfer-download" aria-hidden="true"></span> 阅读全文 消耗积分：{{article.credit}}分
+                    {% endif %}
+                </button>
+            </div>
+
+            {% else %}}
+            <div href="#" onclick="showLogin()">
+                <button class="col-sm-10 col-12 get_ct_more" id="get_ct_more" style="display:block;">
+                    <span class="oi oi-data-transfer-download" aria-hidden="true"></span> 登录后才能查看全文
+                </button>
+            </div>
+
+            {% endif %}
+        </div>
+
+        <script>
+            var btn = document.getElementById('get_ct_more');
+            var obj = document.getElementById('content_t');
+            var total_height = obj.scrollHeight;//文章总高度
+            var show_height = 300;//定义原始显示高度
+            var login = "{{ session.get('islogin') }}";
+            if (login == "true") {
+                if (total_height > show_height) {
+                    btn.style.display = 'block';
+                    btn.onclick = function () {
+                        obj.style.height = total_height + 'px';
+                        btn.style.display = 'none';
+                    }
+                }
+            }
+
+        </script>
+    </div>
+
+
+    <div class="col-12 article-nav">
+        <div><a href="/article/{{prev_next.prev_id}}">上一篇:{{prev_next.prev_headline}}</a></div>
+        <div><a href="/article/{{prev_next.next_id}}">下一篇:{{prev_next.next_headline}}</a></div>
+    </div>
+
+    <!-- 文章评论 -->
+    <div class="col-12 article-comment">
+        <div class="col-12 row">
+            <div class="col-2">
+                <label for="nickname">你的昵称：</label>
+            </div>
+
+            <div class="col-10">
+                {% if session.get("islogin")%}
+                <input type="text" id="nickname" class="form-control" value="{{session.get('nickname')}}" readonly/>
+                {% else%}
+                <input type="text" id="nickname" class="form-control" value="你还未登录，双击此处可登录" readonly
+                       ondblclick="showLogin()"/>
+                {%endif%}
+            </div>
+
+        </div>
+
+        <div class="col-12 row" style="padding-top: 10px">
+            <div class="col-2">
+                <label for="comment">你的评论：</label>
+            </div>
+            <div class="col-10">
+                <textarea class="form-control " style="height: 100px" id="comment"></textarea>
+            </div>
+        </div>
+
+        <div class="col-12 row" style="padding-top: 10px">
+            <div class="col-12" style="text-align: right">
+                {% if session.get("islogin")=="true" %}
+                <button class="btn btn-primary" onclick="addCommnet({{article.articleid}})" style="margin-bottom:8px;"
+                        id="submitBtn">提交评论
+                </button>
+                <button type="button" class="btn btn-primary" onclick="replyComment({{article.articleid}})"
+                        style="display: none;margin-bottom:8px;" id="replyBtn">回复评论
+                </button>
+                {%else%}
+                <button class="btn btn-primary" onclick="showLogin()" style="margin-bottom:8px;">点击登录</button>
+                {%endif%}
+            </div>
+        </div>
+
+        <!--        后端渲染  也可以将这些注释掉转换为-->
+        <!--        <script>-->
+        <!--            window.onload=function(){-->
+        <!--                fillComment("{{article.articleid}}","1")-->
+        <!--            }-->
+        <!--        </script>-->
+
+
+        <div id="commentDiv">
+            {% for comment in comment_list %}
+            <div class="col-12 list row">
+                <div class="col-2 icon">
+                    <img src="/static/img/avatar/{{comment['avater']}}" class="img-fluid" style="width: 70px;"/>
+                </div>
+                <div class="col-10 comment">
+                    <div class="col-12 row" style="padding: 0px">
+                        <div class="col-7 commenter">{{comment.nickname}}&nbsp;&nbsp;&nbsp;{{comment.createment}}</div>
+                        <div class="col-5 reply">
+                            <!--                        文章作者、管理员和评论员只能回复和隐藏，不能点赞-->
+                            {%if article.userid==session.get("userid") or session.get("role")=="admin" or
+                            comment.userid==session.get("userid") %}
+                            <label onclick="gotoReply({{comment.commentid}})">
+                                <span class="oi oi-arrow-circle-right" aria-hidden="true" style="color:#337ab7;"></span>回复
+                            </label>&nbsp;&nbsp;&nbsp;
+                            <label onclick="hideComment(this,{{comment.commentid}})">
+                                <span class="oi oi-delete" aria-hidden="true"></span>隐藏
+                            </label>
+                            {%else%}
+
+                            <label onclick="gotoReply({{comment.commentid}})">
+                                <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>回复
+                            </label>&nbsp;&nbsp;
+
+                            <label onclick="agreeComment(this,{{comment.commentid}})">
+                                <span class="oi oi-chevron-bottom" aria-hidden="true"></span>赞成(<span>{{comment["agreecount"]}}</span>)
+                            </label>&nbsp;&nbsp;
+
+                            <label onclick="opposeComment(this,{{comment.commentid}})">
+                                <span class="oi oi-x"
+                                      aria-hidden="true"></span>反对(<span>{{comment["opposecount"]}}</span>)
+                            </label>
+
+                            {%endif%}
+                        </div>
+                    </div>
+                    <div class="col-12 content">
+                        {{comment.content}}
+                    </div>
+                </div>
+            </div>
+            <!--        回复评论-->
+            {% if comment["reply_list"] %}
+            {%for reply in comment["reply_list"]%}
+            <div class="col-12 list row">
+                <div class="col-2 icon">
+                    <img src="/static/img/avatar/{{reply['avater']}}" class="img-fluid" style="width: 45px;"/>
+                </div>
+
+                <div class="col-10 comment" style="border: solid 1px #ccc">
+                    <div class="col-12 row" style="padding-left: 15px">
+                        <div class="col-7 commenter" style="color: #337ab7">{{reply.nickname}}&nbsp;&nbsp;回复&nbsp;&nbsp;{{comment.nickname}}
+                            &nbsp;&nbsp;&nbsp;{{reply.createment}}
+                        </div>
+                        <div class="col-5 reply">
+                            {%if article.userid==session.get("userid") or session.get("role")=="admin" or
+                            comment.userid==session.get("userid") %}
+                            <label onclick="hideComment(this,{{comment.commentid}})">
+                                <span class="oi oi-delete" aria-hidden="true"></span>隐藏
+                            </label>
+                            {%else%}
+
+                            <label onclick="agreeComment(this,{{reply.commentid}})">
+                                <span class="oi oi-chevron-bottom" aria-hidden="true"></span>赞成(<span>{{reply["agreecount"]}}</span>)
+                            </label>&nbsp;&nbsp;
+
+                            <label onclick="opposeComment(this,{{reply.commentid}})">
+                                <span class="oi oi-x"
+                                      aria-hidden="true"></span>反对(<span>{{comment["opposecount"]}}</span>)
+                            </label>
+                            {%endif%}
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        {{reply.content}}
+                    </div>
+                </div>
+            </div>
+            {%endfor%}
+            {% endif%}
+            {%endfor%}
+        </div>
+        {%if total>1%}
+        <div class="col-12 paginate">
+            <label onclick="gotoPage({{article.articleid}},'prev')">上一页</label>&nbsp;&nbsp;
+            {%for i in range(total)%}
+            <label onclick="gotoPage({{article.articleid}},'{{i+1}}')">{{i+1}}</label>&nbsp;&nbsp;
+            {%endfor%}
+            <label onclick="gotoPage({{article.articleid}},'next')">下一页</label>&nbsp;&nbsp;
+        </div>
+        {%endif%}
+    </div>
+
+</div>
+{%  include "side.html" %}
+{% endblock %}
+
+

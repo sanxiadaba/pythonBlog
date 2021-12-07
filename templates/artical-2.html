@@ -1,0 +1,53 @@
+{%  extends "base.html" %}
+{%  block artical %}
+<div class="col-lg-9 col-sm-12" style="padding-top:11px ">
+    <div class="col-12 row article-detail">
+        <div class="col-9 title">
+            {{article.headline}}
+        </div>
+        <div class="col-3 favorite">
+            <label><span class="oi oi-heart" aria-hidden="true"></span> 收藏文本</label>
+        </div>
+        <div class="col-12 info">
+            作者：{{article.nickname}} 类别：{{article_type[article.type | string]}}
+            日期：{{article.createtime}}
+            阅读：{{article.readcount}} 次 消耗积分：{{article.credit}} 分
+        </div>
+        <div class="col-12 content">
+            {{article.content | safe}}
+        </div>
+    </div>
+    <div class="col-12 article-nav">
+        <div>版权所有，转载本站文章请注明出处：蜗牛笔记， http://www.woniunote.com/article/1</div>
+        <div><a href="#">上一篇：Python中利用装饰器实现复杂函数功能</a></div>
+        <div><a href="#">下一篇：Python中的多线程在测试和开发中的应用</a></div>
+    </div>
+
+    <!-- 文章评论 -->
+    <div class="col-12 article-comment">
+        <div class="col-12 row">
+            <div class="col-2">
+                <label for="nickname">你的昵称：</label>
+            </div>
+            <div class="col-10">
+                <input type="text" id="nickname" class="form-control"/>
+            </div>
+        </div>
+        <div class="col-12 row" style="padding-top: 10px">
+            <div class="col-2">
+                <label for="comment">你的评论：</label>
+            </div>
+            <div class="col-10">
+                <textarea class="form-control" style="height: 100px" id="comment"></textarea>
+            </div>
+        </div>
+        <div class="col-12 row" style="padding-top: 10px">
+            <div class="col-12" style="text-align: right">
+                <button class="btn btn-primary">发表评论</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+{%  include "side.html" %}
+{% endblock %}
