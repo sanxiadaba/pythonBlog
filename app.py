@@ -1,6 +1,6 @@
 import os
 from datetime import timedelta
-
+from config import config_mysql
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, render_template, abort
 import pymysql
@@ -9,7 +9,8 @@ pymysql.install_as_MySQLdb()
 
 app = Flask(__name__)
 # 设置
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://root:root@120.27.242.197:3306/myBlog?charset=utf8"
+
+app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://"+config_mysql+"/myBlog?charset=utf8"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # 防止报错设置
