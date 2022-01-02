@@ -1,5 +1,5 @@
 from flask import Blueprint, request, session
-
+from database.instanceDatabase import instanceFavorite
 from database.favorite import Favorite
 
 favorite = Blueprint("favorite", __name__)
@@ -25,8 +25,7 @@ def cancel_favorite(articleid):
         return "not-login"
     else:
         try:
-            favo = Favorite()
-            favo.cancel_favorite(articleid)
+            instanceFavorite.cancel_favorite(articleid)
             return "cancel-pass"
         except:
             return "cancel-fail"

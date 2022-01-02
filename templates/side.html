@@ -22,11 +22,16 @@
 
     <div class="col-12 side">
         <div class="tip">特别推荐</div>
-        <ul id="recommmended"></ul>
+        <ul id="recommmended">
+{#            python的过滤器也可以这样做#}
+{#            {{ article_type["1"] | my_truncate(1) }}#}
+        </ul>
     </div>
+
 </div>
 
 <script type="text/javascript">
+{#    这里定义搜索函数#}
     function dosearch(e) {
         if (e != null && e.keyCode != 13) {
             return false
@@ -90,6 +95,8 @@
                 var id = parseInt(i) + 1
                 $("#recommmended").append('<li><a href="/article/' + articleid + '">' + (id) + '. ' + truncate(headline, 14) + '</a></li>')
             }
+
+
         })
     });
 </script>

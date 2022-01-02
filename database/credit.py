@@ -24,3 +24,14 @@ class Credit(DBase):
             return True
         else:
             return False
+
+    # 每天登录只加一分
+    def check_limit_login_per_day(self):
+        start = time.strftime("%Y-%m-%d 00:00:00")
+        end = time.strftime("%Y-%m-%d 23:59:59")
+        result = dbsession.query(Credit).filter(Credit.userid == session.get("userid"),
+                                          Credit.createtime.between(start, end)).all()
+        if len(result) > 0:
+            return True
+        else:
+            return False

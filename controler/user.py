@@ -1,20 +1,19 @@
-from flask import Blueprint, make_response, session, request, redirect, url_for
+from flask import Blueprint, make_response, session, request ,url_for
 from common.utility import ImageCode, gen_email_code, send_email
 import re, hashlib
-
-from database.credit import Credit
-from database.users import Users
+from common.utility import genearteMD5
+from database.instanceDatabase import instanceCredit,instanceUser
 
 user = Blueprint("user", __name__)
 
 
-# gofsuuskywdpdjec
 @user.route("/vcode")
 def vcode():
     image = ImageCode()
     code, bstring = image.get_code()
     response = make_response(bstring)
     response.headers['Content-Type'] = 'image/jpeg'
+    # 这里对验证码进行不区分大小写处理
     session['vcode'] = code.lower()
     return response
 
@@ -22,35 +21,21 @@ def vcode():
 @user.route("/ecode", methods=["POST"])
 def ecode():
     email = request.form.get("email")
-    # print(email)
     if not re.match(".+@.+\..+", email):
-        # print(1)
         return "email-invailid"
     code = gen_email_code()
     try:
         send_email(email, code)
-        # print("code=",code)
         session["ecode"] = code  # 将邮箱验证码保存在session中
         session.permanent = True
-        # print("session[ecode]=",session.get("ecode"))
-        # print("-----------")
         return "send-pass"
     except:
         return "send fail"
 
-    # test
-    # email=request.form.get("email")
-    # code=gen_email_code()
-    # session["ecode"] = code
-    # print(code,email)
-    # print(session.get("ecode"))
-    # return "1"
 
 
 @user.route("/user", methods=["POST"])
 def register():
-    # print("session[ecode]=", session.get("ecode"))
-    user = Users()
     username = request.form.get("username").strip()
     password = request.form.get("password").strip()
     ecode = request.form.get("ecode").strip()
@@ -65,14 +50,14 @@ def register():
         return "up-invalid"
 
     # 验证用户是否已经注册
-    elif len(user.find_by_username(username)) > 0:
+    elif len(instanceUser.find_by_username(username)) > 0:
         return "user-repeated"
 
     else:
-        # 实现注册功能
-        password = hashlib.md5(password.encode()).hexdigest()
+        # 实现注册功能 将密码转换为md5加密下
+        password = genearteMD5(password)
         try:
-            result = user.do_register(username, password)
+            result = instanceUser.do_register(username, password)
         except:
             return "reg-fail"
         session["islogin"] = "true"
@@ -80,37 +65,33 @@ def register():
         session["nickname"] = nickname
         session["role"] = result.role
         # 更新积分表
-        credit = Credit()
-        credit.insert_detail(type="用户注册", target=0, credit=50)
+        instanceCredit.insert_detail(type="用户注册", target=0, credit=50)
         return "reg-pass"
 
 
 @user.route("/login", methods=["POST"])
 def login():
-    # print("session[ecode]=", session.get("ecode"))
-    user = Users()
     username = request.form.get("username").strip()
     password = request.form.get("password").strip()
     vcode = request.form.get("logincode").lower().strip()
     nickname = username.split("@")[0]
 
     # 万能登陆验证码
-    if vcode != session.get("vcode") and vcode != "zhimakaimen":
+    if vcode != session.get("vcode"):
         return "vcode-error"
 
     else:
         # 实现登录功能
         password = hashlib.md5(password.encode()).hexdigest()
-        result = user.find_by_username(username)
+        result = instanceUser.find_by_username(username)
         if len(result) == 1 and result[0].password == password:
             session["islogin"] = "true"
             session["userid"] = result[0].userid
             session["nickname"] = nickname
             session["role"] = result[0].role
             # 更新积分表
-            credit = Credit()
-            credit.insert_detail(type="正常登录", target=0, credit=1)
-            user.update_credit(1)
+            instanceCredit.insert_detail(type="正常登录", target=0, credit=1)
+            instanceUser.update_credit(1)
             response = make_response("login-pass")
             response.set_cookie("username", username, max_age=30 * 24 * 3600)
             response.set_cookie("password", password, max_age=30 * 24 * 3600)
@@ -124,7 +105,6 @@ def logout():
     # 清空session 页面跳转
     session.clear()
     response = make_response("注销并重定向", 302)
-    # response.headers["Location"]="/"  # 这样也行
     response.headers["Location"] = url_for("index.home")
     response.delete_cookie("username")
     response.set_cookie("password", max_age=0)  # 这是另一种写法

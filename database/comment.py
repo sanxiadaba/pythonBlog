@@ -1,11 +1,10 @@
 import time
-
+from constant import commentNum
 from flask import session
 from sqlalchemy import Table, func
 from common.connect_db import connect_db
 from common.utility import model_join_list
 from database.users import Users
-
 dbsession, md, DBase = connect_db()
 
 
@@ -20,13 +19,6 @@ class Comment(DBase):
         dbsession.add(comment)
         dbsession.commit()
 
-    # 新增一条回复
-    # def insert_reply(self,articleid,commentid,content,ipaddr):
-    #     now=time.strftime("%Y-%m-%d %H:%M:%S")
-    #     comment=Comment(userid=session.get("userid"),articleid=articleid,content=content,\
-    #                     ipaddr=ipaddr,createtime=now,updatetime=now,replyid=commentid)
-    #     dbsession.add(comment)
-    #     dbsession.commit()
 
     # 根据文章编号查询所有评论
     def find_by_articleid(self, articleid):
@@ -34,15 +26,17 @@ class Comment(DBase):
         return result
 
     # 根据用户编号和日期进行查询是否已经超过每天五条的限制
-    def check_limit_per_5(self):
+    def check_limit_per_day(self):
         start = time.strftime("%Y-%m-%d 00:00:00")
         end = time.strftime("%Y-%m-%d 23:59:59")
         result = dbsession.query(Comment).filter(Comment.userid == session.get("userid"),
                                                  Comment.createtime.between(start, end)).all()
-        if len(result) >= 5 and session.get("username") != "1610265328@qq.com":
+        if len(result) >= commentNum:
             return True
         else:
             return False
+
+
 
     # 查询评论与用户信息  注意评论也需要分页
     def find_limit_with_user(self, articleid, start, count):

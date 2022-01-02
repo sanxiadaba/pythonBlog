@@ -11,15 +11,15 @@
                 <li data-target="#carouselExampleIndicators" data-slide-to="2"></li>
             </ol>
             <div class="carousel-inner">
-                <div class="carousel-item active">
-                    <img src="/static/img/banner-1.jpg" class="d-block w-100" alt="...">
-                </div>
-                <div class="carousel-item">
-                    <img src="/static/img/banner-2.jpg" class="d-block w-100" alt="...">
-                </div>
-                <div class="carousel-item">
-                    <img src="/static/img/banner-3.jpg" class="d-block w-100" alt="...">
-                </div>
+                <a class="carousel-item active" href="https://github.com/sanxiadaba/pythonBlog">
+                    <img src="/static/img/banner/banner-1.jpg" class="d-block w-100" alt="..." >
+                </a>
+                <a class="carousel-item" href="https://github.com/sanxiadaba/pythonBlog">
+                    <img src="/static/img/banner/banner-2.jpg" class="d-block w-100" alt="...">
+                </a>
+                <a class="carousel-item" href="https://github.com/sanxiadaba/pythonBlog">
+                    <img src="/static/img/banner/banner-3.jpg" class="d-block w-100" alt="...">
+                </a>
             </div>
             <button class="carousel-control-prev" type="button" data-target="#carouselExampleIndicators"
                     data-slide="prev">
@@ -39,7 +39,7 @@
     {% for nickname,article in result %}
     <div class="col-12 row article-list">
         <div class="col-sm-3 col-3 thumb d-none d-sm-block">
-            <img src="/static/thumb/{{article.thumbnail}}" width="207" height="122"/>
+            <img src="/static/img/thumb/{{article.thumbnail}}" width="207" height="122"/>
         </div>
         <div class="col-sm-9 col-xs-12 detail">
             <div class="title"><a href="/article/{{article.articleid}}">{{article.headline}}</a></div>

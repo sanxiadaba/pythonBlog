@@ -1,6 +1,3 @@
-print("尝试")
-print("第二次尝试")
-print("第二次尝试")
-print("第二次尝试")
-print("第三次尝试")
-print("第四次尝试")
+classification=["Python技巧","LeetCode刷题","项目开发","综合学习","其它"]
+for i,j in enumerate(classification):
+    print(i,j)

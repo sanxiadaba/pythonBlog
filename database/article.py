@@ -1,8 +1,6 @@
 import time
-
 from flask import session
 from sqlalchemy import Table, func
-
 from common.connect_db import connect_db
 from database.users import Users
 

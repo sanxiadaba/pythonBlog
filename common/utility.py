@@ -1,9 +1,13 @@
 import random, string
 import time
 from datetime import datetime
-
+from smtplib import SMTP_SSL
+from email.mime.text import MIMEText
+from email.header import Header
 from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
+from constant import emailPasswod,emailAccount,portNum
+from hashlib import md5
 
 
 class ImageCode:
@@ -55,9 +59,7 @@ class ImageCode:
         return code, bstring
 
 
-from smtplib import SMTP_SSL
-from email.mime.text import MIMEText
-from email.header import Header
+
 
 
 def send_email(receiver, ecode):
@@ -67,12 +69,12 @@ def send_email(receiver, ecode):
     message = MIMEText(content, "html", "utf-8")
     # 指定邮件标题
     message["Subject"] = Header("博客验证码为", "utf-8")
-    message["From"] = Header("Blog <2190165626@qq.com>", 'utf-8')  # 指定发件人信息
+    message["From"] = Header(f"Blog <{emailAccount}>", 'utf-8')  # 指定发件人信息
     message["To"] = Header(receiver, 'utf-8')  # 指定收件人邮箱地址
     message['Date'] = Header(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                              'utf-8')  # 时间可以这么获取：datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     smtpObj = SMTP_SSL("smtp.qq.com", 465)
-    smtpObj.login(user="2190165626@qq.com", password="gofsuuskywdpdjec")
+    smtpObj.login(user=emailAccount, password=emailPasswod)
     smtpObj.sendmail(sender, receiver, str(message))
     smtpObj.quit()
 
@@ -151,34 +153,33 @@ def download_image(url, dest):
 # 解析列表中的图片url并生成缩略图
 def generate_thumb(url_list):
     for url in url_list:
-        if url.startswith("http://127.0.0.1:1234/static/upload/"):
+        if url.startswith(f"http://127.0.0.1:{portNum}/static/img/upload/"):
             filename = url.split("/")[-1]
-            compress_image("./static/upload/" + filename, "./static/thumb/" + filename, 400)
+            compress_image("./static/img/upload/" + filename, "./static/img/thumb/" + filename, 400)
             return filename
 
     # 如果在内容中没有找到本地图片，需要将网络图片下载到本地再处理
     # 直接将第一张图片作为缩略图，并生成基于时间戳的标准文件名
     url = url_list[0]
-    print("url=", url)
     filename = url.split("/")[-1]
     suffix = filename.split(".")[-1]  # 取得文件的后缀名
     thumbname = time.strftime("%Y%m%d_%H%M%S." + suffix)
-    download_image(url, "./static/download/" + thumbname)
-    compress_image("./static/download/" + thumbname, "./static/thumb/" + thumbname, 400)
+    download_image(url, "./static/img/download/" + thumbname)
+    compress_image("./static/img/download/" + thumbname, "./static/img/thumb/" + thumbname, 400)
     return thumbname
 
-# content="""
-# <p>
-#     <img src="https://uploadfile.bizhizu.cn/up/0e/5b/65/0e5b656bd09e9984b37d72bb86b8a303.jpg"/>
-# </p>
-# <p>
-# </p>
-# <p>
-#     <br/>
-# </p>"""
+# 设置获取时间戳的函数
+def getDatatimeStr():
+    return datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
 
+# 生成MD5
+def genearteMD5(strlin):
+    strlin=str(strlin)
+    # 创建md5对象
+    hl = md5()
+    # Tips
+    # 此处必须声明encode
+    # 否则报错为：hl.update(str)    Unicode-objects must be encoded before hashing
+    hl.update(strlin.encode(encoding='utf-8'))
+    return hl.hexdigest()
 
-# if __name__ == '__main__':
-#     list=parser_image_url(content)
-#     thumb=generate_thumb(list)
-#     print(thumb)
