@@ -123,4 +123,4 @@ if __name__ == '__main__':
 
     app.register_blueprint(ueditor)
 
-    app.run(debug=True, port=1234)
+    app.run(debug=True, port=1235)
