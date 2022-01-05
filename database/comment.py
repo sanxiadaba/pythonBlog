@@ -71,9 +71,9 @@ class Comment(DBase):
     def get_comment_user_list(self, articleid, start, count):
         result = self.find_comment_with_user(articleid, start, count)
         comment_list = model_join_list(result)
+        print(comment_list)
         for comment in comment_list:
             result = self.find_reply_with_user(comment["commentid"])
-
             comment["reply_list"] = model_join_list(result)
         return comment_list
 

@@ -1,4 +1,4 @@
-{%  extends "base.html" %}
+{%  extends "baseArticle.html" %}
 {%  block writeConfig %}
 <script type="text/javascript" src="/static/ue/ueditor.config.js"></script>
 <script type="text/javascript" src="/static/ue/ueditor.all.min.js"></script>
@@ -93,11 +93,9 @@
     <label for="type" class="col-1">类型： </label>
     <select class="form-control col-2" id="type">
         {# {{article_type[article.type |string]}}#}
-        <option value="1">{{article_type["1" |string]}}&nbsp;&nbsp;</option>
-        <option value="2">{{article_type["2" |string]}}</option>
-        <option value="3">{{article_type["3" |string]}}</option>
-        <option value="4">{{article_type["4" |string]}}</option>
-        <option value="5">{{article_type["5" |string]}}</option>
+        {% for k,v in article_type.items()  %}
+        <option value="{{ k }}">{{ v }}&nbsp;&nbsp;</option>
+        {% endfor %}
     </select>
     <label class="col-1"></label>
     <label for="credit" class="col-1">积分：</label>
@@ -112,7 +110,11 @@
     </select>
     <label class="col-1"></label>
     <button class="form-control btn-default col-2" onclick="doDraft()">保存草稿</button>
+{% if session.get("role")=="editor" %}
     <button class="form-control btn-primary col-2" onclick="doPost()">发布文章</button>
+{% else %}
+<button class="form-control btn-primary col-2" onclick="doPost()">投稿</button>
+{% endif %}
     </select>
 </div>
 <div>

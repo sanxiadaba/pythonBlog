@@ -26,7 +26,7 @@ class Users(DBase):
     def do_register(self, username, password):
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         nickname = username.split("@")[0]  # 默认账号前缀作为昵称
-        avatar = str(random.randint(1, 15))  # 从十五张随机图片中选一张
+        avatar = str(random.randint(1, 10))  # 从十五张随机图片中选一张
         user = Users(username=username, password=password, role="user", credit=50, nickname=nickname,
                      avatar=avatar + ".png", createtime=now, updatetime=now)
         dbsession.add(user)

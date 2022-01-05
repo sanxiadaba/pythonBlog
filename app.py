@@ -53,7 +53,7 @@ def gettype():
         type[str(i+1)]=j
     # 传到前面一个字典
     return dict(article_type=type)
-
+# http://127.0.0.1:1234/style/css/bootstrap.min.css
 
 # 自定义过滤器函数，设置取的字的长度
 def my_truncate(s, length, end="..."):
@@ -93,6 +93,12 @@ def before():
                 nickname = username.split("@")[0]
                 session["nickname"] = nickname
                 session["role"] = result[0].role
+
+
+@app.route("/test", methods=["GET"])
+def test():
+    return render_template("userManage.html")
+
 
 
 

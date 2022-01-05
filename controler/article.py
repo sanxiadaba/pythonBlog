@@ -35,7 +35,7 @@ def read(articleid):
     comment_list = instanceComment.get_comment_user_list(articleid, 0, 10)
     count = instanceComment.get_count_by_article(articleid)
     total = math.ceil(count / 10)
-    return render_template("artical.html", article=dict, is_favorite=is_favorite, prev_next=prev_next,
+    return render_template("article.html", article=dict, is_favorite=is_favorite, prev_next=prev_next,
                            comment_list=comment_list, total=total)
 
 
@@ -62,7 +62,9 @@ def add_article():
     headline = request.form.get("headline")
     content = request.form.get("content")
     type = int(request.form.get("type"))
-    credit = int(request.form.get("credit"))
+    credit =int(request.form.get("credit"))
+    if credit is None:
+        credit=0
     drafted = int(request.form.get("drafted"))
     checked = int(request.form.get("checked"))
     articleid = int(request.form.get("articleid"))
@@ -78,7 +80,7 @@ def add_article():
                 thumbname = generate_thumb(url_list)
             else:
                 # 如果文章中没有图片，那么就根据文章类型指定一个
-                thumbname = "%d.png" % (int(type))
+                thumbname = "%d.jpg" % (int(type))
             if articleid == 0:  # 如果为0说明是新文章
                 try:
                     id = instanceArticle.insert_article(type=type, headline=headline, content=content, credit=credit,

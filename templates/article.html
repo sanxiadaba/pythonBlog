@@ -1,6 +1,5 @@
 <script>
     function readAll() {
-        // bootbox.alert({title:"错误提示",message:"注册邮箱不正确或密码少于5位"})
         if ("{{article.paid}}"=== "false"){
         var parm = "articleid={{article.articleid}}"
         $.post("/readAll", parm, function (data) {
@@ -9,10 +8,7 @@
             }
         })}
 
-        // function test(){
-        //     bootbox.alert({title:"错误提示",message:"注册邮箱不正确或密码少于5位"})
-        //     //
-        // }
+
     }
 </script>
 <script>
@@ -121,33 +117,23 @@
 <script>
     var PAGE = 1;
     var TOTAL = parseInt("{{total}}")
-    //     {
-    // {
-    //     total
-    // }
-    // }
+
     ;
 
     //    添加gotoPage对应的代码
     function gotoPage(articleid, type) {
-        // page=1 total=3    type=2
-        // bootbox.alert({title:PAGE,message:type})
         //    如果当前是第一页，那么上一页还是第一页
         if (type === "prev") {
             if (PAGE > 1) {
                 PAGE -= 1;
-                // bootbox.alert({title:PAGE,message:"2"})
             }
         } else if (type == "next") {
             if (PAGE < TOTAL) {
                 PAGE += 1;
-                // bootbox.alert({title:PAGE,message:"2"})
             }
         } else {
             PAGE = parseInt(type);
-            // bootbox.alert({title:PAGE,message:"4"})
         }
-        // bootbox.alert({title:PAGE,message:"5"})
         fillComment(articleid, PAGE)
     }
 </script>
@@ -317,7 +303,7 @@
     /*    */
 
 </style>
-{%  extends "base.html" %}
+{%  extends "baseArticle.html" %}
 {%  block artical %}
 <div class="col-lg-9 col-sm-12" style="padding-top:11px ">
     <div class="col-12 row article-detail">
@@ -447,19 +433,13 @@
             </div>
         </div>
 
-        <!--        后端渲染  也可以将这些注释掉转换为-->
-        <!--        <script>-->
-        <!--            window.onload=function(){-->
-        <!--                fillComment("{{article.articleid}}","1")-->
-        <!--            }-->
-        <!--        </script>-->
 
 
         <div id="commentDiv">
             {% for comment in comment_list %}
             <div class="col-12 list row">
                 <div class="col-2 icon">
-                    <img src="/static/img/avatar/{{comment['avater']}}" class="img-fluid" style="width: 70px;"/>
+                    <img src="/static/img/avatar/{{comment['avatar']}}" class="img-fluid" style="width: 70px;"/>
                 </div>
                 <div class="col-10 comment">
                     <div class="col-12 row" style="padding: 0px">
@@ -502,7 +482,7 @@
             {%for reply in comment["reply_list"]%}
             <div class="col-12 list row">
                 <div class="col-2 icon">
-                    <img src="/static/img/avatar/{{reply['avater']}}" class="img-fluid" style="width: 45px;"/>
+                    <img src="/static/img/avatar/{{reply['avatar']}}" class="img-fluid" style="width: 45px;"/>
                 </div>
 
                 <div class="col-10 comment" style="border: solid 1px #ccc">

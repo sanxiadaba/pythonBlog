@@ -1,4 +1,4 @@
-{%  extends "base.html" %}
+{%  extends "baseArticle.html" %}
 {%  block content %}
 <div class="col-lg-9 col-sm-12" style="padding-top:0px" id="" left>
     {# 轮播图#}
@@ -61,7 +61,7 @@
         {% endif %}
 
         {% for i in range(total) %}
-        <a href="/type/{{type}}-{{i+1}}">{{i+1}}</a>&nbsp;&nbsp;
+        <a href="/type/{{type}}-{{ i+1 }}">{{i+1}}</a>&nbsp;&nbsp;
         {% endfor %}
 
         {% if page==total %}
