@@ -1,6 +1,7 @@
 from flask import Blueprint, request, session, jsonify
 from database.instanceDatabase import instanceArticle,instanceCredit,instanceUser,instanceComment
-
+from constant import replyAndAddCommentCredit
+from constant import howCommentInArticle
 comment = Blueprint("comment", __name__)
 
 
@@ -30,8 +31,7 @@ def add():
             try:
                 instanceComment.insert_comment(articleid, content, ipaddr)
                 # 评论成功后，更新积分明细和剩余积分，及文章的回复数量
-                instanceCredit.insert_detail(type="添加评论", target=articleid, credit=2)
-                instanceUser.update_credit(2)
+                instanceCredit.insert_detail(type="添加评论", target=articleid, credit=replyAndAddCommentCredit)
                 instanceArticle.update_replycount(articleid)
                 return "add-pass"
             except Exception as ex:
@@ -55,11 +55,10 @@ def reply():
 
         if len(content) < 5 or len(content) > 1000:
             return "content-invaild"
-        if not instanceComment.check_limit_per_5():
+        if not instanceComment.check_limit_per_day():
             try:
                 instanceComment.insert_reply(articleid=articleid, commentid=commentid, ipaddr=ipaddr, content=content)
-                instanceCredit.insert_detail(type="添加评论", target=articleid, credit=2)
-                instanceUser.update_credit(2)
+                instanceCredit.insert_detail(type="回复评论", target=articleid, credit=replyAndAddCommentCredit)
                 instanceArticle.update_replycount(articleid)
                 return "reply-pass"
             except:
@@ -70,6 +69,6 @@ def reply():
 
 @comment.route("/comment/<int:articleid>-<int:page>")
 def comment_page(articleid, page):
-    start = (page - 1) * 10
-    list = instanceComment.get_comment_user_list(articleid, start, 10)
+    start = (page - 1) * howCommentInArticle
+    list = instanceComment.get_comment_user_list(articleid, start, howCommentInArticle)
     return jsonify(list)

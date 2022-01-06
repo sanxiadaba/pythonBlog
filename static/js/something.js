@@ -51,6 +51,7 @@ function doRegister(e) {
                 bootbox.alert({title: "错误提示", message: "注册邮箱不正确或密码少于5位"})
             } else if (data == "reg-pass") {
                 bootbox.alert({title: "信息提示", message: "恭喜你注册成功"})
+                qingti("注册成功，已增加50积分")
                 // 注册成功后 延迟一秒钟刷新当前页面
                 setTimeout("location.reload();", 1000)
             } else if (data == "reg-fail") {
@@ -107,10 +108,9 @@ function doLogin(e) {
         var param = "username=" + loginname;
         param += "&password=" + loginpass;
         param += "&logincode=" + logincode;
-
         $.post("/login", param, function (data) {
             if (data == "vcode-error") {
-                bootbox.alert({title: "错误提示", message: "验证码无效"});
+                bootbox.alert({title: "错误提示", message: "验证码无效，请点击验证码刷新后尝试"});
                 $("#loginvcode").val("");
                 $("#loginvcode").focus();
 
@@ -121,10 +121,20 @@ function doLogin(e) {
                 bootbox.alert({title: "错误提示", message: "没有该用户或密码错误，如有其他问题，请练习管理员"});
 
             }
+            else if (data=="add-credit"){
+                bootbox.alert({title: "信息提示", message: "恭喜你，登陆成功"});
+                qingti("每天登录成功，积分+1")
+                setTimeout("location.reload();", 1000)
+
+            }
         })
     }
 
 }
+
+function  qingti(s) {
+        toastr.info(s)
+    }
 
 
 

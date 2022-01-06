@@ -1,7 +1,7 @@
 import time
 from constant import commentNum
 from flask import session
-from sqlalchemy import Table, func
+from sqlalchemy import Table
 from common.connect_db import connect_db
 from common.utility import model_join_list
 from database.users import Users
@@ -30,8 +30,8 @@ class Comment(DBase):
         start = time.strftime("%Y-%m-%d 00:00:00")
         end = time.strftime("%Y-%m-%d 23:59:59")
         result = dbsession.query(Comment).filter(Comment.userid == session.get("userid"),
-                                                 Comment.createtime.between(start, end)).all()
-        if len(result) >= commentNum:
+                                                 Comment.createtime.between(start, end)).count()
+        if result >= commentNum:
             return True
         else:
             return False
@@ -71,7 +71,6 @@ class Comment(DBase):
     def get_comment_user_list(self, articleid, start, count):
         result = self.find_comment_with_user(articleid, start, count)
         comment_list = model_join_list(result)
-        print(comment_list)
         for comment in comment_list:
             result = self.find_reply_with_user(comment["commentid"])
             comment["reply_list"] = model_join_list(result)

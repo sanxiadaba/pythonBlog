@@ -3,7 +3,7 @@
 <div class="col-lg-9 col-sm-12" style="padding-top:0px" id="" left>
     {# 轮播图#}
 
-    <div class="col-12" style="padding: 15px 0px">
+    <div class="col-12" style="padding: 15px 0px;display: {{ manyParameter['display'][0] }}">
         <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
 {#            轮播图#}
             <ol class="carousel-indicators">
@@ -12,15 +12,11 @@
                 <li data-target="#carouselExampleIndicators" data-slide-to="2"></li>
             </ol>
             <div class="carousel-inner">
-                <a class="carousel-item active" href="https://github.com/sanxiadaba/pythonBlog">
-                    <img src="/static/img/banner/banner-1.jpg" class="d-block w-100" alt="..." >
+                {% for shuffImage in manyParameter["shufflingFigure"] %}
+                <a class="carousel-item active" href={{ shuffImage[1] }}>
+                    <img src="/static/img/banner/{{ shuffImage[0] }}" class="d-block w-100" alt="..." >
                 </a>
-                <a class="carousel-item" href="https://github.com/sanxiadaba/pythonBlog">
-                    <img src="/static/img/banner/banner-2.jpg" class="d-block w-100" alt="...">
-                </a>
-                <a class="carousel-item" href="https://github.com/sanxiadaba/pythonBlog">
-                    <img src="/static/img/banner/banner-3.jpg" class="d-block w-100" alt="...">
-                </a>
+                {% endfor %}
             </div>
             <button class="carousel-control-prev" type="button" data-target="#carouselExampleIndicators"
                     data-slide="prev">

@@ -1,6 +1,6 @@
 import random
 import time
-
+from  constant import thumbNailNum
 from flask import session
 from sqlalchemy import Table
 
@@ -26,15 +26,21 @@ class Users(DBase):
     def do_register(self, username, password):
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         nickname = username.split("@")[0]  # 默认账号前缀作为昵称
-        avatar = str(random.randint(1, 10))  # 从十五张随机图片中选一张
-        user = Users(username=username, password=password, role="user", credit=50, nickname=nickname,
+        avatar = str(random.randint(1, thumbNailNum))  # 从十张随机图片中选一张作为初始默认头像
+        user = Users(username=username, password=password, role="user", credit=0, nickname=nickname,
                      avatar=avatar + ".png", createtime=now, updatetime=now)
         dbsession.add(user)
         dbsession.commit()
         return user
 
     # 修改用户剩余积分
-    def update_credit(self, credit):
-        user = dbsession.query(Users).filter_by(userid=session.get("userid")).one()
+    def update_credit(self, credit,userid):
+        user = dbsession.query(Users).filter_by(userid=userid).one()
         user.credit = int(user.credit) + credit
         dbsession.commit()
+
+    # 查看剩余的积分
+    def findRestCredit(self):
+        userid=session.get("userid")
+        restOfCredit= dbsession.query(Users.credit).filter_by(userid=userid).one()[0]
+        return restOfCredit

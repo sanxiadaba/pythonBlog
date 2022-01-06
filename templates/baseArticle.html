@@ -9,7 +9,11 @@
     <link rel="stylesheet" type="text/css" href="/static/icon/font/css/open-iconic-bootstrap.css">
     <script type="text/javascript" src="/static/js/jquery-3.5.1.min.js"></script>
     <script type="text/javascript" src="/static/js/bootstrap.js"></script>
+    <script type="text/javascript" src="/static/js/bootbox.min.js"></script>
     <script type="text/javascript" src="/static/js/something.js"></script>
+<link rel="stylesheet" type="text/css" href="/static/css/toastr.min.css">
+<script src="/static/js/toastr.min.js"></script>
+
 
     {# 导入响应式设置#}
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -23,15 +27,15 @@
 <div class="header">
     <div class="container" style="height: 80px">
         <div class="row">
-            <div href="#" class="col-2" style="padding-top: 10px"><img src="/static/img/logo/logo.png" width="60"></div>
+            <div href="#" class="col-2" style="padding-top: 10px"><img src="/static/img/logo/{{ manyParameter['indexLogoPicture'][0] }}" width={{ manyParameter['indexLogoPictureSize'][0] }} height={{ manyParameter['indexLogoPictureSize'][1] }}></div>
             <div class="col-5 d-none d-sm-block "
-                 style="text-align: center;font-size: 30px;padding-top: 10px ">欢迎来到我的博客
+                 style="text-align: center;font-size: 30px;padding-top: 10px ">{{ manyParameter['indexAboveStr'][0] }}
             </div>
             <div class="col-5 d-none d-sm-block "
-                 style="text-align: right;font-size: 30px;padding-top: 10px ">好好学习
+                 style="text-align: right;font-size: 30px;padding-top: 10px ">{{ manyParameter['indexAboveStr'][1] }}
             </div>
             <div class="col-5 d-sm-none"
-                 style="text-align: right;font-size: 30px;padding-top: 10px ">天天向上
+                 style="text-align: right;font-size: 30px;padding-top: 10px ">{{ manyParameter['indexAboveStr'][2] }}
             </div>
         </div>
     </div>

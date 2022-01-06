@@ -6,7 +6,7 @@ from email.mime.text import MIMEText
 from email.header import Header
 from PIL import Image, ImageFont, ImageDraw
 from io import BytesIO
-from constant import emailPasswod,emailAccount,portNum
+from constant import emailAdmit,emailAccount,portNum
 from hashlib import md5
 
 
@@ -63,7 +63,7 @@ class ImageCode:
 
 
 def send_email(receiver, ecode):
-    sender = "2190165626@qq.com"
+    sender = emailAccount
     # 定义发送文件的内容
     content = f"<br/>欢迎注册博客，你的邮箱验证码为：<span style='color:red;font-size:20px;'>{ecode}</span>,请复制到注册窗口完成注册，感谢你的支持。<br/>"
     message = MIMEText(content, "html", "utf-8")
@@ -74,7 +74,7 @@ def send_email(receiver, ecode):
     message['Date'] = Header(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                              'utf-8')  # 时间可以这么获取：datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     smtpObj = SMTP_SSL("smtp.qq.com", 465)
-    smtpObj.login(user=emailAccount, password=emailPasswod)
+    smtpObj.login(user=emailAccount, password=emailAdmit)
     smtpObj.sendmail(sender, receiver, str(message))
     smtpObj.quit()
 

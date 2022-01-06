@@ -3,6 +3,7 @@ from flask import session
 from sqlalchemy import Table, func
 from common.connect_db import connect_db
 from database.users import Users
+from constant import recommendedNumOfSide
 
 dbsession, md, DBase = connect_db()
 
@@ -63,32 +64,32 @@ class Article(DBase):
         return count
 
     # 最新文章推荐
-    def find_last_9(self):
+    def find_last(self):
         result = dbsession.query(Article.articleid, Article.headline).filter(Article.hide == 0, Article.drafted == 0,
                                                                              Article.checked == 1) \
-            .order_by(Article.articleid.desc()).limit(9).all()
+            .order_by(Article.articleid.desc()).limit(recommendedNumOfSide[0]).all()
         return result
 
     # 最多阅读
-    def find_most_9(self):
+    def find_most(self):
         result = dbsession.query(Article.articleid, Article.headline).filter(Article.hide == 0, Article.drafted == 0,
                                                                              Article.checked == 1) \
-            .order_by(Article.readcount.desc()).limit(9).all()
+            .order_by(Article.readcount.desc()).limit(recommendedNumOfSide[1]).all()
         return result
 
     # 特别推荐  如果超过九篇可以用rand的方式随机显示
-    def find_recommended_9(self):
+    def find_recommended(self):
         result = dbsession.query(Article.articleid, Article.headline).filter(Article.hide == 0, Article.drafted == 0,
                                                                              Article.checked == 1,
                                                                              Article.recommended == 1) \
-            .order_by(func.rand()).limit(9).all()
+            .order_by(func.rand()).limit(recommendedNumOfSide[2]).all()
         return result
 
     # 一次性返回三个推荐  (封装）
     def find_last_most_recommended(self):
-        last = self.find_last_9()
-        most = self.find_most_9()
-        recommended = self.find_recommended_9()
+        last = self.find_last()
+        most = self.find_most()
+        recommended = self.find_recommended()
         return last, most, recommended
 
     # 每阅读一次，阅读次数加一
@@ -163,3 +164,7 @@ class Article(DBase):
         row.updatetime = now
         dbsession.commit()
         return articleid
+
+    # 根据文章id查询作者id
+    def searchUseridByArticleid(self,articleid):
+        return dbsession.query(Article.userid).filter_by(articleid=articleid).first()

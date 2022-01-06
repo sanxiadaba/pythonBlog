@@ -3,6 +3,7 @@ from common.utility import ImageCode, gen_email_code, send_email
 import re, hashlib
 from common.utility import genearteMD5
 from database.instanceDatabase import instanceCredit,instanceUser
+from constant import whetherDistinguishCapital,regGiveCredit,loginEvereDayCredit
 
 user = Blueprint("user", __name__)
 
@@ -14,7 +15,10 @@ def vcode():
     response = make_response(bstring)
     response.headers['Content-Type'] = 'image/jpeg'
     # 这里对验证码进行不区分大小写处理
-    session['vcode'] = code.lower()
+    if whetherDistinguishCapital is False:
+        session['vcode'] = code.lower()
+    else:
+        session['vcode'] = code
     return response
 
 
@@ -41,7 +45,7 @@ def register():
     ecode = request.form.get("ecode").strip()
     nickname = username.split("@")[0]
 
-    # 校验邮箱验证码是否正确   # 或者也可以设置一个万能的验证码
+    # 校验邮箱验证码是否正确   #或者也可以设置一个万能的验证码
     if ecode != session.get("ecode"):
         return "ecode-error"
 
@@ -65,21 +69,22 @@ def register():
         session["nickname"] = nickname
         session["role"] = result.role
         # 更新积分表
-        instanceCredit.insert_detail(type="用户注册", target=0, credit=50)
+        instanceCredit.insert_detail(type="用户注册", target=0, credit=regGiveCredit)
         return "reg-pass"
 
 
 @user.route("/login", methods=["POST"])
 def login():
+    # 判断是否加一
+    #  如果今天的登录分没有领过
+    whetherAddCredit=1 if instanceCredit.check_limit_login_per_day() is False else 0
     username = request.form.get("username").strip()
     password = request.form.get("password").strip()
     vcode = request.form.get("logincode").lower().strip()
     nickname = username.split("@")[0]
-
     # 万能登陆验证码
     if vcode != session.get("vcode"):
         return "vcode-error"
-
     else:
         # 实现登录功能
         password = hashlib.md5(password.encode()).hexdigest()
@@ -90,9 +95,11 @@ def login():
             session["nickname"] = nickname
             session["role"] = result[0].role
             # 更新积分表
-            instanceCredit.insert_detail(type="正常登录", target=0, credit=1)
-            instanceUser.update_credit(1)
-            response = make_response("login-pass")
+            if whetherAddCredit==0:
+                instanceCredit.insert_detail(type="正常登录", target=0, credit=loginEvereDayCredit)
+                response = make_response("login-pass")
+            else:
+                response = make_response("add-credit")
             response.set_cookie("username", username, max_age=30 * 24 * 3600)
             response.set_cookie("password", password, max_age=30 * 24 * 3600)
             return response

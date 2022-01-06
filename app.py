@@ -3,7 +3,8 @@ from constant import config_mysql
 from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, render_template, abort, request, session
 import pymysql
-from constant import sessionExpirationTime,sessionRestart,classification,portNum
+from collections import defaultdict
+from constant import sessionExpirationTime,sessionRestart,classification,portNum,creditListForReleaseArticle,shufflingFigurePicture,shufflingFigureLink,indexLogoPicture,indexLogoPictureSize,indexAboveStr,whetherSaveShufflingFigure
 # 链接数据库的一些设置，防止报错
 pymysql.install_as_MySQLdb()
 
@@ -45,7 +46,7 @@ def page_not_find(e):
     return render_template("error-500.html")
 
 
-# 把字典注册到全部里面
+# 把文章的类别”注册“到全局函数中
 @app.context_processor
 def gettype():
     type={}
@@ -53,6 +54,37 @@ def gettype():
         type[str(i+1)]=j
     # 传到前面一个字典
     return dict(article_type=type)
+
+# 把发布文章作者的可选积分注册到全局函数中
+@app.context_processor
+def listOfCredit():
+    type={}
+    for i in creditListForReleaseArticle:
+        type[i]=str(i)+"分"
+    return dict(listOfCredit=type)
+
+@app.context_processor
+def manyParameter():
+    type=defaultdict(list)
+    for i in range(len(shufflingFigurePicture)):
+        type["shufflingFigure"].append([shufflingFigurePicture[i],shufflingFigureLink[i]])
+
+    type["indexLogoPicture"].append(indexLogoPicture)
+
+    for i in indexLogoPictureSize:
+        type["indexLogoPictureSize"].append(i)
+
+    for i in indexAboveStr:
+        type["indexAboveStr"].append(i)
+
+    if whetherSaveShufflingFigure is True:
+        type["display"].append("block")
+    else:
+        type["display"].append("none")
+    return dict(manyParameter=type)
+
+
+
 
 # 自定义过滤器函数，设置取的字的长度
 def my_truncate(s, length, end="..."):

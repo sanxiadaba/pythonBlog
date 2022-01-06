@@ -101,12 +101,9 @@
     <label for="credit" class="col-1">积分：</label>
     <select class="form-control col-2" id="credit">
         <option value="0">免费</option>
-        <option value="1">1分</option>
-        <option value="2">2分</option>
-        <option value="5">5分</option>
-        <option value="10">10分</option>
-        <option value="20">20分</option>
-        <option value="50">50分</option>
+        {% for k,v in listOfCredit.items() %}
+        <option value="{{ k }}">{{ v }}</option>
+        {% endfor %}
     </select>
     <label class="col-1"></label>
     <button class="form-control btn-default col-2" onclick="doDraft()">保存草稿</button>
@@ -150,6 +147,7 @@
                     setTimeout(function () {
                         location.href = "/article/" + data;
                     }, 1000)
+                    qingti("发布文章成功，已+10分")
                 } else {
                     bootbox.alert({title: "信息提示", message: "文章发布失败，可能没有权限"});
 

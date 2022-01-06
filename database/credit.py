@@ -1,7 +1,9 @@
-from flask import session
+from flask import session, request
 from sqlalchemy import Table
 import time
 from common.connect_db import connect_db
+from database.users import Users
+
 
 dbsession, md, DBase = connect_db()
 
@@ -10,11 +12,15 @@ class Credit(DBase):
     __table__ = Table("credit", md, autoload=True)
 
     # 插入积分明细表
-    def insert_detail(self, type, target, credit):
+    def insert_detail(self, type, target, credit,userid=None):
+        if userid is None:
+            userid=session.get("userid")
         now = time.strftime("%Y-%m-%d %H:%M:%S")
-        credit = Credit(userid=session.get("userid"), category=type, target=target, credit=credit, createtime=now,
-                        updatetime=now)
-        dbsession.add(credit)
+        creditP = Credit(userid=userid, category=type, target=target, credit=credit, createtime=now,
+                        updatetime=now,ipaddr = request.remote_addr)
+        dbsession.add(creditP)
+        u=Users()
+        u.update_credit(credit,userid)
         dbsession.commit()
 
     # 判断用户是否已经消耗积分
@@ -35,3 +41,5 @@ class Credit(DBase):
             return True
         else:
             return False
+
+
