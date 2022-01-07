@@ -53,7 +53,7 @@
             if (data == "not-login") {
                 bootbox.alert({title: "错误提示", message: "请先登录本界面"})
             } else if (data == "favorite-pass") {
-                bootbox.alert({title: "信息提示", message: "本文收藏成功，可在我的收藏中查看"})
+                bootbox.alert({title: "信息提示", message: "本文收藏成功，可在我的收藏中查看,再次刷新页面可选择取消收藏"})
                 //    菜单名称改为感谢收藏
                 $(".favorite-btn").html('<span class=\"oi oi-heart \" aria-hidden=\"true\" style=\"color: red\"></span> 感谢收藏')
                 //    取消收藏按钮的单击事件
