@@ -1,3 +1,4 @@
+# 用来进行项目日志的一些基本设置
 import os
 from loguru import logger
 from constant import compressedFormat,clearLogTime,logSize
