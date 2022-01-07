@@ -1,7 +1,7 @@
 import math
 from flask import Blueprint, session, request, abort, render_template
 from common.utility import  parser_image_url, generate_thumb
-from database.instanceDatabase import instanceUser,instanceArticle,instanceComment,instanceCredit,instanceFavorite
+from database.instanceDatabase import instanceUser,instanceArticle,instanceComment,instanceLog,instanceFavorite
 from constant import postArticleCredit,rateCreditForArticle,howCommentInArticle
 article = Blueprint("article", __name__)
 
@@ -22,7 +22,7 @@ def read(articleid):
             dict[k] = v
     dict["nickname"] = result.nickname
     #  检查是否已经买了这个文章，这样的话，再次点击就用再买  #作者的话默认买过了
-    if instanceCredit.check_paid_article(articleid) or int(session.get("userid"))==  int(instanceArticle.searchUseridByArticleid(articleid)[0]):
+    if instanceLog.check_paid_article(articleid) or int(session.get("userid"))==  int(instanceArticle.searchUseridByArticleid(articleid)[0]):
         dict["paid"] = "true"
     else:
         dict["paid"] = "false"
@@ -46,9 +46,9 @@ def readAll():
     articleid = request.form.get("articleid")
     result = instanceArticle.find_by_id(articleid)
     # 减去自己的积分
-    instanceCredit.insert_detail(type="阅读文章", target=articleid, credit=-1 * result[0].credit)
+    instanceLog.insert_detail(type="阅读文章", target=articleid, credit=-1 * result[0].credit)
     # 增加作者的积分
-    instanceCredit.insert_detail(type="别人阅读", target=articleid, credit=math.ceil(rateCreditForArticle * result[0].credit),userid=int(instanceArticle.searchUseridByArticleid(articleid)[0]))
+    instanceLog.insert_detail(type="别人阅读", target=articleid, credit=math.ceil(rateCreditForArticle * result[0].credit), userid=int(instanceArticle.searchUseridByArticleid(articleid)[0]))
     return "1"
 
 
@@ -87,7 +87,7 @@ def add_article():
                 try:
                     id = instanceArticle.insert_article(type=type, headline=headline, content=content, credit=credit,
                                                 drafted=drafted, checked=checked, thumbnail=thumbname)
-                    instanceCredit.insert_detail(type="发布文章", target=0, credit=postArticleCredit)
+                    instanceLog.insert_detail(type="发布文章", target=0, credit=postArticleCredit)
                     return str(id)
                 except Exception as e:
                     return "post-fail"

@@ -1,18 +1,9 @@
 from flask import Blueprint, request, session, jsonify
-from database.instanceDatabase import instanceArticle,instanceCredit,instanceUser,instanceComment
+from database.instanceDatabase import instanceArticle,instanceLog,instanceUser,instanceComment
 from constant import replyAndAddCommentCredit
 from constant import howCommentInArticle
+from common.myLog import logger
 comment = Blueprint("comment", __name__)
-
-
-# 可以用拦截器
-# 未登录的不能通过直接访问端口发送评论
-@comment.before_request
-def before_comment():
-    if session.get("islogin") is None or session.get("islogin") != "true":
-        return "not-login"
-    else:
-        pass
 
 # 新增评论
 @comment.route("/comment", methods=["POST"])
@@ -31,11 +22,11 @@ def add():
             try:
                 instanceComment.insert_comment(articleid, content, ipaddr)
                 # 评论成功后，更新积分明细和剩余积分，及文章的回复数量
-                instanceCredit.insert_detail(type="添加评论", target=articleid, credit=replyAndAddCommentCredit)
+                instanceLog.insert_detail(type="添加评论", target=articleid, credit=replyAndAddCommentCredit)
                 instanceArticle.update_replycount(articleid)
                 return "add-pass"
-            except Exception as ex:
-                print(ex)
+            except Exception as e:
+                logger.error(e)
                 return "add-fail"
         else:
             return "add-limit"
@@ -58,7 +49,7 @@ def reply():
         if not instanceComment.check_limit_per_day():
             try:
                 instanceComment.insert_reply(articleid=articleid, commentid=commentid, ipaddr=ipaddr, content=content)
-                instanceCredit.insert_detail(type="回复评论", target=articleid, credit=replyAndAddCommentCredit)
+                instanceLog.insert_detail(type="回复评论", target=articleid, credit=replyAndAddCommentCredit)
                 instanceArticle.update_replycount(articleid)
                 return "reply-pass"
             except:
@@ -67,8 +58,55 @@ def reply():
             return "reply-limit"
 
 
-@comment.route("/comment/<int:articleid>-<int:page>")
+@comment.route("/comment/<int:articleid>-<int:page>", methods=["GET"])
 def comment_page(articleid, page):
     start = (page - 1) * howCommentInArticle
     list = instanceComment.get_comment_user_list(articleid, start, howCommentInArticle)
     return jsonify(list)
+
+
+# 为赞同或反对加一
+@comment.route("/agreeComment", methods=["POST"])
+def agreeComment():
+    commentid = request.form.get("commentid")
+    try:
+        instanceComment.update_agreecount(commentid)
+        return "1"
+    except Exception as e:
+        logger.error(e)
+        return "0"
+
+@comment.route("/disagreeComment", methods=["POST"])
+def disagreeComment():
+    commentid = request.form.get("commentid")
+    try:
+        instanceComment.update_disagreecount(commentid)
+        return "1"
+    except Exception as e:
+        logger.error(e)
+        return "0"
+
+
+# 为赞同或反对减1
+@comment.route("/cancle_agreeComment", methods=["POST"])
+def cancle_agreeComment():
+    commentid = request.form.get("commentid")
+    try:
+        instanceComment.cancle_update_agreecount(commentid)
+        return "1"
+    except Exception as e:
+        logger.error(e)
+        return "0"
+
+@comment.route("/cancle_disagreeComment", methods=["POST"])
+def cancle_disagreeComment():
+    commentid = request.form.get("commentid")
+    try:
+        instanceComment.cancle_update_disagreecount(commentid)
+        return "1"
+    except Exception as e:
+        logger.error(e)
+        return "0"
+
+
+

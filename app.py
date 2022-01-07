@@ -14,7 +14,16 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://"+config_mysql+"/myBlog?charset=utf8"
 # 如果设置成 True (默认情况)，Flask-SQLAlchemy 将会追踪对象的修改并且发送信号。这需要额外的内存， 如果不必要的可以禁用它。
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
+#  设置自动回收时间
+app.config["SQLALCHEMY_POOL_RECYCLE"]=15
+# 	数据库连接池的大小
+app.config["SQLALCHEMY_POOL_SIZE"]=10
+#  指定数据库连接池的超时时间
+app.config["SQLALCHEMY_POOL_TIMEOUT"]=100
+#  控制在连接池达到最大值后可以创建的连接数。当这些额外的 连接回收到连接池后将会被断开和抛弃。
+app.config["SQLALCHEMY_MAX_OVERFLOW"]=100
+# 是否在使用连接前先进行ping
+app.config["pool_pre_ping"]=True
 # 防止报错设置
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_FILE_DIR'] = '/flask-session'  # session类型为filesystem
@@ -37,14 +46,10 @@ db = SQLAlchemy(app)
 def page_not_find(e):
     return render_template("erroe-404.html")
 
-
-
-
 # 500处理
 @app.errorhandler(500)
 def page_not_find(e):
     return render_template("error-500.html")
-
 
 # 把文章的类别”注册“到全局函数中
 @app.context_processor
@@ -63,6 +68,7 @@ def listOfCredit():
         type[i]=str(i)+"分"
     return dict(listOfCredit=type)
 
+#  这里将logo、轮播图等传到前端
 @app.context_processor
 def manyParameter():
     type=defaultdict(list)
@@ -83,9 +89,6 @@ def manyParameter():
         type["display"].append("none")
     return dict(manyParameter=type)
 
-
-
-
 # 自定义过滤器函数，设置取的字的长度
 def my_truncate(s, length, end="..."):
     count = 0
@@ -99,7 +102,6 @@ def my_truncate(s, length, end="..."):
         if count > length:
             break
     return new + end
-
 
 # 将函数注册进去
 app.jinja_env.filters.update(my_truncate=my_truncate)
@@ -126,38 +128,40 @@ def before():
                 session["role"] = result[0].role
 
 
-@app.route("/test", methods=["GET"])
-def test():
-    return render_template("userManage.html")
+#  用来释放没连接的dbsession 防止出现阻塞
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    if exception is None:
+        db.session.remove()
 
 
 
-
+#  主运行程序
 if __name__ == '__main__':
+    # 导入实例化的数据库操作类
     from database.instanceDatabase import instanceUser
 
+    # 注册flask蓝图
     from controler.index import index
-
     app.register_blueprint(index)
 
     from controler.user import user
-
     app.register_blueprint(user)
 
     from controler.article import article
-
     app.register_blueprint(article)
 
     from controler.favorite import favorite
-
     app.register_blueprint(favorite)
 
     from controler.comment import comment
-
     app.register_blueprint(comment)
 
     from controler.ueditor import ueditor
-
     app.register_blueprint(ueditor)
 
+    from controler.userManage import userManage
+    app.register_blueprint(userManage)
+
+    #  以debug模式在指定端口启动
     app.run(debug=True, port=portNum)

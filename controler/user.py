@@ -2,13 +2,13 @@ from flask import Blueprint, make_response, session, request ,url_for
 from common.utility import ImageCode, gen_email_code, send_email
 import re, hashlib
 from common.utility import genearteMD5
-from database.instanceDatabase import instanceCredit,instanceUser
+from database.instanceDatabase import instanceLog,instanceUser
 from constant import whetherDistinguishCapital,regGiveCredit,loginEvereDayCredit
 
 user = Blueprint("user", __name__)
 
 
-@user.route("/vcode")
+@user.route("/vcode",methods=["GET"])
 def vcode():
     image = ImageCode()
     code, bstring = image.get_code()
@@ -69,7 +69,7 @@ def register():
         session["nickname"] = nickname
         session["role"] = result.role
         # 更新积分表
-        instanceCredit.insert_detail(type="用户注册", target=0, credit=regGiveCredit)
+        instanceLog.insert_detail(type="用户注册", target=0, credit=regGiveCredit)
         return "reg-pass"
 
 
@@ -77,13 +77,19 @@ def register():
 def login():
     # 判断是否加一
     #  如果今天的登录分没有领过
-    whetherAddCredit=1 if instanceCredit.check_limit_login_per_day() is False else 0
+    whetherAddCredit=1 if instanceLog.check_limit_login_per_day() is False else 0
     username = request.form.get("username").strip()
     password = request.form.get("password").strip()
     vcode = request.form.get("logincode").lower().strip()
     nickname = username.split("@")[0]
-    # 万能登陆验证码
+    # 先判断账户是否存在
+    lin_userid=instanceUser.findUseridByUsername(username)
+    if len(lin_userid)==0:
+        return "login-fail"
+    # 再验证验证码对不对
+    #  图片验证码
     if vcode != session.get("vcode"):
+        instanceLog.insert_detail(type="验证码错误", target=0, credit=0,userid=lin_userid[0])
         return "vcode-error"
     else:
         # 实现登录功能
@@ -94,16 +100,21 @@ def login():
             session["userid"] = result[0].userid
             session["nickname"] = nickname
             session["role"] = result[0].role
-            # 更新积分表
+            # 向log表中添加记录
+            # 已经领过登录积分的情况下
             if whetherAddCredit==0:
-                instanceCredit.insert_detail(type="正常登录", target=0, credit=loginEvereDayCredit)
+                creditLoginEveryDayGet=0
                 response = make_response("login-pass")
             else:
+                creditLoginEveryDayGet = loginEvereDayCredit
                 response = make_response("add-credit")
+            #   加入记录
+            instanceLog.insert_detail(type="正常登录", target=0, credit=creditLoginEveryDayGet)
             response.set_cookie("username", username, max_age=30 * 24 * 3600)
             response.set_cookie("password", password, max_age=30 * 24 * 3600)
             return response
         else:
+            # 记录下登录失败的话也进行记录
             return "login-fail"
 
 

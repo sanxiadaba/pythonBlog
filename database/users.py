@@ -44,3 +44,8 @@ class Users(DBase):
         userid=session.get("userid")
         restOfCredit= dbsession.query(Users.credit).filter_by(userid=userid).one()[0]
         return restOfCredit
+
+    # 根据user全名查询对应的id
+    def findUseridByUsername(self,username):
+        userid=dbsession.query(Users.userid).filter_by(username=username).one()
+        return userid

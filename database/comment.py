@@ -25,7 +25,7 @@ class Comment(DBase):
         result = dbsession.query(Comment).filter_by(articleid=articleid, hide=0, replyid=0).all()
         return result
 
-    # 根据用户编号和日期进行查询是否已经超过每天五条的限制
+    # 根据用户编号和日期进行查询是否已经超过一定条数的限制
     def check_limit_per_day(self):
         start = time.strftime("%Y-%m-%d 00:00:00")
         end = time.strftime("%Y-%m-%d 23:59:59")
@@ -80,3 +80,31 @@ class Comment(DBase):
     def get_count_by_article(self, articleid):
         count = dbsession.query(Comment).filter_by(articleid=articleid, hide=0, replyid=0).count()
         return count
+
+    # 评论的赞同数量加一
+    def update_agreecount(self, commentid):
+        row = dbsession.query(Comment).filter_by(commentid=int(commentid)).first()
+        row.agreecount += 1
+        dbsession.commit()
+
+    # 评论的反对数量加一
+    def update_disagreecount(self, commentid):
+        row = dbsession.query(Comment).filter_by(commentid=int(commentid)).first()
+        row.opposecount += 1
+        dbsession.commit()
+
+    # 取消赞同
+    def cancle_update_agreecount(self, commentid):
+        row = dbsession.query(Comment).filter_by(commentid=int(commentid)).first()
+        row.agreecount -= 1
+        dbsession.commit()
+
+    #取消反对
+    def cancle_update_disagreecount(self, commentid):
+        row = dbsession.query(Comment).filter_by(commentid=int(commentid)).first()
+        row.opposecount -= 1
+        dbsession.commit()
+
+    # 判断是否已赞成或反对该评论
+    # 赞成返回1 反对返回2 不赞同不反对返回0
+

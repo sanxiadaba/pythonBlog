@@ -102,7 +102,11 @@
 
             } else if (data == "add-pass") {
                 qingti("发表评论成功，积分+2")
-                location.reload();
+                setTimeout(()=>{undefined
+      location.reload();
+},2000);
+
+
             } else {
                 bootbox.alert({title: "错误提示", message: "发表评论出错，请联系管理员"});
 
@@ -142,8 +146,11 @@
             } else if (data == "reply-limit") {
                 bootbox.alert({title: "错误提示", message: "当天已用完五次评论的限额"});
             } else if (data == "reply-pass") {
-                qingti("回复评论成功，积分+2")
-                location.reload();
+            qingti("回复评论成功，积分+2");
+            setTimeout(()=>{undefined
+      location.reload();
+},2000);
+
             } else if (data == "reply-fail") {
                 bootbox.alert({title: "错误提示", message: "回复评论错误，请联系管理员"});
             }
@@ -498,16 +505,15 @@
                                             <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>回复
                                         </label>&nbsp;&nbsp;
 
-                                        <label onclick="agreeComment(this,'{{ comment.commentid }}')">
+                                        <label onclick="agreeComment(this,'{{ comment.commentid }}','{{ comment["agreecount"] }}')" style="visibility: visible;" id="agreeComment">
                                             <span class="oi oi-chevron-bottom"
                                                   aria-hidden="true"></span>赞成(<span>{{ comment["agreecount"] }}</span>)
                                         </label>&nbsp;&nbsp;
 
-                                        <label onclick="opposeComment(this,'{{ comment.commentid }}')">
+                                        <label onclick="opposeComment(this,'{{ comment.commentid }}','{{ comment["opposecount"] }}')" style="visibility: visible;" id="opposeComment">
                                 <span class="oi oi-x"
                                       aria-hidden="true"></span>反对(<span>{{ comment["opposecount"] }}</span>)
                                         </label>
-
                                     {% endif %}
                                 </div>
                             </div>

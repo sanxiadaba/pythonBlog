@@ -77,7 +77,7 @@ class Article(DBase):
             .order_by(Article.readcount.desc()).limit(recommendedNumOfSide[1]).all()
         return result
 
-    # 特别推荐  如果超过九篇可以用rand的方式随机显示
+    # 特别推荐  如果搜索结果超过栏目容量可以用rand的方式随机显示
     def find_recommended(self):
         result = dbsession.query(Article.articleid, Article.headline).filter(Article.hide == 0, Article.drafted == 0,
                                                                              Article.checked == 1,
