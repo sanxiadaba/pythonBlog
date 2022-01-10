@@ -170,3 +170,4 @@ class Article(DBase):
     # 根据文章id查询作者id
     def searchUseridByArticleid(self, articleid):
         return dbsession.query(Article.userid).filter_by(articleid=articleid).first()
+

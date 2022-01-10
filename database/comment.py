@@ -1,13 +1,10 @@
 import time
-
+from constant import commentNum
 from flask import session
 from sqlalchemy import Table
-
 from common.connect_db import connect_db
 from common.utility import model_join_list
-from constant import commentNum
 from database.users import Users
-
 dbsession, md, DBase = connect_db()
 
 
@@ -21,6 +18,7 @@ class Comment(DBase):
                           ipaddr=ipaddr, createtime=now, updatetime=now)
         dbsession.add(comment)
         dbsession.commit()
+
 
     # 根据文章编号查询所有评论
     def find_by_articleid(self, articleid):
@@ -37,6 +35,8 @@ class Comment(DBase):
             return True
         else:
             return False
+
+
 
     # 查询评论与用户信息  注意评论也需要分页
     def find_limit_with_user(self, articleid, start, count):
@@ -99,18 +99,22 @@ class Comment(DBase):
         row.agreecount -= 1
         dbsession.commit()
 
-    # 取消反对
+    #取消反对
     def cancle_update_disagreecount(self, commentid):
         row = dbsession.query(Comment).filter_by(commentid=int(commentid)).first()
         row.opposecount -= 1
         dbsession.commit()
 
     # 根据commentid查询userid
-    def searchUseridByCommentid(self, commentid):
+    def searchUseridByCommentid(self,commentid):
         return dbsession.query(Comment.userid).filter_by(commentid=commentid).one()[0]
 
     # 让指定的commentid隐藏
-    def hideCommentByCommentid(self, commentid):
-        data = dbsession.query(Comment).filter_by(commentid=commentid).first()
-        data.hide = 1
+    def hideCommentByCommentid(self,commentid):
+        data=dbsession.query(Comment).filter_by(commentid=commentid).first()
+        data.hide=1
         dbsession.commit()
+
+
+
+

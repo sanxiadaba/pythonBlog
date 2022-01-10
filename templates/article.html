@@ -118,7 +118,6 @@
 </script>
 <script>
     var COMMENTID = 0;
-
     function gotoReply(commentid) {
         $("#replyBtn").show();
         $("#submitBtn").hide();
@@ -149,8 +148,8 @@
                 bootbox.alert({title: "错误提示", message: "当天已用完五次评论的限额"});
             } else if (data == "reply-pass") {
                 qingti("回复评论成功，积分+2");
-                gotoPage(articleid, PAGE)
-                {#    再跳转到进行评论的那一页#}
+                gotoPage(articleid,PAGE)
+            {#    再跳转到进行评论的那一页#}
             } else if (data == "reply-fail") {
                 bootbox.alert({title: "错误提示", message: "回复评论错误，请联系管理员"});
             }
