@@ -1,13 +1,17 @@
-import random, string
+import random
+import string
 import time
 from datetime import datetime
-from smtplib import SMTP_SSL
-from email.mime.text import MIMEText
 from email.header import Header
-from PIL import Image, ImageFont, ImageDraw
-from io import BytesIO
-from constant import emailAdmit,emailAccount,portNum
+from email.mime.text import MIMEText
 from hashlib import md5
+from io import BytesIO
+from smtplib import SMTP_SSL
+
+from PIL import Image, ImageFont, ImageDraw
+from flask import request
+
+from constant import emailAdmit, emailAccount, portNum
 
 
 class ImageCode:
@@ -59,13 +63,14 @@ class ImageCode:
         return code, bstring
 
 
-
-
-
-def send_email(receiver, ecode):
+def send_email(receiver, ecode, n):
     sender = emailAccount
     # 定义发送文件的内容
-    content = f"<br/>欢迎注册博客，你的邮箱验证码为：<span style='color:red;font-size:20px;'>{ecode}</span>,请复制到注册窗口完成注册，感谢你的支持。<br/>"
+    # 判断是注册邮件还是找回密码的邮件
+    if n == 1:
+        content = f"<br/>欢迎注册博客，你的邮箱验证码为：<span style='color:red;font-size:20px;'>{ecode}</span>,请复制到注册窗口完成注册，感谢你的支持(验证码两分钟后失效)。<br/>"
+    else:
+        content = f"<br/>你此次找回密码的邮箱验证码为：<span style='color:red;font-size:20px;'>{ecode}</span>,请将验证码复制到指定位置完成操作(验证码两分钟后失效)<br/>"
     message = MIMEText(content, "html", "utf-8")
     # 指定邮件标题
     message["Subject"] = Header("博客验证码为", "utf-8")
@@ -168,13 +173,15 @@ def generate_thumb(url_list):
     compress_image("./static/img/download/" + thumbname, "./static/img/thumb/" + thumbname, 400)
     return thumbname
 
-# 设置获取时间戳的函数
+
+# 设置获取时间
 def getDatatimeStr():
-    return datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+    return datetime.now().strftime('%Y-%m-%d')
+
 
 # 生成MD5
 def genearteMD5(strlin):
-    strlin=str(strlin)
+    strlin = str(strlin)
     # 创建md5对象
     hl = md5()
     # Tips
@@ -183,3 +190,6 @@ def genearteMD5(strlin):
     hl.update(strlin.encode(encoding='utf-8'))
     return hl.hexdigest()
 
+
+def getIpForFlask():
+    return str(request.remote_addr)

@@ -1,23 +1,24 @@
-from flask import Blueprint, request, session, jsonify, render_template
-from database.instanceDatabase import instanceArticle,instanceLog,instanceUser,instanceComment
+from flask import Blueprint, session, jsonify, render_template
+
+from database.instanceDatabase import instanceArticle
 
 userManage = Blueprint("userManage", __name__)
 
+
 @userManage.route("/baseManage", methods=["GET"])
 def baseManage():
-    if session.get("role")!="admin":
+    if session.get("role") != "admin":
         return render_template("userManage.html")
     else:
         return render_template("adminManage.html")
 
+
 #  返回我的资料
 # 文章数、评论数、浏览总数、总积分、我的昵称、我的头像、我的qq号、我的角色
-@userManage.route("/userInfo",methods=["GET"])
+@userManage.route("/userInfo", methods=["GET"])
 def userInfo():
     last, most, recommended = instanceArticle.find_last_most_recommended()
     return jsonify(last, most, recommended)
-
-
 
 # 修改昵称
 

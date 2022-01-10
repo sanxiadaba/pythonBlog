@@ -1,72 +1,80 @@
-{%  extends "baseArticle.html" %}
-{%  block content %}
-<div class="col-lg-9 col-sm-12" style="padding-top:0px" id="" left>
-    {# 轮播图#}
+{% extends "baseArticle.html" %}
+{% block content %}
+    <div class="col-lg-9 col-sm-12" style="padding-top:0px" id="" left>
+        {# 轮播图#}
 
-    <div class="col-12" style="padding: 15px 0px;display: {{ manyParameter['display'][0] }}">
-        <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
-{#            轮播图#}
-            <ol class="carousel-indicators">
-                <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
-                <li data-target="#carouselExampleIndicators" data-slide-to="1"></li>
-                <li data-target="#carouselExampleIndicators" data-slide-to="2"></li>
-            </ol>
-            <div class="carousel-inner">
-                {% for shuffImage in manyParameter["shufflingFigure"] %}
-                <a class="carousel-item active" href={{ shuffImage[1] }}>
-                    <img src="/static/img/banner/{{ shuffImage[0] }}" class="d-block w-100" alt="..." >
-                </a>
-                {% endfor %}
-            </div>
-            <button class="carousel-control-prev" type="button" data-target="#carouselExampleIndicators"
-                    data-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="sr-only">Previous</span>
-            </button>
+        <div class="col-12" style="padding: 15px 0px;">
+            {#    display: {{ manyParameter['display'][0] }}#}
+            <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+                {#            轮播图#}
+                <ol class="carousel-indicators">
+                    <li data-target="#carouselExampleIndicators" data-slide-to="0" class="active"></li>
+                    <li data-target="#carouselExampleIndicators" data-slide-to="1"></li>
+                    <li data-target="#carouselExampleIndicators" data-slide-to="2"></li>
+                </ol>
+                <div class="carousel-inner">
+                    {% for shuffImage in manyParameter["shufflingFigure"] %}
+                        {% if loop.index0==0 %}
+                            <a class="carousel-item active" href={{ shuffImage[1] }}>
+                                {% if loop.index0<0 %}
+                                    </a>
+                                {% endif %}
+                        {% else %}
+                            <a class="carousel-item" href={{ shuffImage[1] }}>
+                        {% endif %}
+                    <img src="/static/img/banner/{{ shuffImage[0] }}" class="d-block w-100" alt="...">
+                    </a>
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-target="#carouselExampleIndicators"
+                        data-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Previous</span>
+                </button>
 
-            <button class="carousel-control-next" type="button" data-target="#carouselExampleIndicators"
-                    data-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="sr-only">Next</span>
-            </button>
-        </div>
-    </div>
-    {# 文章1#}
-
-    {% for nickname,article in result %}
-    <div class="col-12 row article-list">
-        <div class="col-sm-3 col-3 thumb d-none d-sm-block">
-            <img src="/static/img/thumb/{{article.thumbnail}}" width="207" height="122"/>
-        </div>
-        <div class="col-sm-9 col-xs-12 detail">
-            <div class="title"><a href="/article/{{article.articleid}}">{{article.headline}}</a></div>
-            <div class="info">作者：{{nickname}}&nbsp;&nbsp;&nbsp; 类别：{{article_type[article.type |string]}}
-                &nbsp;日期：{{article.createtime}}&nbsp;&nbsp;&nbsp;阅读：{{article.readcount}} 次&nbsp;&nbsp;&nbsp;消耗积分：{{article.credit}}
-                分
-            </div>
-            <div class="intro">
-                {{article.content | striptags |truncate(80)}}
+                <button class="carousel-control-next" type="button" data-target="#carouselExampleIndicators"
+                        data-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="sr-only">Next</span>
+                </button>
             </div>
         </div>
-    </div>
-    {% endfor %}
-    <div class="col-12 paginate article-list">
-        {% if page==1 %}
-        <a href="/page/1">上一页</a>&nbsp;&nbsp;
-        {% else %}
-        <a href="/page/{{page-1}}">上一页</a>&nbsp;&nbsp;
-        {% endif %}
+        {# 文章1#}
 
-        {% for i in range(total) %}
-        <a href="/page/{{i+1}}">{{i+1}}</a>&nbsp;&nbsp;
+        {% for nickname,article in result %}
+            <div class="col-12 row article-list">
+                <div class="col-sm-3 col-3 thumb d-none d-sm-block">
+                    <img src="/static/img/thumb/{{ article.thumbnail }}" width="207" height="122"/>
+                </div>
+                <div class="col-sm-9 col-xs-12 detail">
+                    <div class="title"><a href="/article/{{ article.articleid }}">{{ article.headline }}</a></div>
+                    <div class="info">作者：{{ nickname }}&nbsp;&nbsp;&nbsp; 类别：{{ article_type[article.type |string] }}
+                        &nbsp;日期：{{ article.createtime }}&nbsp;&nbsp;&nbsp;阅读：{{ article.readcount }} 次&nbsp;&nbsp;&nbsp;消耗积分：{{ article.credit }}
+                        分
+                    </div>
+                    <div class="intro">
+                        {{ article.content | striptags |truncate(80) }}
+                    </div>
+                </div>
+            </div>
         {% endfor %}
+        <div class="col-12 paginate article-list">
+            {% if page==1 %}
+                <a href="/page/1">上一页</a>&nbsp;&nbsp;
+            {% else %}
+                <a href="/page/{{ page-1 }}">上一页</a>&nbsp;&nbsp;
+            {% endif %}
 
-        {% if page==total %}
-        <a href="/page/{{total}}">下一页</a>
-        {% else %}
-        <a href="/page/{{page+1}}">下一页</a>
-        {% endif %}
+            {% for i in range(total) %}
+                <a href="/page/{{ loop.index }}">{{ loop.index }}</a>&nbsp;&nbsp;
+            {% endfor %}
+
+            {% if page==total %}
+                <a href="/page/{{ total }}">下一页</a>
+            {% else %}
+                <a href="/page/{{ page | numAddNum(1) }}">下一页</a>
+            {% endif %}
+        </div>
     </div>
-</div>
-{%  include "side.html" %}
+    {% include "side.html" %}
 {% endblock %}

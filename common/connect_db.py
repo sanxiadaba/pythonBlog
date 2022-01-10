@@ -1,4 +1,6 @@
 from sqlalchemy import MetaData
+
+
 # 这里是连接数据库的一些设置（基本上都是一些固定的东西）
 
 def connect_db():

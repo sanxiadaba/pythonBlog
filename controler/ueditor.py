@@ -2,10 +2,14 @@
 
 import os
 import time
+
 from flask import Blueprint, render_template, request, jsonify
+
 from common.utility import compress_image
 
 ueditor = Blueprint("ueditor", __name__)
+
+
 @ueditor.route("/uedit", methods=["GET", "POST"])
 def uedit():
     param = request.args.get("action")

@@ -2,10 +2,10 @@ import math
 
 from flask import Blueprint, render_template, abort
 from flask.json import jsonify
-from database.instanceDatabase import instanceArticle
-from database.article import Article
-from constant import howArticleInWeb
 
+from constant import howArticleInWeb
+from database.article import Article
+from database.instanceDatabase import instanceArticle
 
 index = Blueprint("index", __name__)
 

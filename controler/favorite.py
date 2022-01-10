@@ -1,6 +1,7 @@
 from flask import Blueprint, request, session
-from database.instanceDatabase import instanceFavorite
+
 from database.favorite import Favorite
+from database.instanceDatabase import instanceFavorite
 
 favorite = Blueprint("favorite", __name__)
 

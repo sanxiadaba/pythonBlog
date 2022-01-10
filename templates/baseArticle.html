@@ -11,8 +11,8 @@
     <script type="text/javascript" src="/static/js/bootstrap.js"></script>
     <script type="text/javascript" src="/static/js/bootbox.min.js"></script>
     <script type="text/javascript" src="/static/js/myFunction.js"></script>
-<link rel="stylesheet" type="text/css" href="/static/css/toastr.min.css">
-<script src="/static/js/toastr.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/css/toastr.min.css">
+    <script src="/static/js/toastr.min.js"></script>
 
 
     {# 导入响应式设置#}
@@ -27,7 +27,10 @@
 <div class="header">
     <div class="container" style="height: 80px">
         <div class="row">
-            <div href="#" class="col-2" style="padding-top: 10px"><img src="/static/img/logo/{{ manyParameter['indexLogoPicture'][0] }}" width={{ manyParameter['indexLogoPictureSize'][0] }} height={{ manyParameter['indexLogoPictureSize'][1] }}></div>
+            <div href="#" class="col-2" style="padding-top: 10px"><img
+                    src="/static/img/logo/{{ manyParameter['indexLogoPicture'][0] }}"
+                    width={{ manyParameter['indexLogoPictureSize'][0] }} height={{ manyParameter['indexLogoPictureSize'][1] }}>
+            </div>
             <div class="col-5 d-none d-sm-block "
                  style="text-align: center;font-size: 30px;padding-top: 10px ">{{ manyParameter['indexAboveStr'][0] }}
             </div>
@@ -51,29 +54,29 @@
             </button>
             <div class="collapse navbar-collapse menu-bar" id="navbarNavAltMarkup">
                 <div class="navbar-nav ">
-                    {%for k,v in article_type.items()%}
-                    <a class="nav-item nav-link" href="/type/{{k}}-1">{{v}}</a>
+                    {% for k,v in article_type.items() %}
+                        <a class="nav-item nav-link" href="/type/{{ k }}-1">{{ v }}</a>
                     {% endfor %}
 
                 </div>
                 <div class="navbar-nav menu-bar ml-auto">
                     {% if session.get("islogin") == "true" %}
-                    <a class="nav-item nav-link" href="#">欢迎你：{{session.get("nickname")}}</a>
-                    &nbsp;&nbsp;&nbsp;
-                    {%if session.get("role")=="admin"%}
-                    <a class="nav-item nav-link" href="/admin">系统管理</a>&nbsp;&nbsp;&nbsp;
-                    {%elif session.get("role")=="editor"%}
-<!--                    <a class="nav-item nav-link" href="/ucenter">用户中心</a>&nbsp;&nbsp;&nbsp;-->
-                    <a class="nav-item nav-link" href="/prepost">发表文章</a>&nbsp;&nbsp;&nbsp;
-                    {%elif session.get("role")=="user"%}
-                     <a class="nav-item nav-link" href="/prepost">我要投稿</a>&nbsp;&nbsp;&nbsp;
-                    {% endif %}
+                        <a class="nav-item nav-link" href="#">欢迎你：{{ session.get("nickname") }}</a>
+                        &nbsp;&nbsp;&nbsp;
+                        {% if session.get("role")=="admin" %}
+                            <a class="nav-item nav-link" href="/admin">系统管理</a>&nbsp;&nbsp;&nbsp;
+                        {% elif session.get("role")=="editor" %}
+                            <!--                    <a class="nav-item nav-link" href="/ucenter">用户中心</a>&nbsp;&nbsp;&nbsp;-->
+                            <a class="nav-item nav-link" href="/prepost">发表文章</a>&nbsp;&nbsp;&nbsp;
+                        {% elif session.get("role")=="user" %}
+                            <a class="nav-item nav-link" href="/prepost">我要投稿</a>&nbsp;&nbsp;&nbsp;
+                        {% endif %}
 
 
-                    <a class="nav-item nav-link" href="/logout">注销</a>
+                        <a class="nav-item nav-link" href="/logout">注销</a>
                     {% else %}
-                    <a class="nav-item nav-link" href="#" onclick="showLogin()">登录</a>
-                    <a class="nav-item nav-link" href="#" onclick="showReg()">注册</a>
+                        <a class="nav-item nav-link" href="#loginpanel" onclick="showLogin()">登录</a>
+                        <a class="nav-item nav-link" href="#" onclick="showReg()">注册</a>
                     {% endif %}
                 </div>
             </div>
@@ -125,6 +128,7 @@
                 <ul class="nav nav-tabs" role="tablist">
                     <li id="login" class="nav-item active">
                         <a href="#loginpanel" data-toggle="tab" class="nav-link" style="color: midnightblue">登录</a>
+                        {#                        onclick="showLogin()"#}
                     </li>
 
                     <li id="reg" class="nav-item">
@@ -142,10 +146,9 @@
                 <div class="tab-pane container active" id="loginpanel">
                     <div class="modal-content" style="margin: 20px 0px;">
                         <div class="modal-body">
-
                             <div class="form-group row" style="margin-top: 20px;">
                                 <label for="loginname" class="col-4">&nbsp;&nbsp;登录邮箱：</label>
-                                <input type="text" id="loginname" class="form-control col-7" placeholder="请输入你的邮箱地址"/>
+                                <input type="text" id="loginname" class="form-control col-7 " placeholder="请输入你的邮箱地址"/>
                             </div>
 
                             <div class="form-group row">
@@ -153,7 +156,6 @@
                                 <input type="password" id="loginpass" class="form-control col-7"
                                        placeholder="请输入你的登录密码"/>
                             </div>
-
                             <div class="form-group row">
                                 <label for="logincode" class="col-4"> &nbsp;&nbsp;图片验证码：</label>
                                 <input type="text" id="logincode" class="form-control col-5" placeholder="请输入右侧的验证码"
@@ -186,7 +188,7 @@
                                 <label for="regcode" class="col-4">&nbsp;&nbsp;邮箱验证码：</label>
                                 <input type="text" id="regcode" class="form-control col-4" placeholder="请输入邮箱验证码"
                                        onkeyup="doRegister(event)"/>
-                                <button type="button" class="btn btn-primary col-3" onclick="doSendMail(this)">发送邮件
+                                <button type="button" class="btn btn-primary col-3" onclick="doSendMail(this,1)">发送邮件
                                 </button>
                             </div>
                         </div>
@@ -213,13 +215,14 @@
                             <div class="form-group row">
                                 <label for="ficode" class="col-4">&nbsp;&nbsp;邮箱验证码：</label>
                                 <input type="text" id="ficode" class="form-control col-4" placeholder="请输入邮箱验证码"/>
-                                <button type="button" class="btn btn-primary col-3">发送邮件</button>
+                                <button type="button" class="btn btn-primary col-3" onclick="doSendMail(this,2)">发送邮件
+                                </button>
                             </div>
                         </div>
                         <div class="modal-footer">
                             <span>请输入注册邮箱地址并重置密码。&nbsp;&nbsp;</span>
                             <button type="button" class="btn btn-dark" data-dismiss="modal">关闭</button>
-                            <button type="button" class="btn btn-primary">找回密码</button>
+                            <button type="button" class="btn btn-primary" onclick="findPassword(null)">找回密码</button>
                         </div>
                     </div>
                 </div>

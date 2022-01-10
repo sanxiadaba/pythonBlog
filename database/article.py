@@ -1,9 +1,11 @@
 import time
+
 from flask import session
 from sqlalchemy import Table, func
+
 from common.connect_db import connect_db
-from database.users import Users
 from constant import recommendedNumOfSide
+from database.users import Users
 
 dbsession, md, DBase = connect_db()
 
@@ -166,5 +168,5 @@ class Article(DBase):
         return articleid
 
     # 根据文章id查询作者id
-    def searchUseridByArticleid(self,articleid):
+    def searchUseridByArticleid(self, articleid):
         return dbsession.query(Article.userid).filter_by(articleid=articleid).first()
