@@ -1,10 +1,12 @@
 import random
 import time
-from  constant import thumbNailNum
+
 from flask import session
 from sqlalchemy import Table
-from common.utility import genearteMD5
+
 from common.connect_db import connect_db
+from common.utility import genearteMD5
+from constant import thumbNailNum
 
 dbsession, md, DBase = connect_db()
 
@@ -34,20 +36,20 @@ class Users(DBase):
         return user
 
     # 修改用户剩余积分
-    def update_credit(self, credit,userid):
+    def update_credit(self, credit, userid):
         user = dbsession.query(Users).filter_by(userid=userid).one()
         user.credit = int(user.credit) + credit
         dbsession.commit()
 
     # 查看剩余的积分
     def findRestCredit(self):
-        userid=session.get("userid")
-        restOfCredit= dbsession.query(Users.credit).filter_by(userid=userid).one()[0]
+        userid = session.get("userid")
+        restOfCredit = dbsession.query(Users.credit).filter_by(userid=userid).one()[0]
         return restOfCredit
 
     # 根据user全名查询对应的id
-    def findUseridByUsername(self,username):
-        userid=dbsession.query(Users.userid).filter_by(username=username).first()
+    def findUseridByUsername(self, username):
+        userid = dbsession.query(Users.userid).filter_by(username=username).first()
         if userid is not None:
             return userid[0]
         else:
@@ -58,8 +60,8 @@ class Users(DBase):
         return dbsession.query(Users.nickname).filter_by(userid=userid).one()
 
     # 修改密码
-    def modifyUserPassword(self,userid,newPassword):
-        newPassword=genearteMD5(newPassword)
-        user=dbsession.query(Users).filter_by(userid=userid).first()
-        user.password=newPassword
+    def modifyUserPassword(self, userid, newPassword):
+        newPassword = genearteMD5(newPassword)
+        user = dbsession.query(Users).filter_by(userid=userid).first()
+        user.password = newPassword
         dbsession.commit()

@@ -1,10 +1,13 @@
 from flask import Blueprint, request, session, jsonify
-from database.instanceDatabase import instanceArticle,instanceLog,instanceUser,instanceComment
-from constant import replyAndAddCommentCredit
-from constant import howCommentInArticle
-from common.myLog import myLogger,allLogger,ininUserDir
+
+from common.myLog import myLogger, allLogger, ininUserDir
 from common.utility import getIpForFlask
+from constant import howCommentInArticle
+from constant import replyAndAddCommentCredit
+from database.instanceDatabase import instanceArticle, instanceLog, instanceComment
+
 comment = Blueprint("comment", __name__)
+
 
 # 新增评论
 @comment.route("/comment", methods=["POST"])
@@ -27,7 +30,7 @@ def add():
                 instanceArticle.update_replycount(articleid)
                 return "add-pass"
             except Exception as e:
-                allLogger(0,e)
+                allLogger(0, e)
                 return "add-fail"
         else:
             return "add-limit"
@@ -50,7 +53,8 @@ def reply():
         if not instanceComment.check_limit_per_day():
             try:
                 instanceComment.insert_reply(articleid=articleid, commentid=commentid, ipaddr=ipaddr, content=content)
-                instanceLog.insert_detail(type="回复评论", target=articleid, credit=replyAndAddCommentCredit,info=f"回复commentid为{commentid}的评论")
+                instanceLog.insert_detail(type="回复评论", target=articleid, credit=replyAndAddCommentCredit,
+                                          info=f"回复commentid为{commentid}的评论")
                 instanceArticle.update_replycount(articleid)
                 return "reply-pass"
             except:
@@ -66,7 +70,7 @@ def comment_page(articleid, page):
     # 再添加一条作者对这些评论的赞同反对的情况
     # 赞成返回1 反对返回2 不赞同不反对返回0
     for i in range(len(list)):
-        list[i]["agreeOrdisAgreeType"]=instanceLog.whetherAgreeOrDisInThisComment(list[i]["commentid"])
+        list[i]["agreeOrdisAgreeType"] = instanceLog.whetherAgreeOrDisInThisComment(list[i]["commentid"])
     return jsonify(list)
 
 
@@ -75,21 +79,23 @@ def comment_page(articleid, page):
 def agreeComment():
     commentid = request.form.get("commentid")
     instanceLog.whetherAgreeOrDisInThisComment(commentid)
-    authorId=instanceComment.searchUseridByCommentid(commentid)
-    userid=session.get("userid")
-    nickname=session.get("nickname")
-    ip=getIpForFlask()
+    authorId = instanceComment.searchUseridByCommentid(commentid)
+    userid = session.get("userid")
+    nickname = session.get("nickname")
+    ip = getIpForFlask()
     ininUserDir(userid=authorId)
     try:
         instanceComment.update_agreecount(commentid)
         instanceLog.insert_detail(type="赞同评论", target=commentid, credit=0,
                                   info=f"赞同评论commentid为{commentid}的评论")
-        myLogger(9,f"用户id为{userid} 昵称为{nickname} 赞同了用户id为{authorId} 的评论id号为{commentid}的评论 其赞同人的ip地址为{ip}",userid=userid)
+        myLogger(9, f"用户id为{userid} 昵称为{nickname} 赞同了用户id为{authorId} 的评论id号为{commentid}的评论 其赞同人的ip地址为{ip}",
+                 userid=userid)
         myLogger(10,
-                 f"用户id为{userid} 昵称为{nickname} 赞同了用户id为{authorId} 的评论id号为{commentid}的评论 其赞同人的ip地址为{ip}",userid=authorId)
+                 f"用户id为{userid} 昵称为{nickname} 赞同了用户id为{authorId} 的评论id号为{commentid}的评论 其赞同人的ip地址为{ip}",
+                 userid=authorId)
         return "1"
     except Exception as e:
-        allLogger(0,e)
+        allLogger(0, e)
         return "0"
 
 
@@ -112,7 +118,7 @@ def disagreeComment():
                  userid=authorId)
         return "1"
     except Exception as e:
-        allLogger(0,e)
+        allLogger(0, e)
         return "0"
 
 
@@ -136,8 +142,9 @@ def cancle_agreeComment():
                  userid=authorId)
         return "1"
     except Exception as e:
-        allLogger(0,e)
+        allLogger(0, e)
         return "0"
+
 
 @comment.route("/cancle_disagreeComment", methods=["POST"])
 def cancle_disagreeComment():
@@ -158,8 +165,9 @@ def cancle_disagreeComment():
                  userid=authorId)
         return "1"
     except Exception as e:
-        allLogger(0,e)
+        allLogger(0, e)
         return "0"
+
 
 #   隐藏评论
 @comment.route("/hideComment", methods=["POST"])
@@ -171,4 +179,3 @@ def hideComment():
     except Exception as e:
         allLogger(0, e)
         return "0"
-
