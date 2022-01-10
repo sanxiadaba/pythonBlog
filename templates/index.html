@@ -3,7 +3,8 @@
 <div class="col-lg-9 col-sm-12" style="padding-top:0px" id="" left>
     {# 轮播图#}
 
-    <div class="col-12" style="padding: 15px 0px;display: {{ manyParameter['display'][0] }}">
+    <div class="col-12" style="padding: 15px 0px;">
+{#    display: {{ manyParameter['display'][0] }}#}
         <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
 {#            轮播图#}
             <ol class="carousel-indicators">
@@ -13,7 +14,14 @@
             </ol>
             <div class="carousel-inner">
                 {% for shuffImage in manyParameter["shufflingFigure"] %}
+                    {% if loop.index0==0 %}
                 <a class="carousel-item active" href={{ shuffImage[1] }}>
+                    {% if loop.index0<0 %}
+                        </a>
+                    {% endif %}
+                {% else %}
+                    <a class="carousel-item" href={{ shuffImage[1] }}>
+                    {% endif %}
                     <img src="/static/img/banner/{{ shuffImage[0] }}" class="d-block w-100" alt="..." >
                 </a>
                 {% endfor %}
@@ -58,13 +66,13 @@
         {% endif %}
 
         {% for i in range(total) %}
-        <a href="/page/{{i+1}}">{{i+1}}</a>&nbsp;&nbsp;
+        <a href="/page/{{loop.index}}">{{loop.index}}</a>&nbsp;&nbsp;
         {% endfor %}
 
         {% if page==total %}
         <a href="/page/{{total}}">下一页</a>
         {% else %}
-        <a href="/page/{{page+1}}">下一页</a>
+        <a href="/page/{{page | numAddNum(1)}}">下一页</a>
         {% endif %}
     </div>
 </div>

@@ -61,13 +61,13 @@
         {% endif %}
 
         {% for i in range(total) %}
-        <a href="/type/{{type}}-{{ i+1 }}">{{i+1}}</a>&nbsp;&nbsp;
+        <a href="/type/{{type}}-{{ loop.index }}">{{loop.index}}</a>&nbsp;&nbsp;
         {% endfor %}
 
         {% if page==total %}
         <a href="/type/{{type}}-{{total}}">下一页</a>
         {% else %}
-        <a href="/type/{{type}}-{{page+1}}">下一页</a>
+        <a href="/type/{{type}}-{{page | numAddNum(1) }}">下一页</a>
         {% endif %}
     </div>
 </div>

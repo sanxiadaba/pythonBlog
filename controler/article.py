@@ -3,6 +3,7 @@ from flask import Blueprint, session, request, abort, render_template
 from common.utility import  parser_image_url, generate_thumb
 from database.instanceDatabase import instanceUser,instanceArticle,instanceComment,instanceLog,instanceFavorite
 from constant import postArticleCredit,rateCreditForArticle,howCommentInArticle
+from common.myLog import myLogger
 article = Blueprint("article", __name__)
 
 
@@ -37,18 +38,29 @@ def read(articleid):
     comment_list = instanceComment.get_comment_user_list(articleid, 0, howCommentInArticle)
     count = instanceComment.get_count_by_article(articleid)
     total = math.ceil(count / howCommentInArticle)
+    for i in range(len(comment_list)):
+        comment_list[i]["agreeOrdisAgreeType"] = instanceLog.whetherAgreeOrDisInThisComment(comment_list[i]["commentid"])
     return render_template("article.html", article=dict, is_favorite=is_favorite, prev_next=prev_next,
                            comment_list=comment_list, total=total,restOfCredit=restOfCredit)
-
-
 @article.route("/readAll", methods=["POST"])
 def readAll():
     articleid = request.form.get("articleid")
     result = instanceArticle.find_by_id(articleid)
+    # 读者花费的的积分
+    readerPaidedCredit=result[0].credit
+    #  作者得到的积分
+    authorGettedCredit=math.ceil(rateCreditForArticle * result[0].credit)
+    # 这篇文章的作者id
+    userid=int(instanceArticle.searchUseridByArticleid(articleid)[0])
+    # 这篇作者的nickname
+    nickname=instanceUser.searchNicknameByUserid(userid)
     # 减去自己的积分
-    instanceLog.insert_detail(type="阅读文章", target=articleid, credit=-1 * result[0].credit)
+    instanceLog.insert_detail(type="购买文章", target=articleid, credit=-1 * readerPaidedCredit,info=f"消耗{readerPaidedCredit}积分")
+    # logger.info(f"userid 为{session.get('userid')},昵称为{nickname} 的读者")
+    # 增加阅读量
+    instanceArticle.update_read_count(articleid)
     # 增加作者的积分
-    instanceLog.insert_detail(type="别人阅读", target=articleid, credit=math.ceil(rateCreditForArticle * result[0].credit), userid=int(instanceArticle.searchUseridByArticleid(articleid)[0]))
+    instanceLog.insert_detail(type="别人阅读", target=articleid, credit=authorGettedCredit, userid=userid,info=f"获取{math.ceil(rateCreditForArticle * result[0].credit)}积分")
     return "1"
 
 

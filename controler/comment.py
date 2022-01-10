@@ -2,7 +2,8 @@ from flask import Blueprint, request, session, jsonify
 from database.instanceDatabase import instanceArticle,instanceLog,instanceUser,instanceComment
 from constant import replyAndAddCommentCredit
 from constant import howCommentInArticle
-from common.myLog import logger
+from common.myLog import myLogger,allLogger,ininUserDir
+from common.utility import getIpForFlask
 comment = Blueprint("comment", __name__)
 
 # 新增评论
@@ -26,7 +27,7 @@ def add():
                 instanceArticle.update_replycount(articleid)
                 return "add-pass"
             except Exception as e:
-                logger.error(e)
+                allLogger(0,e)
                 return "add-fail"
         else:
             return "add-limit"
@@ -49,7 +50,7 @@ def reply():
         if not instanceComment.check_limit_per_day():
             try:
                 instanceComment.insert_reply(articleid=articleid, commentid=commentid, ipaddr=ipaddr, content=content)
-                instanceLog.insert_detail(type="回复评论", target=articleid, credit=replyAndAddCommentCredit)
+                instanceLog.insert_detail(type="回复评论", target=articleid, credit=replyAndAddCommentCredit,info=f"回复commentid为{commentid}的评论")
                 instanceArticle.update_replycount(articleid)
                 return "reply-pass"
             except:
@@ -62,6 +63,10 @@ def reply():
 def comment_page(articleid, page):
     start = (page - 1) * howCommentInArticle
     list = instanceComment.get_comment_user_list(articleid, start, howCommentInArticle)
+    # 再添加一条作者对这些评论的赞同反对的情况
+    # 赞成返回1 反对返回2 不赞同不反对返回0
+    for i in range(len(list)):
+        list[i]["agreeOrdisAgreeType"]=instanceLog.whetherAgreeOrDisInThisComment(list[i]["commentid"])
     return jsonify(list)
 
 
@@ -69,21 +74,45 @@ def comment_page(articleid, page):
 @comment.route("/agreeComment", methods=["POST"])
 def agreeComment():
     commentid = request.form.get("commentid")
+    instanceLog.whetherAgreeOrDisInThisComment(commentid)
+    authorId=instanceComment.searchUseridByCommentid(commentid)
+    userid=session.get("userid")
+    nickname=session.get("nickname")
+    ip=getIpForFlask()
+    ininUserDir(userid=authorId)
     try:
         instanceComment.update_agreecount(commentid)
+        instanceLog.insert_detail(type="赞同评论", target=commentid, credit=0,
+                                  info=f"赞同评论commentid为{commentid}的评论")
+        myLogger(9,f"用户id为{userid} 昵称为{nickname} 赞同了用户id为{authorId} 的评论id号为{commentid}的评论 其赞同人的ip地址为{ip}",userid=userid)
+        myLogger(10,
+                 f"用户id为{userid} 昵称为{nickname} 赞同了用户id为{authorId} 的评论id号为{commentid}的评论 其赞同人的ip地址为{ip}",userid=authorId)
         return "1"
     except Exception as e:
-        logger.error(e)
+        allLogger(0,e)
         return "0"
+
 
 @comment.route("/disagreeComment", methods=["POST"])
 def disagreeComment():
     commentid = request.form.get("commentid")
+    authorId = instanceComment.searchUseridByCommentid(commentid)
+    userid = session.get("userid")
+    nickname = session.get("nickname")
+    ip = getIpForFlask()
+    ininUserDir(userid=authorId)
     try:
         instanceComment.update_disagreecount(commentid)
+        instanceLog.insert_detail(type="反对评论", target=commentid, credit=0,
+                                  info=f"反对评论commentid为{commentid}的评论")
+        myLogger(9, f"用户id为{userid} 昵称为{nickname} 反对了用户id为{authorId} 的评论id号为{commentid}的评论 其反对人的ip地址为{ip}",
+                 userid=userid)
+        myLogger(10,
+                 f"用户id为{userid} 昵称为{nickname} 反对了用户id为{authorId} 的评论id号为{commentid}的评论 其反对人的ip地址为{ip}",
+                 userid=authorId)
         return "1"
     except Exception as e:
-        logger.error(e)
+        allLogger(0,e)
         return "0"
 
 
@@ -91,22 +120,55 @@ def disagreeComment():
 @comment.route("/cancle_agreeComment", methods=["POST"])
 def cancle_agreeComment():
     commentid = request.form.get("commentid")
+    authorId = instanceComment.searchUseridByCommentid(commentid)
+    userid = session.get("userid")
+    nickname = session.get("nickname")
+    ip = getIpForFlask()
+    ininUserDir(userid=authorId)
     try:
         instanceComment.cancle_update_agreecount(commentid)
+        instanceLog.insert_detail(type="取消赞同评论", target=commentid, credit=0,
+                                  info=f"取消赞同评论commentid为{commentid}的评论")
+        myLogger(9, f"用户id为{userid} 昵称为{nickname} 取消赞同了用户id为{authorId} 的评论id号为{commentid}的评论 其取消赞同人的ip地址为{ip}",
+                 userid=userid)
+        myLogger(10,
+                 f"用户id为{userid} 昵称为{nickname} 取消赞同了用户id为{authorId} 的评论id号为{commentid}的评论 其取消赞同人的ip地址为{ip}",
+                 userid=authorId)
         return "1"
     except Exception as e:
-        logger.error(e)
+        allLogger(0,e)
         return "0"
 
 @comment.route("/cancle_disagreeComment", methods=["POST"])
 def cancle_disagreeComment():
     commentid = request.form.get("commentid")
+    authorId = instanceComment.searchUseridByCommentid(commentid)
+    userid = session.get("userid")
+    nickname = session.get("nickname")
+    ip = getIpForFlask()
+    ininUserDir(userid=authorId)
     try:
         instanceComment.cancle_update_disagreecount(commentid)
+        instanceLog.insert_detail(type="取消反对评论", target=commentid, credit=0,
+                                  info=f"取消反对评论commentid为{commentid}的评论")
+        myLogger(9, f"用户id为{userid} 昵称为{nickname} 取消反对了用户id为{authorId} 的评论id号为{commentid}的评论 其取消反对人的ip地址为{ip}",
+                 userid=userid)
+        myLogger(10,
+                 f"用户id为{userid} 昵称为{nickname} 取消反对了用户id为{authorId} 的评论id号为{commentid}的评论 其取消反对人的ip地址为{ip}",
+                 userid=authorId)
         return "1"
     except Exception as e:
-        logger.error(e)
+        allLogger(0,e)
         return "0"
 
-
+#   隐藏评论
+@comment.route("/hideComment", methods=["POST"])
+def hideComment():
+    commentid = request.form.get("commentid")
+    try:
+        instanceComment.hideCommentByCommentid(commentid)
+        return "1"
+    except Exception as e:
+        allLogger(0, e)
+        return "0"
 

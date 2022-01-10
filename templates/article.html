@@ -5,8 +5,8 @@
         var obj = document.getElementById('content_t');
         var total_height = obj.scrollHeight;//文章总高度
         var show_height = 300;//定义原始显示高度
-        var restOdCredit=parseInt("{{ restOfCredit }}")
-        if (xiaohao === 0 || "{{article.paid}}"==="true") {
+        var restOdCredit = parseInt("{{ restOfCredit }}")
+        if (xiaohao === 0 || "{{article.paid}}" === "true") {
             if (total_height > show_height) {
                 btn.style.display = 'block';
                 obj.style.height = total_height + 'px';
@@ -17,7 +17,7 @@
             if ("{{article.paid}}" === "false") {
                 a = confirm("确定消耗" + xiaohao + "积分来阅读文章吗？"); //在页面上弹出对话框
                 if (a === true) {
-                    if (xiaohao>restOdCredit){
+                    if (xiaohao > restOdCredit) {
                         bootbox.alert({title: "错误提示", message: "积分不足，无法阅读文章"})
                         qingti("积分不足")
                         return false
@@ -30,7 +30,7 @@
                                 obj.style.height = total_height + 'px';
                                 btn.style.display = 'none';
                             }
-                            qingti("您当前还有"+(restOdCredit-xiaohao)+"积分")
+                            qingti("您当前还有" + (restOdCredit - xiaohao) + "积分")
                             return false
                         }
                     })
@@ -102,9 +102,10 @@
 
             } else if (data == "add-pass") {
                 qingti("发表评论成功，积分+2")
-                setTimeout(()=>{undefined
-      location.reload();
-},2000);
+                setTimeout(() => {
+                    undefined
+                    location.reload();
+                }, 2000);
 
 
             } else {
@@ -146,11 +147,9 @@
             } else if (data == "reply-limit") {
                 bootbox.alert({title: "错误提示", message: "当天已用完五次评论的限额"});
             } else if (data == "reply-pass") {
-            qingti("回复评论成功，积分+2");
-            setTimeout(()=>{undefined
-      location.reload();
-},2000);
-
+                qingti("回复评论成功，积分+2");
+                gotoPage(articleid,PAGE)
+            {#    再跳转到进行评论的那一页#}
             } else if (data == "reply-fail") {
                 bootbox.alert({title: "错误提示", message: "回复评论错误，请联系管理员"});
             }
@@ -172,7 +171,7 @@
             if (PAGE > 1) {
                 PAGE -= 1;
             }
-        } else if (type == "next") {
+        } else if (type === "next") {
             if (PAGE < TOTAL) {
                 PAGE += 1;
             }
@@ -190,7 +189,7 @@
         $.get("/comment/" + articleid + "-" + pageid, function (data) {
             var comment = data;
             for (var i in comment) {
-                content += '<div class="col-12 list row">';
+                content += `<div class="col-12 list row" id="returnArticle${i}" style="">`;
                 content += '<div class="col-2 icon">';
                 content += '<img src="/static/img/avatar/' + comment[i]['avatar'] + '"class="img-fluid" style="width: 70px;"/>';
                 content += '</div>'
@@ -204,24 +203,56 @@
 
                 if ("{{article.userid}}" === "{{session.get('userid')}}" ||
                     "{{session.get('role')}}" == "admin" || comment[i]['userid'] + "" == "{{session.get('userid')}}") {
-
                     content += '<label onclick="gotoReply(' + comment[i]['commentid'] + ')"';
                     content += '<span class="oi oi-arrow-circle-right"aria-hidden="true"></span> ';
                     content += '回复</label>&nbsp;&nbsp;&nbsp;'
-                    content += '<label onclick="hideComment(this,' + comment[i]['commentid'] + ')"';
-                    content += '<span class="oi oi-delete"aria-hidden="true"></span>隐藏</label> ';
-                } else {
-                    content += '<lable onclick="gotoReply(' + comment[i]['commentid'] + ')" style="color:#337ab7;">'
-                    // <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>回复
-                    content += '<span class="oi oi-arrow-circle-right" aria-hidden="true" style="color:#337ab7;"></span>回复';
-                    content += '</label>&nbsp;&nbsp;';
-                    content += '<label onclick="agreeComment(this,' + comment[i]["commentid"] + ')">';
-                    content += '<span class="oi oi-chevron-bottom" aria-hidden="true" ></span>赞成(<span>' + comment[i]["agreecount"] + "</span>)"
-                    content += '</label>&nbsp;&nbsp;&nbsp;';
-                    content += '<label onclick="opposeComment(this,' + comment[i]["commentid"] + ')">';
-                    content += '<span class="oi oi-x" aria-hidden="true"></span>反对(<span>' + comment[i]["opposecount"] + '</span>)';
-                    content += '</label>';
+                    content += `<label onclick="hideComment(this,${comment[i]['commentid']},1,${i},-1)"`;
 
+                    content += '<span class="oi oi-delete"aria-hidden="true"></span>删除评论</label> ';
+                } else {
+                    if (comment[i]["agreeOrdisAgreeType"] === 0) {
+                        content += `<label onclick="gotoReply(${comment[i]['commentid']})">
+                                            <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>回复
+                                        </label>&nbsp;&nbsp;
+
+                                        <label onclick="agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: visible;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font>赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                        </label>&nbsp;&nbsp;
+
+                                        <label onclick="opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: visible;" id="opposeComment1">
+                                <font color=""><span class="oi oi-x"
+                                      aria-hidden="true"></span>反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                        </label>`
+                    } else if (comment[i]["agreeOrdisAgreeType"] === 1) {
+                        content += `<label onclick="gotoReply(${comment[i]['commentid']})">
+                                            <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>回复
+                                        </label>&nbsp;&nbsp;
+
+                                        <label onclick="cancle_agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: visible;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font color="red">取消赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                        </label>&nbsp;&nbsp;
+
+                                        <label onclick="opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: hidden;" id="opposeComment1">
+                                <font color=""><span class="oi oi-x"
+                                      aria-hidden="true"></span>反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                        </label>`
+                    } else if (comment[i]["agreeOrdisAgreeType"] === -1) {
+                        content += `<label onclick="gotoReply(${comment[i]['commentid']})">
+                                            <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>回复
+                                        </label>&nbsp;&nbsp;
+
+                                        <label onclick="agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: hidden;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font>赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                        </label>&nbsp;&nbsp;
+
+                                        <label onclick="cancle_opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: hidden id="opposeComment1">
+                                <font color="red"><span class="oi oi-x"
+                                      aria-hidden="true"></span>取消反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                        </label>`
+                    }
                 }
                 content += '</div>';
                 content += '</div>';
@@ -235,7 +266,7 @@
                 if (comment[i]["reply_list"].length > 0) {
                     var reply = comment[i]["reply_list"];
                     for (var j in reply) {
-                        content += '<div class="col-12 list row">';
+                        content += `<div class="col-12 list row" id="returnComment${i}${j}" style="">`;
                         content += '<div class="col-2 icon">';
                         content += '<img src="/static/img/avatar/' + reply[j]["avatar"] + '"class="img-fluid" style="width:45px;"/>';
                         content += '</div>';
@@ -252,19 +283,44 @@
                         content += '</div>';
                         content += '<div class="col-sm-5 col-12 reply">';
 
-                        //    回复的评论不呢个继续评论，但可以隐藏和点赞
+                        //    回复的评论不能继续评论，但可以删除评论和点赞(作者或管理员的话)
                         if ("{{article.userid}}" == "{{session.get('userid')}}" ||
                             "{{session.get('role')}}" == "admin" || reply[j]["userid"] + "" == "{{session.get('userid')}}") {
-                            content += '<label onclick="hideComment(this,' + reply[j]["commentid"] + ')">';
-                            content += '<span class="oi oi-delete" aria-hideen="true"></span>隐藏';
+                            content += `<label onclick="hideComment(this,${reply[j]["commentid"]},2,${i},${j})">`;
+                            content += '<span class="oi oi-delete" aria-hideen="true"></span>删除评论';
                             content += '</label>&nbsp;&nbsp;';
                         }
-                        content += '<label onclick="agreeComment(this,' + reply[j]["commentid"] + ')">';
-                        content += '<span class="oi oi-chevron-bottom" aria-hidden="true"></span>赞成(<span>' + reply[j]["agreecount"] + "</span>)";
-                        content += '</label>&nbsp;&nbsp;';
-                        content += '<label onclick="opposeComment(this,' + reply[j]["commentid"] + ')">';
-                        content += '<span clas="oi oi-x" aria-hidden:"true"></span>反对(<span>' + reply[j]["opposecount"] + '</span>)';
-                        content += '</label>';
+                        if (comment[i]["agreeOrdisAgreeType"] === 0) {
+                            content += `<label onclick="agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: visible;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font>赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                        </label>&nbsp;&nbsp;
+
+                                        <label onclick="opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: visible;" id="opposeComment1">
+                                <font color=""><span class="oi oi-x"
+                                      aria-hidden="true"></span>反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                        </label>`
+                        } else if (comment[i]["agreeOrdisAgreeType"] === 1) {
+                            content += `<label onclick="cancle_agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: visible;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font color="red">取消赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                        </label>&nbsp;&nbsp;
+
+                                        <label onclick="opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: hidden;"  id="opposeComment1">
+                                <font color=""><span class="oi oi-x"
+                                      aria-hidden="true"></span>反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                        </label>`
+                        } else if (comment[i]["agreeOrdisAgreeType"] === -1) {
+                            content += `<label onclick="agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: hidden;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font>赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                        </label>&nbsp;&nbsp;
+                                        <label onclick="cancle_opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility:visible;" id="opposeComment1">
+                                <font color="red"><span class="oi oi-x"
+                                      aria-hidden="true"></span>取消反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                        </label>`
+                        }
+
                         content += '</div>';
                         content += '</div>';
                         content += '<div class="col-12">';
@@ -364,7 +420,7 @@
                             aria-hidden="true" style="color: red"></span>
                         取消收藏</label>
                 {% else %}
-                    <label class="favorite-btn" onclick="add_favorite('{{ article.articleid }}')" ><span
+                    <label class="favorite-btn" onclick="add_favorite('{{ article.articleid }}')"><span
                             class="oi oi-heart "
                             aria-hidden="true"></span>
                         收藏文章</label>
@@ -373,7 +429,7 @@
             <div class="col-12 info">
                 作者：{{ article.nickname }} 类别：{{ article_type[article.type | string] }}
                 日期：{{ article.createtime }}
-                阅读：{{ article.readcount }} 次 消耗积分：{{ article.credit }} 分
+                阅读：{{ article.readcount }} 次 消耗积分：<font color="red">{{ article.credit }} 分</font>
             </div>
             <div class="col-12 content_t" id="content_t">
                 {{ article.content | safe }}
@@ -403,28 +459,6 @@
                 {% endif %}
             </div>
 
-            {#            <script>#}
-            {#                if ("{{session.get('islogin')}}" === "true") {#}
-            {#                    var btn = document.getElementById('get_ct_more_1');#}
-            {#                } else {#}
-            {#                    var btn = document.getElementById('get_ct_more_2');#}
-            {#                }#}
-            {##}
-            {#                var obj = document.getElementById('content_t');#}
-            {#                var total_height = obj.scrollHeight;//文章总高度#}
-            {#                var show_height = 300;//定义原始显示高度#}
-            {#                var login = "{{ session.get('islogin') }}";#}
-            {#                if (login === "true") {#}
-            {#                    if (total_height > show_height) {#}
-            {#                        btn.style.display = 'block';#}
-            {#                        btn.onclick = function () {#}
-            {#                            obj.style.height = total_height + 'px';#}
-            {#                            btn.style.display = 'none';#}
-            {#                        }#}
-            {#                    }#}
-            {#                }#}
-            {##}
-            {#            </script>#}
         </div>
 
 
@@ -432,7 +466,6 @@
             <div><a href="/article/{{ prev_next.prev_id }}">上一篇:{{ prev_next.prev_headline }}</a></div>
             <div><a href="/article/{{ prev_next.next_id }}">下一篇:{{ prev_next.next_headline }}</a></div>
         </div>
-
         <!-- 文章评论 -->
         <div class="col-12 article-comment">
             <div class="col-12 row">
@@ -477,10 +510,12 @@
                 </div>
             </div>
 
-
             <div id="commentDiv">
+
+
                 {% for comment in comment_list %}
-                    <div class="col-12 list row">
+                    {% set thisIndex=loop.index0 %}
+                    <div class="col-12 list row" id="returnArticle{{ thisIndex }}" style="">
                         <div class="col-2 icon">
                             <img src="/static/img/avatar/{{ comment['avatar'] }}" class="img-fluid"
                                  style="width: 70px;"/>
@@ -489,31 +524,58 @@
                             <div class="col-12 row" style="padding: 0px">
                                 <div class="col-7 commenter">{{ comment.nickname }}&nbsp;&nbsp;&nbsp;{{ comment.createment }}</div>
                                 <div class="col-5 reply">
-                                    <!--                        文章作者、管理员和评论员只能回复和隐藏，不能点赞-->
+                                    <!--                        文章作者、管理员和评论员只能回复和删除评论，不能点赞-->
                                     {% if article.userid==session.get("userid") or session.get("role")=="admin" or
                             comment.userid==session.get("userid") %}
                                         <label onclick="gotoReply('{{ comment.commentid }}')">
                                             <span class="oi oi-arrow-circle-right" aria-hidden="true"
                                                   style="color:#337ab7;"></span>回复
                                         </label>&nbsp;&nbsp;&nbsp;
-                                        <label onclick="hideComment(this,'{{ comment.commentid }}')">
-                                            <span class="oi oi-delete" aria-hidden="true"></span>隐藏
+                                        <label onclick="hideComment(this,'{{ comment.commentid }}',1,{{ thisIndex }},-1)">
+                                            <span class="oi oi-delete" aria-hidden="true"></span>删除评论
                                         </label>
                                     {% else %}
 
                                         <label onclick="gotoReply('{{ comment.commentid }}')">
                                             <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>回复
                                         </label>&nbsp;&nbsp;
-
-                                        <label onclick="agreeComment(this,'{{ comment.commentid }}','{{ comment["agreecount"] }}')" style="visibility: visible;" id="agreeComment">
+                                        {% if comment["agreeOrdisAgreeType"]==1 %}
+                                            <label onclick="cancle_agreeComment(this,'{{ comment.commentid }}','{{ comment["agreecount"] }}')"
+                                                   style="visibility: visible;" id="agreeComment1">
                                             <span class="oi oi-chevron-bottom"
-                                                  aria-hidden="true"></span>赞成(<span>{{ comment["agreecount"] }}</span>)
-                                        </label>&nbsp;&nbsp;
+                                                  aria-hidden="true"></span><font
+                                                    color="red">取消赞成(<span>{{ comment["agreecount"] }}</span>)</font>
+                                            </label>&nbsp;&nbsp;
+                                            <label onclick="opposeComment(this,'{{ comment.commentid }}','{{ comment["opposecount"] }}')"
+                                                   style="visibility: hidden;" id="opposeComment1">
+                                                <font color=""><span class="oi oi-x"
+                                                                     aria-hidden="true"></span>反对(<span>{{ comment["opposecount"] }}</span>)</font>
+                                            </label>
+                                        {% elif comment["agreeOrdisAgreeType"]==-1 %}
+                                            <label onclick="agreeComment(this,'{{ comment.commentid }}','{{ comment["agreecount"] }}')"
+                                                   style="visibility: hidden;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font>赞成(<span>{{ comment["agreecount"] }}</span>)</font>
+                                            </label>&nbsp;&nbsp;
 
-                                        <label onclick="opposeComment(this,'{{ comment.commentid }}','{{ comment["opposecount"] }}')" style="visibility: visible;" id="opposeComment">
-                                <span class="oi oi-x"
-                                      aria-hidden="true"></span>反对(<span>{{ comment["opposecount"] }}</span>)
-                                        </label>
+                                            <label onclick="cancle_opposeComment(this,'{{ comment.commentid }}','{{ comment["opposecount"] }}')"
+                                                   style="visibility: visible;" id="opposeComment1">
+                                                <font color="red"><span class="oi oi-x"
+                                                                        aria-hidden="true"></span>取消反对(<span>{{ comment["opposecount"] }}</span>)</font>
+                                            </label>
+                                        {% else %}
+                                            <label onclick="agreeComment(this,'{{ comment.commentid }}','{{ comment["agreecount"] }}')"
+                                                   style="visibility: visible;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font>赞成(<span>{{ comment["agreecount"] }}</span>)</font>
+                                            </label>&nbsp;&nbsp;
+
+                                            <label onclick="opposeComment(this,'{{ comment.commentid }}','{{ comment["opposecount"] }}')"
+                                                   style="visibility: visible;" id="opposeComment1">
+                                                <font color=""><span class="oi oi-x"
+                                                                     aria-hidden="true"></span>反对(<span>{{ comment["opposecount"] }}</span>)</font>
+                                            </label>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                             </div>
@@ -525,7 +587,9 @@
                     <!--        回复评论-->
                     {% if comment["reply_list"] %}
                         {% for reply in comment["reply_list"] %}
-                            <div class="col-12 list row">
+                            {% set thatIndex=loop.index0 %}
+                            <div class="col-12 list row" id="returnComment{{ thisIndex }}{{ thatIndex }}" style="">
+                                {#                            style="display: block" id="returnArticle2"#}
                                 <div class="col-2 icon">
                                     <img src="/static/img/avatar/{{ reply['avatar'] }}" class="img-fluid"
                                          style="width: 45px;"/>
@@ -537,23 +601,55 @@
                                             &nbsp;&nbsp;&nbsp;{{ reply.createment }}
                                         </div>
                                         <div class="col-5 reply">
+                                            {#                                        管理员或者作者的话可以选择删除评论该评论#}
                                             {% if article.userid==session.get("userid") or session.get("role")=="admin" or
                             comment.userid==session.get("userid") %}
-                                                <label onclick="hideComment(this,'{{ comment.commentid }}')">
-                                                    <span class="oi oi-delete" aria-hidden="true"></span>隐藏
+                                                <label onclick="hideComment(this,'{{ comment.commentid }}',2,{{ thisIndex }},{{ thatIndex }})">
+                                                    <span class="oi oi-delete" aria-hidden="true"></span>删除评论
                                                 </label>
                                             {% else %}
+                                                {% if comment["agreeOrdisAgreeType"]==1 %}
 
-                                                <label onclick="agreeComment(this,'{{ reply.commentid }}')">
-                                                    <span class="oi oi-chevron-bottom"
-                                                          aria-hidden="true"></span>赞成(<span>{{ reply["agreecount"] }}</span>)
-                                                </label>&nbsp;&nbsp;
+                                                    <label onclick="cancle_agreeComment(this,'{{ comment.commentid }}','{{ comment["agreecount"] }}')"
+                                                           style="visibility: visible;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font
+                                                            color="red">取消赞成(<span>{{ comment["agreecount"] }}</span>)</font>
+                                                    </label>&nbsp;&nbsp;
 
-                                                <label onclick="opposeComment(this,'{{ reply.commentid }}')">
-                                <span class="oi oi-x"
-                                      aria-hidden="true"></span>反对(<span>{{ comment["opposecount"] }}</span>)
-                                                </label>
+                                                    <label onclick="opposeComment(this,'{{ comment.commentid }}','{{ comment["opposecount"] }}')"
+                                                           style="visibility: hidden;" id="opposeComment1">
+                                                        <font color=""><span class="oi oi-x"
+                                                                             aria-hidden="true"></span>反对(<span>{{ comment["opposecount"] }}</span>)</font>
+                                                    </label>
+                                                {% elif comment["agreeOrdisAgreeType"]==-1 %}
+                                                    <label onclick="agreeComment(this,'{{ comment.commentid }}','{{ comment["agreecount"] }}')"
+                                                           style="visibility: hidden;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font>赞成(<span>{{ comment["agreecount"] }}</span>)</font>
+                                                    </label>&nbsp;&nbsp;
+
+                                                    <label onclick="cancle_opposeComment(this,'{{ comment.commentid }}','{{ comment["opposecount"] }}')"
+                                                           style="visibility: visible;" id="opposeComment1">
+                                                        <font color="red"><span class="oi oi-x"
+                                                                                aria-hidden="true"></span>取消反对(<span>{{ comment["opposecount"] }}</span>)</font>
+                                                    </label>
+                                                {% else %}
+                                                    <label onclick="agreeComment(this,'{{ comment.commentid }}','{{ comment["agreecount"] }}')"
+                                                           style="visibility: visible;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font>赞成(<span>{{ comment["agreecount"] }}</span>)</font>
+                                                    </label>&nbsp;&nbsp;
+
+                                                    <label onclick="opposeComment(this,'{{ comment.commentid }}','{{ comment["opposecount"] }}')"
+                                                           style="visibility: visible;" id="opposeComment1">
+                                                        <font color=""><span class="oi oi-x"
+                                                                             aria-hidden="true"></span>反对(<span>{{ comment["opposecount"] }}</span>)</font>
+                                                    </label>
+                                                {% endif %}
                                             {% endif %}
+
+
                                         </div>
                                     </div>
                                     <div class="col-12">
@@ -564,12 +660,16 @@
                         {% endfor %}
                     {% endif %}
                 {% endfor %}
+
+
             </div>
             {% if total>1 %}
                 <div class="col-12 paginate">
                     <label onclick="gotoPage('{{ article.articleid }}','prev')">上一页</label>&nbsp;&nbsp;
-                    {% for i in range(total) %}
-                        <label onclick="gotoPage('{{ article.articleid }}','{{ i+1}})">{{ i+1}}</label>&nbsp;&nbsp;
+                    {% for i in range(1,total) %}
+                        <label onclick="gotoPage('{{ article.articleid }}','{{ loop.index }}')">{{ loop.index }}</label>
+                        &nbsp;&nbsp;
+                        {#                        {{ i+1}}#}
                     {% endfor %}
                     <label onclick="gotoPage('{{ article.articleid }}','next')">下一页</label>&nbsp;&nbsp;
                 </div>

@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask import Flask, render_template, abort, request, session
 import pymysql
 from collections import defaultdict
+from common.myLog import ininLogDir,ininUserDir
 from constant import sessionExpirationTime,sessionRestart,classification,portNum,creditListForReleaseArticle,shufflingFigurePicture,shufflingFigureLink,indexLogoPicture,indexLogoPictureSize,indexAboveStr,whetherSaveShufflingFigure
 # 链接数据库的一些设置，防止报错
 pymysql.install_as_MySQLdb()
@@ -15,11 +16,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://"+config_mysql+"/myBlog?charset
 # 如果设置成 True (默认情况)，Flask-SQLAlchemy 将会追踪对象的修改并且发送信号。这需要额外的内存， 如果不必要的可以禁用它。
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 #  设置自动回收时间
-app.config["SQLALCHEMY_POOL_RECYCLE"]=15
+app.config["SQLALCHEMY_POOL_RECYCLE"]=10
 # 	数据库连接池的大小
-app.config["SQLALCHEMY_POOL_SIZE"]=10
+app.config["SQLALCHEMY_POOL_SIZE"]=100
 #  指定数据库连接池的超时时间
-app.config["SQLALCHEMY_POOL_TIMEOUT"]=100
+app.config["SQLALCHEMY_POOL_TIMEOUT"]=20
 #  控制在连接池达到最大值后可以创建的连接数。当这些额外的 连接回收到连接池后将会被断开和抛弃。
 app.config["SQLALCHEMY_MAX_OVERFLOW"]=100
 # 是否在使用连接前先进行ping
@@ -103,8 +104,13 @@ def my_truncate(s, length, end="..."):
             break
     return new + end
 
+
+# 自定义一个将数字加一的函数，防止html里闪烁错误（虽说不影响运行，但是强迫症看着难受）
+def numAddNum(n,a):
+    return n+a
+
 # 将函数注册进去
-app.jinja_env.filters.update(my_truncate=my_truncate)
+app.jinja_env.filters.update(my_truncate=my_truncate,numAddNum=numAddNum)
 
 
 # 定义全局拦截器,实现自动登录
@@ -138,6 +144,9 @@ def shutdown_session(exception=None):
 
 #  主运行程序
 if __name__ == '__main__':
+    # 初始化logs（检查log能工作的一些必要目录）
+    ininLogDir()
+
     # 导入实例化的数据库操作类
     from database.instanceDatabase import instanceUser
 
@@ -165,3 +174,5 @@ if __name__ == '__main__':
 
     #  以debug模式在指定端口启动
     app.run(debug=True, port=portNum)
+
+

@@ -61,13 +61,13 @@
         {% endif %}
 
         {% for i in range(total) %}
-        <a href="/search/{{i+1}}-{{keyword}}">{{i+1}}</a>&nbsp;&nbsp;
+        <a href="/search/{{loop.index}}-{{keyword}}">{{loop.index}}</a>&nbsp;&nbsp;
         {% endfor %}
 
         {% if page==total %}
         <a href="/search/{{total}}-{{keyword}}">下一页</a>
         {% else %}
-        <a href="/search/{{page+1}}-{{keyword}}">下一页</a>
+        <a href="/search/{{page|numAddNum(1)}}-{{keyword}}">下一页</a>
         {% endif %}
     </div>
 </div>

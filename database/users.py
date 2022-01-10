@@ -3,7 +3,7 @@ import time
 from  constant import thumbNailNum
 from flask import session
 from sqlalchemy import Table
-
+from common.utility import genearteMD5
 from common.connect_db import connect_db
 
 dbsession, md, DBase = connect_db()
@@ -47,5 +47,19 @@ class Users(DBase):
 
     # 根据user全名查询对应的id
     def findUseridByUsername(self,username):
-        userid=dbsession.query(Users.userid).filter_by(username=username).one()
-        return userid
+        userid=dbsession.query(Users.userid).filter_by(username=username).first()
+        if userid is not None:
+            return userid[0]
+        else:
+            return None
+
+    # 根据用户的id查询其昵称
+    def searchNicknameByUserid(self, userid):
+        return dbsession.query(Users.nickname).filter_by(userid=userid).one()
+
+    # 修改密码
+    def modifyUserPassword(self,userid,newPassword):
+        newPassword=genearteMD5(newPassword)
+        user=dbsession.query(Users).filter_by(userid=userid).first()
+        user.password=newPassword
+        dbsession.commit()

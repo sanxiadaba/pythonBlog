@@ -55,8 +55,8 @@ creditListForReleaseArticle=[1,2,5,10,20,50]
 # 每页有几篇文章
 howArticleInWeb=10
 
-# 每篇文章有几个评论(不算上回复评论的回复)
-howCommentInArticle=10
+# 每篇文章有几条评论(不算上回复评论的回复)
+howCommentInArticle=5
 
 # 是否要首页的轮播图
 whetherSaveShufflingFigure=True
@@ -97,6 +97,12 @@ clearLogTime="1 month"
 
 # 分割日志的大小（日志到一定体积后自动压缩，然后开始新的日志） 可选的参数有KB GM MB
 logSize="0.1 MB"
+
+# 打印的loguru是否在控制台输出
+whetherLogPrintInConsole=True
+
+# 超过指定时间后验证码便会失效  # 单位秒
+timeoutOfEcode=120
 
 
 

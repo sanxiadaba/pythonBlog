@@ -1,13 +1,14 @@
 from flask import Blueprint, make_response, session, request ,url_for
 from common.utility import ImageCode, gen_email_code, send_email
 import re, hashlib
+import time
 from common.utility import genearteMD5
 from database.instanceDatabase import instanceLog,instanceUser
-from constant import whetherDistinguishCapital,regGiveCredit,loginEvereDayCredit
-
+from constant import whetherDistinguishCapital,regGiveCredit,loginEvereDayCredit,timeoutOfEcode
+from common.myLog import ininUserDir,myLogger
 user = Blueprint("user", __name__)
-
-
+# 用来判断验证码是否超过时间限制
+timeStart=0
 @user.route("/vcode",methods=["GET"])
 def vcode():
     image = ImageCode()
@@ -24,12 +25,16 @@ def vcode():
 
 @user.route("/ecode", methods=["POST"])
 def ecode():
+    global timeStart
+    timeStart=time.time()
     email = request.form.get("email")
+    # 转换下数字类型
+    n=int(request.form.get("n"))
     if not re.match(".+@.+\..+", email):
         return "email-invailid"
     code = gen_email_code()
     try:
-        send_email(email, code)
+        send_email(email, code,n)
         session["ecode"] = code  # 将邮箱验证码保存在session中
         session.permanent = True
         return "send-pass"
@@ -37,27 +42,28 @@ def ecode():
         return "send fail"
 
 
-
 @user.route("/user", methods=["POST"])
 def register():
+    global timeStart
     username = request.form.get("username").strip()
     password = request.form.get("password").strip()
     ecode = request.form.get("ecode").strip()
     nickname = username.split("@")[0]
+    # 验证邮箱地址的正确性和密码的有效性
+    if not re.match(".+@.+\..+", username) or len(password) < 5:
+        return "up-invalid"
+
+    if len(instanceUser.find_by_username(username)) > 0:
+        return "user-repeated"
 
     # 校验邮箱验证码是否正确   #或者也可以设置一个万能的验证码
     if ecode != session.get("ecode"):
         return "ecode-error"
 
-    # 验证邮箱地址的正确性和密码的有效性
-    elif not re.match(".+@.+\..+", username) or len(password) < 5:
-        return "up-invalid"
-
-    # 验证用户是否已经注册
-    elif len(instanceUser.find_by_username(username)) > 0:
-        return "user-repeated"
-
     else:
+        if time.time()-timeStart>timeoutOfEcode:
+            session["ecode"]=None
+            return "ecode-timeout"
         # 实现注册功能 将密码转换为md5加密下
         password = genearteMD5(password)
         try:
@@ -70,26 +76,60 @@ def register():
         session["role"] = result.role
         # 更新积分表
         instanceLog.insert_detail(type="用户注册", target=0, credit=regGiveCredit)
+        ininUserDir()
         return "reg-pass"
+
+# 找回密码的模块
+@user.route("/resetUserPassword", methods=["POST"])
+def resetUserPassword():
+    username = request.form.get("username").strip()
+    password = request.form.get("password").strip()
+    ecode = request.form.get("ecode").strip()
+    # 先检测邮箱账户、密码是否符合格式
+    if not re.match(".+@.+\..+", username) or len(password) < 5:
+        return "up-invalid"
+
+    # 检查是否有这个用户
+    if instanceUser.find_by_username(username) is None:
+        return "no-user"
+
+    # 校验邮箱验证码是否正确
+    if ecode != session.get("ecode"):
+        return "ecode-error"
+
+    else:
+        if time.time()-timeStart>timeoutOfEcode:
+            session["ecode"]=None
+            return "ecode-timeout"
+        userid=instanceUser.findUseridByUsername(username)
+        # 将密码转换为md5加密下
+        try:
+            instanceUser.modifyUserPassword(userid,password)
+        except:
+            return "fi-fail"
+        # 更新积分表
+        return "fi-pass"
+
+
 
 
 @user.route("/login", methods=["POST"])
 def login():
     # 判断是否加一
-    #  如果今天的登录分没有领过
-    whetherAddCredit=1 if instanceLog.check_limit_login_per_day() is False else 0
     username = request.form.get("username").strip()
     password = request.form.get("password").strip()
     vcode = request.form.get("logincode").lower().strip()
     nickname = username.split("@")[0]
     # 先判断账户是否存在
-    lin_userid=instanceUser.findUseridByUsername(username)
-    if len(lin_userid)==0:
+    userid=instanceUser.findUseridByUsername(username)
+    if userid  is None:
         return "login-fail"
+    # 这个时候就要判断目录了以防万一
+    ininUserDir(userid=userid)
     # 再验证验证码对不对
     #  图片验证码
     if vcode != session.get("vcode"):
-        instanceLog.insert_detail(type="验证码错误", target=0, credit=0,userid=lin_userid[0])
+        instanceLog.insert_detail(type="验证码错误", target=0, credit=0,userid=userid)
         return "vcode-error"
     else:
         # 实现登录功能
@@ -102,7 +142,7 @@ def login():
             session["role"] = result[0].role
             # 向log表中添加记录
             # 已经领过登录积分的情况下
-            if whetherAddCredit==0:
+            if instanceLog.check_limit_login_per_day(userid=userid) is False:
                 creditLoginEveryDayGet=0
                 response = make_response("login-pass")
             else:
@@ -112,6 +152,7 @@ def login():
             instanceLog.insert_detail(type="正常登录", target=0, credit=creditLoginEveryDayGet)
             response.set_cookie("username", username, max_age=30 * 24 * 3600)
             response.set_cookie("password", password, max_age=30 * 24 * 3600)
+            myLogger(0, "登录成功",userid=userid)
             return response
         else:
             # 记录下登录失败的话也进行记录

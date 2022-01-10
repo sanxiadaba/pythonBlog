@@ -105,6 +105,16 @@ class Comment(DBase):
         row.opposecount -= 1
         dbsession.commit()
 
-    # 判断是否已赞成或反对该评论
-    # 赞成返回1 反对返回2 不赞同不反对返回0
+    # 根据commentid查询userid
+    def searchUseridByCommentid(self,commentid):
+        return dbsession.query(Comment.userid).filter_by(commentid=commentid).one()[0]
+
+    # 让指定的commentid隐藏
+    def hideCommentByCommentid(self,commentid):
+        data=dbsession.query(Comment).filter_by(commentid=commentid).first()
+        data.hide=1
+        dbsession.commit()
+
+
+
 
