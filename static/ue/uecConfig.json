@@ -14,6 +14,7 @@
   "imageInsertAlign": "none",
   "imageUrlPrefix": "http://127.0.0.1:1234/",
   "imagePathFormat": "../library/ueditor/jsp/upload/image/{yyyy}{mm}{dd}/{time}{rand:6}",
+
   "scrawlActionName": "uploadscrawl",
   "scrawlFieldName": "upfile",
   "scrawlPathFormat": "/ueditor/jsp/upload/image/{yyyy}{mm}{dd}/{time}{rand:6}",
@@ -41,6 +42,7 @@
     ".gif",
     ".bmp"
   ],
+
   "videoActionName": "uploadvideo",
   "videoFieldName": "upfile",
   "videoPathFormat": "/ueditor/jsp/upload/video/{yyyy}{mm}{dd}/{time}{rand:6}",
@@ -112,6 +114,7 @@
     ".md",
     ".xml"
   ],
+
   "imageManagerActionName": "listimage",
   "imageManagerListPath": "./static/upload/",
   "imageManagerListSize": 20,

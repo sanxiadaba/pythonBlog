@@ -1,11 +1,11 @@
 import math
 
-from flask import Blueprint, session, request, abort, render_template
+from flask import Blueprint, session, request, abort, render_template, jsonify
 
 from common.utility import parser_image_url, generate_thumb
-from constant import postArticleCredit, rateCreditForArticle, howCommentInArticle
+from constant import postArticleCredit, rateCreditForArticle, howCommentInArticle, maxUserPostArticleNum
 from database.instanceDatabase import instanceUser, instanceArticle, instanceComment, instanceLog, instanceFavorite
-
+from common.myLog import allLogger
 article = Blueprint("article", __name__)
 
 
@@ -45,7 +45,8 @@ def read(articleid):
         comment_list[i]["agreeOrdisAgreeType"] = instanceLog.whetherAgreeOrDisInThisComment(
             comment_list[i]["commentid"])
     return render_template("article.html", article=dict, is_favorite=is_favorite, prev_next=prev_next,
-                           comment_list=comment_list, total=total, restOfCredit=restOfCredit)
+                           comment_list=comment_list, total=total, restOfCredit=restOfCredit,
+                           articleOfUserid=instanceArticle.searchUseridByArticleid(articleid)[0], articleid=articleid)
 
 
 @article.route("/readAll", methods=["POST"])
@@ -74,14 +75,24 @@ def readAll():
 
 @article.route("/prepost")
 def pre_post():
-    return render_template("write.html")
+    # 填充修改页面的值 当然到底填充空还是对应的文章需要用articleJudge这个参数来判断
+    articleContent = ""
+    articleidModify=session.get("articleidModify")
+    if articleidModify=="0":
+        pass
+    else:
+        articleContent=instanceArticle.searchHeadlineAndContentByArticleid(articleidModify)["content"]
+    return render_template("write.html", maxUserPostArticleNum=maxUserPostArticleNum,articleContent=articleContent)
+
 
 
 # 发布文章的按钮
 @article.route("/article", methods=["POST"])
-def add_article():
+def addArticle():
     headline = request.form.get("headline")
     content = request.form.get("content")
+    if (len(headline) < 5 or len(content) < 100):
+        return "invalided"
     type = int(request.form.get("type"))
     credit = int(request.form.get("credit"))
     if credit is None:
@@ -89,38 +100,47 @@ def add_article():
     drafted = int(request.form.get("drafted"))
     checked = int(request.form.get("checked"))
     articleid = int(request.form.get("articleid"))
-    if session.get("userid") is None:
-        return "perm-denied"
+    userid = session.get("userid")
+    # 再判断今天是否超出了投稿的限制
+    if instanceArticle.judgePostTomany(userid) is True:
+        return "limit-error"
+    # 首先为文章生成缩略图，如果没有，就随机生成一张
+    url_list = parser_image_url(content)
+    if len(url_list) > 0:
+        thumbname = generate_thumb(url_list)
     else:
-        user = instanceUser.find_by_userid(session.get("userid"))
-        if user.role == "editor" or user.role == "admin" or checked == 1:
-            # 权限合格，可以执行发布文章的代码
-            # 首先为文章生成缩略图，如果没有，就随机生成一张
-            url_list = parser_image_url(content)
-            if len(url_list) > 0:
-                thumbname = generate_thumb(url_list)
-            else:
-                # 如果文章中没有图片，那么就根据文章类型指定一个
-                thumbname = "%d.jpg" % (int(type))
-            if articleid == 0:  # 如果为0说明是新文章
-                try:
-                    id = instanceArticle.insert_article(type=type, headline=headline, content=content, credit=credit,
-                                                        drafted=drafted, checked=checked, thumbnail=thumbname)
-                    instanceLog.insert_detail(type="发布文章", target=0, credit=postArticleCredit)
-                    return str(id)
-                except Exception as e:
-                    return "post-fail"
-            else:
-                # 如果是已经添加过的文章，只做修改操作
-                try:
-                    id = instanceArticle.update_article(articleid=articleid, type=type, headline=headline,
-                                                        content=content,
-                                                        credit=credit, thumbnail=thumbname, drafted=drafted,
-                                                        checked=checked)
-                    return str(id)
-                except:
-                    return "post-fail"
-        else:
-            # 如果角色不是作者或管理员，只能投稿，不能正式发布
-            # 只有作者，才能发布一篇不经审核的文章
-            return "perm-denied"
+        # 如果文章中没有图片，那么就根据文章类型指定一个
+        thumbname = "%d.jpg" % (int(type))
+    if int(articleid) == -1:  # 如果为-1说明是新文章 直接进行插入数据库操作
+        try:
+            id = instanceArticle.insert_article(type=type, headline=headline, content=content, credit=credit,
+                                                drafted=drafted, checked=checked, thumbnail=thumbname)
+            instanceLog.insert_detail(type="发布文章", target=0, credit=postArticleCredit)
+            return str(id)
+        except Exception as e:
+            return "post-fail"
+    else:
+        # 如果是已经添加过的文章，只做修改操作
+        try:
+            id = instanceArticle.update_article(articleid=articleid, type=type, headline=headline,
+                                                content=content,
+                                                credit=credit, thumbnail=thumbname, drafted=drafted,
+                                                checked=checked)
+            return str(id)
+        except:
+            return "post-fail"
+
+
+@article.route("/modifyArticle/<int:articleid>", methods=["GET"])
+def modifyArticle(articleid):
+    result = instanceArticle.searchHeadlineAndContentByArticleid(articleid)
+    return result
+
+# 用来接收当前文章的id(修改文章时用的)
+@article.route('/centerVar',methods=['GET','POST']) #在路由中设置允许GET和POST两种方法可以访问
+def centerVar():
+    if request.method == 'GET':
+        return str(session.get("articleidModify"))
+    if request.method == 'POST':
+        session["articleidModify"]=str(request.form.get("articleid"))
+        return "1"

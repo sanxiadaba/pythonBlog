@@ -4,7 +4,7 @@ from flask import session
 from sqlalchemy import Table, func
 
 from common.connect_db import connect_db
-from constant import recommendedNumOfSide
+from constant import recommendedNumOfSide,maxUserPostArticleNum
 from database.users import Users
 
 dbsession, md, DBase = connect_db()
@@ -170,3 +170,22 @@ class Article(DBase):
     # 根据文章id查询作者id
     def searchUseridByArticleid(self, articleid):
         return dbsession.query(Article.userid).filter_by(articleid=articleid).first()
+
+    # 判断这个用户今天的文章发布、投递数是否已经超过了限制
+    def judgePostTomany(self,userid):
+        start = time.strftime("%Y-%m-%d 00:00:00")
+        end = time.strftime("%Y-%m-%d 23:59:59")
+        result = dbsession.query(Article).filter(Article.userid == userid,
+                                                 Article.createtime.between(start, end)).count()
+        if result >= maxUserPostArticleNum:
+            return True
+        else:
+            return False
+
+    # 根据文章的id查询文章的标题和内容
+    def searchHeadlineAndContentByArticleid(self,articleid):
+        result={}
+        row=dbsession.query(Article.headline,Article.content).filter_by(articleid=articleid).first()
+        result["headline"]=row[0]
+        result["content"]=row[1]
+        return result

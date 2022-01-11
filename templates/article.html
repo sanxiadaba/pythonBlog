@@ -433,7 +433,9 @@
             </div>
             <div class="col-12 content_t" id="content_t">
                 {{ article.content | safe }}
-
+            {% if session.get("userid")==articleOfUserid %}
+            <button class="form-control btn-primary col-2" onclick="modifyArticle({{ articleid }})">修改文章</button>
+            {% endif %}
             </div>
 
             <div class="col-12 readall ">

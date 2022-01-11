@@ -347,3 +347,25 @@ function cancle_opposeComment(s,j,n){
             }
         )
 }
+
+
+// 写跳转页面并修改文章的函数
+ function  modifyArticle(articleid){
+    $.post("/centerVar",param="articleid="+articleid,function (data){
+        if (data==="1"){
+            return false
+        }
+    })
+    location.href="/prepost"
+    //  $.get("/modifyArticle/" + articleid, function (data) {
+    //      $("#biaozhu").empty()
+    //      var fillContent=""
+    //      var headline=data["headline"]
+    //      var content=data["content"]
+
+
+    // $("#headline").val(headline)
+    // $("#xiugaiwenzhang").text("修改文章")
+    //  $("#xiugaiwenzhang").click(function (){doPost(articleid,4)})
+
+     }

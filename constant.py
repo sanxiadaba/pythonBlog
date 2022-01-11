@@ -102,3 +102,6 @@ whetherLogPrintInConsole = True
 
 # 超过指定时间后验证码便会失效  # 单位秒
 timeoutOfEcode = 120
+
+# 设置每个用户、编辑每天最多投递、发布文章的数量(编辑是不限制的)
+maxUserPostArticleNum=10
