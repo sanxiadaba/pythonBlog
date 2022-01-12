@@ -610,8 +610,7 @@ function ue_callback(url, state) {
             obj.btn2Highlight("J_sacleBoard");
         };
         img.src = url;
-    }
-    else {
+    } else {
         alert(state);
     }
 }
@@ -654,7 +653,6 @@ function exec(scrawlObj) {
                             editor.execCommand("insertImage", imgObj);
                             dialog.close();
                         } else {
-
                             alert(responseObj.state);
                         }
 

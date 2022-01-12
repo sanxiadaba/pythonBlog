@@ -7,6 +7,7 @@ from database.logs import Log
 from database.users import Users
 from database.credit import Credit
 from database.upload import Upload
+from database.articleLog import ArticleLog
 
 instanceUser = Users()
 instanceArticle = Article()
@@ -15,3 +16,4 @@ instanceComment = Comment()
 instanceFavorite = Favorite()
 instanceCredit=Credit()
 instanceUpload=Upload()
+instanceArticleLog=ArticleLog()

@@ -120,35 +120,7 @@
     <div>
 
 
-<script type="text/javascript">
-function myfun(){ 　
-    $.get("/centerVar",function (data){
-        var PAN=parseInt(data)
-        if (PAN===0){
-            return false
-}
-else {
-    $.get("/modifyArticle/" + PAN, function (data) {
-          var headline=data["headline"]
 
-
-        $("#headline").val(headline)
-        $("#xiugaiwenzhang").text("修改文章")
-        {#$("#xiugaiwenzhang").removeAttr('onclick')#}
-        $("#xiugaiwenzhang").attr("onclick","doPost(" + "\'" +PAN+"\'" + "," + "\'" + 4 + "\'" +")")
-        $("#biaoji1").css("display","none");
-        {#var a = $("#content").text();#}
-        {#$("#xiugaiwenzhang").onclick(function (){doPost(PAN,4)})#}
-})
-}
-    })
-
-
-
-}
-window.onload = myfun;//不要括号
-PAN=0
-</script>
 
 
 <script>
@@ -159,7 +131,6 @@ PAN=0
             var maxUserPostArticleNum=parseInt({{ maxUserPostArticleNum }})
             var maxUserPostArticleNumOfEditor=parseInt({{ maxUserPostArticleNumOfEditor }})
             var maxModifyArticleNum=parseInt({{ maxModifyArticleNum }})
-
             var drafted
             var checked
             {# 草稿#}
@@ -258,7 +229,7 @@ PAN=0
                     else if (t===4){
                         bootbox.alert({title: "信息提示", message: "恭喜你，修改文章成功"});
                         setTimeout(function () {
-                        location.href = "/article/" + data;
+                       window.location.href = "/article/" + j;
                     }, 1000)
                         qingti("修改文章成功")
                     }

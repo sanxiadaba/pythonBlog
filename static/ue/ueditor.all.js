@@ -24338,10 +24338,6 @@
 
                 'contentchange': function () {
 
-                    if (!me.getOpt('enableAutoSave')) {
-                    return;
-                }
-
                     if (!saveKey) {
                         return;
                     }
@@ -29932,12 +29928,12 @@
 
             timer = setTimeout(function () {
                 if (uid) {
-                    // editor.trigger('hidemessage', uid);
+                    editor.trigger('hidemessage', uid);
                 }
-                // uid = editor.trigger('showmessage', {
-                //     content: editor.getLang('autosave.success'),
-                //     timeout: 2000
-                // });
+                uid = editor.trigger('showmessage', {
+                    content: editor.getLang('autosave.success'),
+                    timeout: 2000
+                });
 
             }, 2000)
         })

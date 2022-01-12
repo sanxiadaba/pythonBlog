@@ -1,3 +1,17 @@
+"""
+文件说明：
+
+模块正在开发，用户查看自己信息的后台接口
+
+encoding: utf-8
+@author: Zhang Jiajun
+@contact: jz272381@gmail.com
+@software: Pycharm
+@time: 2022/1/12
+@gituhb: sanxiadaba/pythonBlog
+"""
+
+
 from flask import Blueprint, session, jsonify, render_template
 
 from database.instanceDatabase import instanceArticle

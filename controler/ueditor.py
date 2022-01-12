@@ -1,4 +1,16 @@
-# 这里对ueditor上传图片进行了相关设置
+"""
+文件说明：
+
+本文件主要是对ueditor上传的实现
+比如发送图片、获取内容等
+
+encoding: utf-8
+@author: Zhang Jiajun
+@contact: jz272381@gmail.com
+@software: Pycharm
+@time: 2022/1/12
+@gituhb: sanxiadaba/pythonBlog
+"""
 
 import os
 import time
@@ -10,9 +22,11 @@ from database.instanceDatabase import instanceUpload,instanceLog
 
 ueditor = Blueprint("ueditor", __name__)
 
-imgSavePath=rootDir+"/static/img/upload"
+# 上传文件的路径
+imgSavePath=rootDir+"\\static\\img\\upload"
 
 
+# 具体访问的接口
 @ueditor.route("/uedit", methods=["GET", "POST"])
 @logDanger
 def uedit():
@@ -22,12 +36,14 @@ def uedit():
         return returnUeConf(session.get("userid"))
     else:
         userid = session.get("userid")
+        # 每个用户都有一个属于自己的文件夹，图片上传到这里
         myPictureName = "myPic_" + str(userid)
         myPicturePath = imgSavePath + "\\" + myPictureName
-
+        # 检测前端ueditor发送的请求 不同的请求响应不同的状态
         if request.method == "POST" and request.args.get("action") == "uploadimage":
             if instanceUpload.checkLimitUpload() is True:
                 result = {}
+                # 每天有上传限制、上传次数用完的话前端会提示
                 result["state"] = "每天上传次数已用完"
                 info=f"userid为{userid}的用户因今天的上传次数用完故上传失败"
                 instanceLog.insert_detail(credit=0, target=0, type="上传图片失败", info=info)
@@ -39,16 +55,17 @@ def uedit():
                 suffix = filename.split(".")[-1]  # 获取文章的后缀名（不包括.）
                 newname = time.strftime("%Y%m%d_%H%M%S." + suffix)
                 dirInDir(myPictureName, imgSavePath)
-                print(myPicturePath+"/" + newname)
-                f.save(myPicturePath+"/" + newname)  # 保存图片
+                f.save(myPicturePath+"\\" + newname)  # 保存图片
                 # 对图片进行压缩 并覆盖原始文件
-                source = dest = myPicturePath+"/" + newname
+                source = dest = myPicturePath+"\\" + newname
+                #  压缩图片
                 compress_image(source, dest, 1200)
-                instanceUpload.insert_detail(imgname=myPictureName+"\\" + newname)
-                info=f"userid为{userid}的用户，上传了名称为"+myPictureName+"\\" + newname+"的图片"
+                instanceUpload.insert_detail(imgname=source)
+                info=f"userid为{userid}的用户，上传了路径为"+source+"的图片"
                 instanceLog.insert_detail(credit=0,target=0,type="上传图片",info=info)
                 listLogger(userid,info,[8])
                 result = {}
+                # 返回成功的状态码
                 result["state"] = "SUCCESS"
                 result["url"] = f"static/img/upload/{myPictureName}/{newname}"
                 result['title'] = filename

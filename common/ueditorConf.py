@@ -43,14 +43,16 @@ def returnUeConf(userid):
   "fileManagerListPath": "./static/upload/"+myDirName+"/",
   "fileManagerUrlPrefix": urlPort,
 }
-
+    #  改变json的值
     def changeDic(name,value):
         jsonStr[f"{name}"]=value
 
+    # 批量传入要改变的东西，一键更改
     def doChange(dic):
         for name,value in dic.items():
             changeDic(name,value)
 
+    #  打开文件夹，加载json
     try:
         with open(directory + '\\' + filename) as f:
             jsonStr = json.load(f)

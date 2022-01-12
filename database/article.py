@@ -13,9 +13,7 @@ dbsession, md, DBase = connect_db()
 class Article(DBase):
     __table__ = Table("article", md, autoload=True)
 
-    # 查询所有文章
-    def find_all(self):
-        return dbsession.query(Article).all()
+
 
     # 根据id查询文章<Article,"nickname">
     def find_by_id(self, articleid):
@@ -33,25 +31,25 @@ class Article(DBase):
             .order_by(Article.articleid.desc()).limit(count).offset(start).all()
         return result
 
-    # 查询显示文章地数量
+    # 查询所有能显示的文章的数量
     def get_total_count(self):
         count = dbsession.query(Article).filter(Article.hide == 0, Article.drafted == 0, Article.checked == 1).count()
         return count
 
-    # 进行分页
+    # 查询不同的分页
     def find_by_type(self, type, start, count):
         result = dbsession.query(Users.nickname, Article).join(Users, Users.userid == Article.userid) \
             .filter(Article.hide == 0, Article.drafted == 0, Article.checked == 1, Article.type == type) \
             .order_by(Article.articleid.desc()).limit(count).offset(start).all()
         return result
 
-    # 查看分页的数量
+    # 查看不同分类类型的文章的数量
     def get_count_by_type(self, type):
         count = dbsession.query(Article).filter(Article.hide == 0, Article.drafted == 0, Article.checked == 1,
                                                 Article.type == type).count()
         return count
 
-    # 根据文章标题进行标题模糊搜索
+    # 根据文章标题进行标题模糊搜索（主要用于search时调用）
     def find_by_headline(self, headline, start, count):
         result = dbsession.query(Users.nickname, Article).join(Users, Users.userid == Article.userid) \
             .filter(Article.hide == 0, Article.drafted == 0, Article.checked == 1,
@@ -59,7 +57,7 @@ class Article(DBase):
             .order_by(Article.articleid.desc()).limit(count).offset(start).all()
         return result
 
-    # 统计headline匹配的总数量
+    # 统计headline匹配的总数量（也是服务与搜索）
     def get_count_by_headline(self, headline):
         count = dbsession.query(Article).filter(Article.hide == 0, Article.drafted == 0, Article.checked == 1,
                                                 Article.headline.like("%" + headline + "%")).count()
@@ -72,7 +70,7 @@ class Article(DBase):
             .order_by(Article.articleid.desc()).limit(recommendedNumOfSide[0]).all()
         return result
 
-    # 最多阅读
+    # 最多阅读推荐
     def find_most(self):
         result = dbsession.query(Article.articleid, Article.headline).filter(Article.hide == 0, Article.drafted == 0,
                                                                              Article.checked == 1) \
@@ -134,23 +132,24 @@ class Article(DBase):
 
         return dict
 
-    # 当发表或者着回复评论后，为文章的replycount+1
+    # 为评论的的replycount+1
     def update_replycount(self, articleid):
         row = dbsession.query(Article).filter_by(articleid=articleid).first()
         row.replycount += 1
         dbsession.commit()
 
+
     # 插入一篇新文章
     def insert_article(self, type, headline, content, thumbnail, credit, drafted=0, checked=1):
         now = time.strftime("%Y-%m-%d %H:%M:%S")
-        userid = session.get("userid")
+        userid = int(session.get("userid"))
         # 其他字段在数据库中已经设置好，无需自动插入
-        article = Article(userid=userid, type=type, headline=headline, \
+        articleP = Article(userid=userid, type=type, headline=headline, \
                           content=content, thumbnail=thumbnail, credit=credit, drafted=drafted, checked=checked,
                           createtime=now, updatetime=now)
-        dbsession.add(article)
+        dbsession.add(articleP)
         dbsession.commit()
-        return article.articleid
+        return articleP.articleid
 
     # 根据文章编号更新内容，用于文章编辑或草稿修改 以及草稿的发布
     def update_article(self, articleid, type, headline, content, thumbnail, credit, drafted=0, checked=1):
@@ -170,22 +169,6 @@ class Article(DBase):
     # 根据文章id查询作者id
     def searchUseridByArticleid(self, articleid):
         return dbsession.query(Article.userid).filter_by(articleid=articleid).first()
-
-
-    # 判断这个用户今天的文章发布、投递数是否已经超过了限制
-    def judgePostTomany(self,userid):
-        role=session.get("role")
-        start = time.strftime("%Y-%m-%d 00:00:00")
-        end = time.strftime("%Y-%m-%d 23:59:59")
-        result = dbsession.query(Article).filter(Article.userid == userid,
-                                                 Article.createtime.between(start, end)).count()
-        if result >= maxUserPostArticleNum and role=="user" :
-            return True
-        elif result >= maxUserPostArticleNumOfEditor and role=="editor" :
-            return True
-        else:
-            return False
-
 
     # 根据文章的id查询文章的标题和内容
     def searchHeadlineAndContentByArticleid(self,articleid):

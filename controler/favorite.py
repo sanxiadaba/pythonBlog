@@ -1,3 +1,21 @@
+"""
+文件说明：
+
+本文件主要完成对收藏与取消收藏文章
+主要操作数据库中的favorite文件
+
+
+encoding: utf-8
+@author: Zhang Jiajun
+@contact: jz272381@gmail.com
+@software: Pycharm
+@time: 2022/1/12
+@gituhb: sanxiadaba/pythonBlog
+"""
+
+
+import traceback
+
 from flask import Blueprint, request, session
 
 from common.myLog import listLogger,logDanger,allLogger
@@ -6,7 +24,7 @@ from database.instanceDatabase import instanceFavorite, instanceArticle, instanc
 
 favorite = Blueprint("favorite", __name__)
 
-
+# 收藏文章的函数
 @favorite.route("/favorite", methods=["POST"])
 @logDanger
 def add_favorite():
@@ -31,6 +49,7 @@ def add_favorite():
         return "favorite-fail"
 
 
+# 取消收藏文章的操作 注意这里是delete请求
 @favorite.route("/favorite/<int:articleid>", methods=["DELETE"])
 @logDanger
 def cancel_favorite(articleid):

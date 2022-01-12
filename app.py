@@ -151,7 +151,6 @@ def before():
                 if islogin =="true":
                     if instanceCredit.check_limit_login_per_day(userid) is True:
                         info=f"userid为{user} 昵称为{nickname}的用户每天登录成功,并且领取{loginEvereDayCredit}积分，这是自动登录"
-                        print(1)
                         instanceCredit.insert_detail(type="每日登录",target=0,credit=loginEvereDayCredit,info=info)
                         listLogger(userid,info,[0])
                         # 用来判定是否每天自动登录，然后自己领积分

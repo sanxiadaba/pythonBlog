@@ -1,3 +1,18 @@
+"""
+文件说明：
+
+本界面主要是对评论相关内容的控制
+比如加载评论、赞成、反对、取消赞成评论
+主要对数据库的comment表进行操作
+
+encoding: utf-8
+@author: Zhang Jiajun
+@contact: jz272381@gmail.com
+@software: Pycharm
+@time: 2022/1/12
+@gituhb: sanxiadaba/pythonBlog
+"""
+
 import traceback
 
 from flask import Blueprint, request, session, jsonify
@@ -27,11 +42,9 @@ def addOriginComment():
         # 没人每天只能评论一定次数
         if not instanceComment.check_limit_per_day():
             try:
-
                 # 评论成功后，更新积分明细和剩余积分，及文章的回复数量
                 info = f"userid为{userid}的用户 对作者id为{authorid}文章id为{articleid}进行了回复,并且获取{replyAndAddCommentCredit}积分"
                 instanceComment.insert_comment(articleid, content,info=info)
-
                 instanceCredit.insert_detail(type="添加评论", target=articleid, credit=replyAndAddCommentCredit,info=info)
                 instanceLog.insert_detail(type="文章被评论",target=articleid,credit=0,info=info)
                 instanceArticle.update_replycount(articleid)
@@ -53,7 +66,7 @@ def addOriginComment():
         return "not-login"
 
 
-# 回复原始评论
+# 回复原始评论（回复其它人的评论，最多只能“套娃”到这，即回复原始评论的评论不可被评论）
 @comment.route("/reply", methods=["POST"])
 @logDanger
 def reply():
@@ -62,18 +75,20 @@ def reply():
     content = request.form.get("content").strip()
     ipaddr = request.remote_addr
     userid=session.get("userid")
+    # 通过commentid获取原作者id
     authorid=instanceComment.searchUseridByCommentid(commentid)
+    # 通过userid获取作者的昵称 方便后面的写日志
     authorNickname=instanceUser.searchNicknameByUserid(authorid)[0]
     if len(content) < 5 or len(content) > 1000:
         return "content-invaild"
-    # 判断每天的评论限制
+    # 判断每天的评论限制 （每天的评论次数也有限制，这些都可以在constant文件修改）
     if not instanceComment.check_limit_per_day():
         try:
             info=f"userid为{userid}的用户，在articleid为{articleid}的文章中回复了userid为{authorid},昵称为{authorNickname}的commentid为{commentid}的评论"
             instanceComment.insert_reply(articleid=articleid, commentid=commentid, ipaddr=ipaddr, content=content,info=info)
             instanceCredit.insert_detail(type="回复原始评论", target=articleid, credit=replyAndAddCommentCredit, info=info)
             instanceLog.insert_detail(type="评论被回复", target=articleid, credit=0, info=info)
-
+            # 回复原始评论也算文章的评论
             instanceArticle.update_replycount(articleid)
             listLogger(userid, info, [7, 5])
             # 接下来是被评论人对应的log日志
@@ -102,6 +117,9 @@ def comment_page(articleid, page):
         list[i]["agreeOrdisAgreeType"] = instanceLog.whetherAgreeOrDisInThisComment(list[i]["commentid"])
     return jsonify(list)
 
+"""
+下面四个函数主要是执行赞同、反对评论以及取消赞同、反对评论的操作
+"""
 
 # 为赞同加一
 @comment.route("/agreeComment", methods=["POST"])
@@ -206,7 +224,7 @@ def cancle_disagreeComment():
         return "0"
 
 
-#   隐藏评论
+#   隐藏评论  即将原评论的hide值变为1
 @comment.route("/hideComment", methods=["POST"])
 def hideComment():
     commentid = request.form.get("commentid")

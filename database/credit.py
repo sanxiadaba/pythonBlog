@@ -91,7 +91,7 @@ class Credit(DBase):
             dbsession.add(creditP1)
             dbsession.commit()
 
-    # 判断用户是否已经购买了该积分
+    # 判断用户是否已经购买了该文章，已经购买的话，不会显示再让其购买
     def check_paid_article(self, articleid):
         result = dbsession.query(Credit).filter_by(userid=session.get("userid"), target=articleid).all()
         if len(result) > 0:

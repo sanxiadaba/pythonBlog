@@ -366,15 +366,40 @@ function cancle_opposeComment(s,j,n){
         }
     })
     location.href="/prepost"
-    //  $.get("/modifyArticle/" + articleid, function (data) {
-    //      $("#biaozhu").empty()
-    //      var fillContent=""
-    //      var headline=data["headline"]
-    //      var content=data["content"]
-
-
-    // $("#headline").val(headline)
-    // $("#xiugaiwenzhang").text("修改文章")
-    //  $("#xiugaiwenzhang").click(function (){doPost(articleid,4)})
-
      }
+
+// 自动加载的函数
+// load_1函数用来自动登录
+ function load_1(){ 　
+    $.get("/toTransmitParam",function (param){
+        var loginEvereDayCredit=param["loginEvereDayCredit"]
+        $.post("/judgeAutoLogin",function (data){
+        if (data==="1"){
+            bootbox.alert({title: "信息提示", message: "恭喜你，登录成功"});
+                qingti("每天登录成功，积分+"+loginEvereDayCredit)
+                setTimeout("location.reload();", 2000)
+}
+    })
+
+    })
+
+}
+
+// load_2函数用来判定修改文章的值（如果作者点击的是修改按钮的话）
+function load_2(){ 　
+    $.get("/centerVar",function (data){
+        var PAN=parseInt(data)
+        if (PAN===0){
+            return false
+}
+else {
+    $.get("/modifyArticle/" + PAN, function (data) {
+          var headline=data["headline"]
+        $("#headline").val(headline)
+        $("#xiugaiwenzhang").text("修改文章")
+        $("#xiugaiwenzhang").attr("onclick","doPost(" + "\'" +PAN+"\'" + "," + "\'" + 4 + "\'" +")")
+        $("#biaoji1").css("display","none");
+})
+}
+    })
+}

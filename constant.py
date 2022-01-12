@@ -112,3 +112,6 @@ maxUserPostArticleNumOfEditor=20
 
 #设置每天最多的修改文章次数
 maxModifyArticleNum=10
+
+# 每个人每天最多上传图片的数量
+maxUploadPicNum=20

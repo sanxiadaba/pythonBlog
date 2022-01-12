@@ -81,6 +81,7 @@ logUserLog = logDir + "\\" + "userLog"
 logAdminLog = logDir + "\\" + "adminLog"
 
 
+
 # 在一开始，就创建allLog与ErrorLog文件夹
 def ininLogDir():
     # 根目录下是否有logs文件夹，有的话pass，没有的话新建一个
@@ -116,7 +117,7 @@ def ininUserDir(userid=None):
     # 存放用户的目录路径
     logUserLogLin = logUserLog + "\\" + f"userLog_{useridInMyLog}"
 
-    # 用户注册、登录、登出的表  0
+    # 用户注册、登录、登出、找回密码的表  0
     dirInDir(userLogNameList[0], logUserLogLin)
     # 购买文章的记录   1
     dirInDir(userLogNameList[1], logUserLogLin)
@@ -128,15 +129,15 @@ def ininUserDir(userid=None):
     dirInDir(userLogNameList[4], logUserLogLin)
     # 积分变化的记录   5
     dirInDir(userLogNameList[5], logUserLogLin)
-    # 自己文章被阅读、购买、评论的记录    6
+    # 自己文章被阅读、被评论、收藏、取消收藏的记录    6
     dirInDir(userLogNameList[6], logUserLogLin)
     # 评论的记录 7
     dirInDir(userLogNameList[7], logUserLogLin)
     # 所有操作的记录   8
     dirInDir(userLogNameList[8], logUserLogLin)
-    # 赞同、反对评论的记录   9
+    # 赞同、反对、隐藏评论的记录   9
     dirInDir(userLogNameList[9], logUserLogLin)
-    # 自己评论被赞同、反对的记录   10
+    # 自己评论被赞同、反对、回复的记录   10
     dirInDir(userLogNameList[10], logUserLogLin)
 
 

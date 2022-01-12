@@ -11,7 +11,7 @@ dbsession, md, DBase = connect_db()
 class Favorite(DBase):
     __table__ = Table("favorite", md, autoload=True)
 
-    # 插入文章 收藏数据
+    # 新增一条收藏数据
     def insert_favorite(self, articleid):
         row = dbsession.query(Favorite).filter_by(articleid=articleid, userid=session.get("userid")).first()
         if row is not None:
@@ -23,13 +23,13 @@ class Favorite(DBase):
             dbsession.add(favorite)
         dbsession.commit()
 
-    # 取消收藏
+    # 取消收藏文章
     def cancel_favorite(self, articleid):
         row = dbsession.query(Favorite).filter_by(articleid=articleid, userid=session.get("userid")).first()
         row.canceled = 1
         dbsession.commit()
 
-    # 判断是否已经被收藏
+    # 判断是否已经已经被收藏
     def check_favorite(self, articleid):
         row = dbsession.query(Favorite).filter_by(articleid=articleid, userid=session.get("userid")).first()
         if row is None:

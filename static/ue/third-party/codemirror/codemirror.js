@@ -32,7 +32,7 @@ var CodeMirror = (function () {
             '<div class="CodeMirror-lines"><div style="position: relative">' +
             '<div style="position: absolute; width: 100%; height: 0; overflow: hidden; visibility: hidden"></div>' +
             '<pre class="CodeMirror-cursor">&#160;</pre>' + // Absolutely positioned blinky cursor
-            '<div id="qwertyty"></div>' + // This DIV contains the actual code
+            '<div></div>' + // This DIV contains the actual code
             '</div></div></div></div></div>';
         if (place.appendChild) place.appendChild(wrapper); else place(wrapper);
         // I've never seen more elegant code in my life.

@@ -14,17 +14,18 @@ dbsession, md, DBase = connect_db()
 class Users(DBase):
     __table__ = Table("users", md, autoload=True)
 
-    # 登录校验
+    # 登录校验，查看账户对应的密码是否正确
     def find_by_username(self, username):
         result = dbsession.query(Users).filter_by(username=username).all()
         return result
 
+    # 根userid返回作者的相关信息
     def find_by_userid(self, userid):
         row = dbsession.query(Users).filter_by(userid=userid).first()
         return row
 
     # 实现注册，首次注册只需要用户名和密码
-    # 通常用户不会填写太多资料，后续可以完善
+    # 通常用户不会填写太多资料，后续可以在用户中心完善
     def do_register(self, username, password):
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         nickname = username.split("@")[0]  # 默认账号前缀作为昵称
@@ -35,17 +36,20 @@ class Users(DBase):
         dbsession.commit()
         return user
 
-    # 修改用户剩余积分
+    # 修改用户积分
     def update_credit(self, credit, userid):
         user = dbsession.query(Users).filter_by(userid=userid).one()
         user.credit = int(user.credit) + int(credit)
         dbsession.commit()
 
-    # 查看剩余的积分
+    # 查看用户剩余的积分
     def findRestCredit(self):
         userid = session.get("userid")
-        restOfCredit = dbsession.query(Users.credit).filter_by(userid=userid).one()[0]
-        return restOfCredit
+        restOfCredit = dbsession.query(Users.credit).filter_by(userid=userid).first()
+        if restOfCredit is None:
+            return None
+        else:
+            return restOfCredit[0]
 
     # 根据user全名查询对应的id
     def findUseridByUsername(self, username):

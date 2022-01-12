@@ -44,13 +44,3 @@ class Log(DBase):
                 return 0
         pass
 
-    def whetherLimitModifyArticle(self,articleid):
-        start = time.strftime("%Y-%m-%d 00:00:00")
-        end = time.strftime("%Y-%m-%d 23:59:59")
-        result=dbsession.query(Log).filter(Log.articleid == articleid,
-                                                Log.createtime.between(start, end)).count()
-        if result>=maxModifyArticleNum:
-            return True
-        else:
-            return False
-

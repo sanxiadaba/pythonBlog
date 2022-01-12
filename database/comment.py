@@ -25,12 +25,13 @@ class Comment(DBase):
         dbsession.add(comment)
         dbsession.commit()
 
-    # 根据文章编号查询所有评论
+    # 根据文章编号查询其所有评论
     def find_by_articleid(self, articleid):
         result = dbsession.query(Comment).filter_by(articleid=articleid, hide=0, replyid=0).all()
         return result
 
     # 根据用户编号和日期进行查询是否已经超过一定条数的限制
+    # （每天的评论次数也是有限的）
     def check_limit_per_day(self):
         start = time.strftime("%Y-%m-%d 00:00:00")
         end = time.strftime("%Y-%m-%d 23:59:59")
