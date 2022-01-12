@@ -7,6 +7,9 @@ config_mysql=mysql://root:root@120.28.243.198:3306(这个地址不存在，只�
 """
 config_mysql = "root@localhost:3306"
 
+# 设置所在数据库的名称(下面是我测试用的数据库的名称，具体项目需要更改)
+databaseName="myBlog"
+
 # 设置端口号
 portNum = 1234
 
@@ -103,5 +106,9 @@ whetherLogPrintInConsole = True
 # 超过指定时间后验证码便会失效  # 单位秒
 timeoutOfEcode = 120
 
-# 设置每个用户、编辑每天最多投递、发布文章的数量(编辑是不限制的)
+# 设置每个用户、编辑每天最多投稿、发布文章的数量
 maxUserPostArticleNum=10
+maxUserPostArticleNumOfEditor=20
+
+#设置每天最多的修改文章次数
+maxModifyArticleNum=10

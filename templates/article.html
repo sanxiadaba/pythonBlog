@@ -5,7 +5,7 @@
         var obj = document.getElementById('content_t');
         var total_height = obj.scrollHeight;//文章总高度
         var show_height = 300;//定义原始显示高度
-        var restOdCredit = parseInt("{{ restOfCredit }}")
+        var restOfCredit = parseInt("{{ restOfCredit }}")
         if (xiaohao === 0 || "{{article.paid}}" === "true") {
             if (total_height > show_height) {
                 btn.style.display = 'block';
@@ -17,7 +17,7 @@
             if ("{{article.paid}}" === "false") {
                 a = confirm("确定消耗" + xiaohao + "积分来阅读文章吗？"); //在页面上弹出对话框
                 if (a === true) {
-                    if (xiaohao > restOdCredit) {
+                    if (xiaohao > restodCredit) {
                         bootbox.alert({title: "错误提示", message: "积分不足，无法阅读文章"})
                         qingti("积分不足")
                         return false
@@ -101,11 +101,12 @@
                 bootbox.alert({title: "错误提示", message: "您当天最多只能评论五次"});
 
             } else if (data == "add-pass") {
-                qingti("发表评论成功，积分+2")
-                setTimeout(() => {
-                    undefined
-                    location.reload();
-                }, 2000);
+                $.get("/replyAndAddCommentCredit",function (data){
+                    var replyAndAddCommentCredit=data["replyAndAddCommentCredit"]
+                qingti("回复评论成功，积分+"+replyAndAddCommentCredit)
+                setTimeout("location.reload();", 2000)
+
+    })
 
 
             } else {
@@ -147,7 +148,12 @@
             } else if (data == "reply-limit") {
                 bootbox.alert({title: "错误提示", message: "当天已用完五次评论的限额"});
             } else if (data == "reply-pass") {
-                qingti("回复评论成功，积分+2");
+                $.get("/replyAndAddCommentCredit",function (data){
+                    var replyAndAddCommentCredit=data["replyAndAddCommentCredit"]
+                qingti("回复评论成功，积分+"+replyAndAddCommentCredit)
+                setTimeout("location.reload();", 2000)
+
+    })
                 gotoPage(articleid,PAGE)
             {#    再跳转到进行评论的那一页#}
             } else if (data == "reply-fail") {

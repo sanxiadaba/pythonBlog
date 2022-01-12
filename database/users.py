@@ -38,7 +38,7 @@ class Users(DBase):
     # 修改用户剩余积分
     def update_credit(self, credit, userid):
         user = dbsession.query(Users).filter_by(userid=userid).one()
-        user.credit = int(user.credit) + credit
+        user.credit = int(user.credit) + int(credit)
         dbsession.commit()
 
     # 查看剩余的积分
@@ -57,7 +57,7 @@ class Users(DBase):
 
     # 根据用户的id查询其昵称
     def searchNicknameByUserid(self, userid):
-        return dbsession.query(Users.nickname).filter_by(userid=userid).one()
+        return dbsession.query(Users.nickname).filter_by(userid=userid).first()
 
     # 修改密码
     def modifyUserPassword(self, userid, newPassword):
@@ -65,3 +65,4 @@ class Users(DBase):
         user = dbsession.query(Users).filter_by(userid=userid).first()
         user.password = newPassword
         dbsession.commit()
+

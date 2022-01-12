@@ -226,6 +226,24 @@
         </div>
     </div>
 </div>
+<script type="text/javascript">
+function myfun(){ 　
+    $.get("/toTransmitParam",function (param){
+        var loginEvereDayCredit=param["loginEvereDayCredit"]
+        $.post("/judgeAutoLogin",function (data){
+        if (data==="1"){
+            bootbox.alert({title: "信息提示", message: "恭喜你，登录成功"});
+                qingti("每天登录成功，积分+"+loginEvereDayCredit)
+                setTimeout("location.reload();", 2000)
+}
+    })
+
+    })
+
+}
+window.onload = myfun;//不要括号
+</script>
+
 
 </body>
 </html>

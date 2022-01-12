@@ -1,15 +1,16 @@
 import os
+import traceback
 from collections import defaultdict
 
 import pymysql
 from flask import Flask, render_template, request, session
 from flask_sqlalchemy import SQLAlchemy
 
-from common.myLog import ininLogDir
-from constant import config_mysql
+from common.myLog import ininLogDir,logDanger,allLogger
+from constant import config_mysql, replyAndAddCommentCredit, regGiveCredit, postArticleCredit
 from constant import sessionExpirationTime, sessionRestart, classification, portNum, creditListForReleaseArticle, \
     shufflingFigurePicture, shufflingFigureLink, indexLogoPicture, indexLogoPictureSize, indexAboveStr, \
-    whetherSaveShufflingFigure
+    whetherSaveShufflingFigure,databaseName,emailAccount,loginEvereDayCredit
 
 # 链接数据库的一些设置，防止报错
 pymysql.install_as_MySQLdb()
@@ -17,7 +18,7 @@ pymysql.install_as_MySQLdb()
 app = Flask(__name__)
 # 设置
 # 连接数据库
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://" + config_mysql + "/myBlog?charset=utf8"
+app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://" + config_mysql + f"/{databaseName}?charset=utf8"
 # 如果设置成 True (默认情况)，Flask-SQLAlchemy 将会追踪对象的修改并且发送信号。这需要额外的内存， 如果不必要的可以禁用它。
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 #  设置自动回收时间
@@ -42,25 +43,24 @@ app.config['PERMANENT_SESSION_LIFETIME'] = sessionExpirationTime
 db = SQLAlchemy(app)
 
 
-# 主动抛出500异常
-# @app.route("/error-500")
-# def error_500():    # 这里不要传参
-#     return abort(500)
 
 # 404处理
 @app.errorhandler(404)
+@logDanger
 def page_not_find(e):
-    return render_template("erroe-404.html")
+    return render_template("erroe-404.html",myemail=emailAccount)
 
 
 # 500处理
 @app.errorhandler(500)
+@logDanger
 def page_not_find(e):
-    return render_template("error-500.html")
+    return render_template("error-500.html",myemail=emailAccount)
 
 
 # 把文章的类别”注册“到全局函数中
 @app.context_processor
+@logDanger
 def gettype():
     type = {}
     for i, j in enumerate(classification):
@@ -71,6 +71,7 @@ def gettype():
 
 # 把发布文章作者的可选积分注册到全局函数中
 @app.context_processor
+@logDanger
 def listOfCredit():
     type = {}
     for i in creditListForReleaseArticle:
@@ -80,6 +81,7 @@ def listOfCredit():
 
 #  这里将logo、轮播图等传到前端
 @app.context_processor
+@logDanger
 def manyParameter():
     type = defaultdict(list)
     for i in range(len(shufflingFigurePicture)):
@@ -126,6 +128,7 @@ app.jinja_env.filters.update(my_truncate=my_truncate, numAddNum=numAddNum)
 
 # 定义全局拦截器,实现自动登录
 @app.before_request
+@logDanger
 def before():
     url = request.path
     pass_list = ["/user", "/login", "logout"]
@@ -141,9 +144,45 @@ def before():
                 session["username"] = username
                 session["userid"] = result[0].userid
                 nickname = username.split("@")[0]
+                islogin = session.get("islogin")
+                userid = session.get("userid")
                 session["nickname"] = nickname
                 session["role"] = result[0].role
+                if islogin =="true":
+                    if instanceCredit.check_limit_login_per_day(userid) is True:
+                        info=f"userid为{user} 昵称为{nickname}的用户每天登录成功,并且领取{loginEvereDayCredit}积分，这是自动登录"
+                        print(1)
+                        instanceCredit.insert_detail(type="每日登录",target=0,credit=loginEvereDayCredit,info=info)
+                        listLogger(userid,info,[0])
+                        # 用来判定是否每天自动登录，然后自己领积分
+                        session["judgeLin"]="1"
+                    else:
+                        pass
 
+@app.route("/judgeAutoLogin",methods=["POST"])
+@logDanger
+def judgeAutoLogin():
+    try:
+        if session.get("judgeLin")=="1":
+            return "1"
+        else:
+            return "0"
+    except:
+        e=traceback.format_exc()
+        allLogger(0,e)
+    finally:
+        session["judgeLin"]="0"
+
+# 一个传递参数的接口
+@app.route("/toTransmitParam",methods=["GET"])
+@logDanger
+def toTransmitParam():
+    param={}
+    param["loginEvereDayCredit"]=loginEvereDayCredit
+    param["replyAndAddCommentCredit"]=replyAndAddCommentCredit
+    param["regGiveCredit"]=regGiveCredit
+    param["postArticleCredit"]=postArticleCredit
+    return param
 
 #  用来释放没连接的dbsession 防止出现阻塞
 @app.teardown_appcontext
@@ -154,40 +193,28 @@ def shutdown_session(exception=None):
 
 #  主运行程序
 if __name__ == '__main__':
-    # 初始化logs（检查log能工作的一些必要目录）
-    ininLogDir()
-
     # 导入实例化的数据库操作类
-    from database.instanceDatabase import instanceUser
-
+    from database.instanceDatabase import instanceUser,instanceCredit
+    from common.myLog import listLogger
     # 注册flask蓝图
     from controler.index import index
-
-    app.register_blueprint(index)
-
     from controler.user import user
-
-    app.register_blueprint(user)
-
     from controler.article import article
-
-    app.register_blueprint(article)
-
     from controler.favorite import favorite
-
-    app.register_blueprint(favorite)
-
     from controler.comment import comment
-
-    app.register_blueprint(comment)
-
     from controler.ueditor import ueditor
-
-    app.register_blueprint(ueditor)
-
     from controler.userManage import userManage
 
+    app.register_blueprint(index)
+    app.register_blueprint(user)
+    app.register_blueprint(article)
+    app.register_blueprint(favorite)
+    app.register_blueprint(comment)
+    app.register_blueprint(ueditor)
     app.register_blueprint(userManage)
+
+    # 初始化logs（检查log能工作的一些必要目录）
+    ininLogDir()
 
     #  以debug模式在指定端口启动
     app.run(debug=True, port=portNum)

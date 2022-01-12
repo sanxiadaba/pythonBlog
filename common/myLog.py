@@ -1,7 +1,27 @@
+"""
+文件说明：
+
+本文件主要用来设置日志
+其对又对loguru进行了两次封装，可以根据登录者的信息生成对应文件夹
+（文件夹不存在的话会自动创建）
+然后将log日志打印到相应的地方
+
+encoding: utf-8
+@author: Zhang Jiajun
+@contact: jz272381@gmail.com
+@software: Pycharm
+@time: 2022/1/12
+@gituhb: sanxiadaba/pythonBlog
+"""
+
 # 用来进行项目日志的一些基本设置
 import os
-
-from flask import session
+# 导入这个包是用来消除装饰器的”不良影响“
+from functools import wraps
+# 导入追踪函数哪里出错的库，这样打印的日志更详细
+import traceback
+from flask import session, render_template, request, abort
+# 本项目使用的日志系统是基于loguru进行封装得到的
 from loguru import logger
 
 from constant import compressedFormat, clearLogTime, logSize, whetherLogPrintInConsole
@@ -108,7 +128,7 @@ def ininUserDir(userid=None):
     dirInDir(userLogNameList[4], logUserLogLin)
     # 积分变化的记录   5
     dirInDir(userLogNameList[5], logUserLogLin)
-    # 自己文章被阅读、被评论的记录    6
+    # 自己文章被阅读、购买、评论的记录    6
     dirInDir(userLogNameList[6], logUserLogLin)
     # 评论的记录 7
     dirInDir(userLogNameList[7], logUserLogLin)
@@ -130,14 +150,17 @@ def myLogger(n, info, userid=None):
     logger.add(logFile, rotation=logSize, compression=compressedFormat, retention=clearLogTime)
     logger.info(info)
     logger.remove()
-    if n == 8:
-        return
-    else:
-        myLogger(8, info, userid=userid)
-        if n == 10:
-            return
-        else:
-            allLogger(1, info)
+
+# 对myLogger又封装了一层，方便控制写入多个文件
+# 日志在放入特定的文件夹后，还会向自己的alllog以及总的alllog写入一份
+def listLogger(userid,info,*logList):
+    logList=logList[0]
+    for logNum in logList:
+        info=info+f" ip地址为{request.remote_addr}"
+        myLogger(logNum,info, userid)
+    if logList[0]!=8:
+        myLogger(8,info,userid)
+    allLogger(1,info)
 
 
 # 向/logs 目录下的 allLogs errorLog 添加日志
@@ -158,12 +181,15 @@ def allLogger(n, info):
         allLogger(1, info)
 
 
-# 错误信息的装饰器
+# 错误信息的装饰器 注意这里要再加上一层wraps函数用来抵消装饰器使用过中的负面影响
 def logDanger(func):
+    @wraps(func)
     def logDannerFun(*args, **kwargs):
         try:
-            func(*args, **kwargs)
-        except Exception as e:
+            return func(*args, **kwargs)
+        except:
+            e=traceback.format_exc()
+            # 打印错误日志并抛出异常
             allLogger(0, e)
-
+            return abort(404)
     return logDannerFun

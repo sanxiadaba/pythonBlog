@@ -1,7 +1,16 @@
+"""
+文件说明：
+这里是连接sqlalchemy数据库的一些设置（都是一些固定的写法）
+
+encoding: utf-8
+@author: Zhang Jiajun
+@contact: jz272381@gmail.com
+@software: Pycharm
+@time: 2022/1/12
+@gituhb: sanxiadaba/pythonBlog
+"""
+
 from sqlalchemy import MetaData
-
-
-# 这里是连接数据库的一些设置（基本上都是一些固定的东西）
 
 def connect_db():
     from app import db

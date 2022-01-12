@@ -157,20 +157,27 @@ PAN=0
             var headline = $.trim($("#headline").val());
             var contentPlain = UE.getEditor("content").getContentTxt();
             var maxUserPostArticleNum=parseInt({{ maxUserPostArticleNum }})
+            var maxUserPostArticleNumOfEditor=parseInt({{ maxUserPostArticleNumOfEditor }})
+            var maxModifyArticleNum=parseInt({{ maxModifyArticleNum }})
+
             var drafted
             var checked
+            {# 草稿#}
             if (t===1){
                 drafted=1
                 checked=0
             }
+            {#编辑投递#}
             else if(t===2){
                 drafted=0
                 checked=1
             }
+            {#投递文章#}
             else if (t===3){
                 drafted=0
                 checked=0
             }
+            {#修改文章#}
             else if(t===4){
                 drafted=0
                 checked=1
@@ -189,7 +196,7 @@ PAN=0
             param += "&content=" + encodeURIComponent(UE.getEditor("content").getContent());
             param += "&type=" + $("#type").val();
             param += "&credit=" + $("#credit").val();
-            param += "&drafted="+drafted+"&checked="+checked+"&articleid=" + j;
+            param += "&drafted="+drafted+"&checked="+checked+"&articleid=" + j+"&judgeType="+t;
             bootbox.confirm({
     title: "操作提示",
     message: "确认执行该操作",
@@ -211,9 +218,18 @@ PAN=0
 
                         bootbox.alert({title: "错误提示", message: "保存文章过程中出现错误，请联系管理员"});
                 }
-                else if(data==='limit-error'){
+                else if(data==='limit-error-1'){
+                        bootbox.alert({title: "错误提示", message: "保存草稿失败，每天最多保存"+maxUserPostArticleNum+"次，敬请谅解"});
+                    }
+                else if(data==='limit-error-2'){
+                        bootbox.alert({title: "错误提示", message: "发布文章失败，编辑每天最多发布文章数量为"+maxUserPostArticleNumOfEditor+"次，敬请谅解"});
+                    }
+                else if(data==='limit-error-3'){
                         bootbox.alert({title: "错误提示", message: "每天最多投稿"+maxUserPostArticleNum+"次，敬请谅解"});
                     }
+                else if (data==="modify-limited"){
+                    bootbox.alert({title: "错误提示", message: "每天最多修改文章数量为"+maxModifyArticleNum+"次，敬请谅解"});
+                }
                 else{
                     if (t===1){
                         bootbox.alert({title: "信息提示", message: "保存草稿成功"});
@@ -224,15 +240,26 @@ PAN=0
                         setTimeout(function () {
                         location.href = "/article/" + data;
                     }, 1000)
-                    qingti("发布文章成功，已+10分")
+                    $.get("/toTransmitParam",function (data){
+                    var postArticleCredit=data["postArticleCredit"]
+                qingti("发布文章成功，已增加"+postArticleCredit+"积分")
+
+    })
                     }
                     else if (t===3){
                         bootbox.alert({title: "信息提示", message: "投稿成功，请等待管理员审核"});
-                        qingti("投稿成功，已+10分")
+                        $.get("/replyAndAddCommentCredit",function (data){
+                    var postArticleCredit=data["postArticleCredit"]
+                qingti("投稿成功，已增加"+postArticleCredit+"积分")
+
+    })
                         setTimeout("location.reload();", 1500)
                     }
                     else if (t===4){
-                        bootbox.alert({title: "信息提示", message: "修改文章成功"});
+                        bootbox.alert({title: "信息提示", message: "恭喜你，修改文章成功"});
+                        setTimeout(function () {
+                        location.href = "/article/" + data;
+                    }, 1000)
                         qingti("修改文章成功")
                     }
             }

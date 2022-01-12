@@ -1,6 +1,6 @@
 import time
 
-from flask import session
+from flask import session,request
 from sqlalchemy import Table
 
 from common.connect_db import connect_db
@@ -14,11 +14,14 @@ dbsession, md, DBase = connect_db()
 class Comment(DBase):
     __table__ = Table("comment", md, autoload=True)
 
-    # 新增一条评论
-    def insert_comment(self, articleid, content, ipaddr):
+    # 新增一条原始评论
+    def insert_comment(self, articleid, content,info=None):
+        if info is not None:
+            info=info
+        ipaddr=request.remote_addr
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         comment = Comment(userid=session.get("userid"), articleid=articleid, content=content,
-                          ipaddr=ipaddr, createtime=now, updatetime=now)
+                          ipaddr=ipaddr, createtime=now, updatetime=now,info=info)
         dbsession.add(comment)
         dbsession.commit()
 
@@ -45,11 +48,13 @@ class Comment(DBase):
             .order_by(Comment.commentid.desc()).limit(count).offset(start).all()
         return result
 
-    # 新增一条回复
-    def insert_reply(self, articleid, commentid, content, ipaddr):
+    # 新增一条原始评论的回复
+    def insert_reply(self, articleid, commentid, content, ipaddr,info=None):
+        if info is not  None:
+            info=info
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         comment = Comment(userid=session.get("userid"), articleid=articleid, content=content, ipaddr=ipaddr,
-                          replyid=commentid, createtime=now, updatetime=now)
+                          replyid=commentid, createtime=now, updatetime=now,info=info)
         dbsession.add(comment)
         dbsession.commit()
 
@@ -114,3 +119,6 @@ class Comment(DBase):
         data = dbsession.query(Comment).filter_by(commentid=commentid).first()
         data.hide = 1
         dbsession.commit()
+
+
+

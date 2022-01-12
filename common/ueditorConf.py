@@ -1,7 +1,23 @@
+"""
+文件说明：
+此文件用来修改ueitor的值（为了让ueitor适应项目参数的变化）
+
+
+encoding: utf-8
+@author: Zhang Jiajun
+@contact: jz272381@gmail.com
+@software: Pycharm
+@time: 2022/1/12
+@gituhb: sanxiadaba/pythonBlog
+"""
+
 import json
+import traceback
+
 from common.myLog import allLogger,rootDir
 from constant import portNum
 
+# 核心作用是读取指定的json文件并且更改一些字段，比如说端口号，存放目录
 def returnUeConf(userid):
     myDirName="myPic_" + str(userid)
     urlPort=f"http://127.0.0.1:{portNum}/"
@@ -40,7 +56,8 @@ def returnUeConf(userid):
             jsonStr = json.load(f)
             doChange(dic)
             return json.dumps(jsonStr)
-    except Exception as e:
+    except:
+        e=traceback.format_exc()
         allLogger(0,e)
 
 

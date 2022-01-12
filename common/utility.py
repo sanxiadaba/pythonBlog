@@ -1,3 +1,17 @@
+"""
+文件说明：
+这个文件放一些比较通用，能独立运行的一些函数
+比如发送邮件、生成压缩图片、压缩图片、生成加密转换md5等
+一些公共的功能的组件部分
+
+encoding: utf-8
+@author: Zhang Jiajun
+@contact: jz272381@gmail.com
+@software: Pycharm
+@time: 2022/1/12
+@gituhb: sanxiadaba/pythonBlog
+"""
+
 import random
 import string
 import time
@@ -14,6 +28,7 @@ from flask import request
 from constant import emailAdmit, emailAccount, portNum
 
 
+# 生成验证码（带干扰线）
 class ImageCode:
     #  生成随机字符串
     def gen_text(self):
@@ -63,6 +78,7 @@ class ImageCode:
         return code, bstring
 
 
+# 发送邮件
 def send_email(receiver, ecode, n):
     sender = emailAccount
     # 定义发送文件的内容
@@ -84,12 +100,13 @@ def send_email(receiver, ecode, n):
     smtpObj.quit()
 
 
+# 随机生成六位数的邮箱注册或找回密码的验证码
 def gen_email_code():
     list = random.sample(string.ascii_letters + string.digits, 6)
     return "".join(list)
 
 
-# SQLALchemy 连接查询的两张表转化为 [(),()]
+# SQLALchemy 连接查询的两张表转化为 [(),()] （操作连接查询和需要传给前台json数据时用的）
 def model_join_list(result):
     list = []
     for obj1, obj2 in result:
@@ -119,7 +136,7 @@ def model_list(result):
     return list
 
 
-# 压缩图片
+# 压缩图片  将指定路径下的文件按照一定的压缩率保存到另一个文件夹
 def compress_image(source, dest, width):
     from PIL import Image
     im = Image.open(source)
@@ -129,6 +146,7 @@ def compress_image(source, dest, width):
         xs = width
 
         temp = im.resize((xs, ys), Image.ANTIALIAS)
+        # 百分之80的压缩率
         temp.save(dest, quality=80)
     else:
         im.save(dest, quality=80)

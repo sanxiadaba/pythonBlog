@@ -62,7 +62,12 @@ function doRegister(e) {
             } else if (data == "reg-pass") {
                 bootbox.alert({title: "信息提示", message: "恭喜你注册成功"})
                 // 注册成功后 延迟二秒钟刷新当前页面
-                qingti("注册成功，已增加50积分")
+                $.get("/replyAndAddCommentCredit",function (data){
+                    var regGiveCredit=data["regGiveCredit"]
+                qingti("注册成功，已增加"+regGiveCredit+"积分")
+
+    })
+
                 setTimeout("location.reload();", 2000)
             } else if (data == "reg-fail") {
                 bootbox.alert({title: "错误提示", message: "注册失败，请联系管理员"})
@@ -196,9 +201,13 @@ function showReset() {
 
             }
             else if (data=="add-credit"){
-                bootbox.alert({title: "信息提示", message: "恭喜你，登录成功"});
-                qingti("每天登录成功，积分+1")
+                $.get("/loginEvereDayCredit",function (data){
+                    var loginEvereDayCredit=data["loginEvereDayCredit"]
+                qingti("登录成功，积分+"+loginEvereDayCredit)
+                    bootbox.alert({title: "信息提示", message: "恭喜你登录成功"});
                 setTimeout("location.reload();", 2000)
+
+    })
             }
         })
     }
