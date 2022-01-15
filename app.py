@@ -1,3 +1,17 @@
+"""
+文件说明：
+
+此文件为运行该项目的主程序，直接运行即可
+
+encoding: utf-8
+@author: Zhang Jiajun
+@contact: jz272381@gmail.com
+@software: Pycharm
+@time: 2022/1/14
+@gituhb: sanxiadaba/pythonBlog
+"""
+
+
 import os
 import traceback
 from collections import defaultdict
@@ -10,18 +24,26 @@ from common.myLog import ininLogDir,logDanger,allLogger
 from constant import config_mysql, replyAndAddCommentCredit, regGiveCredit, postArticleCredit
 from constant import sessionExpirationTime, sessionRestart, classification, portNum, creditListForReleaseArticle, \
     shufflingFigurePicture, shufflingFigureLink, indexLogoPicture, indexLogoPictureSize, indexAboveStr, \
-    whetherSaveShufflingFigure,databaseName,emailAccount,loginEvereDayCredit
+    whetherSaveShufflingFigure,databaseName,emailAccount,loginEvereDayCredit,whetherDebug,whetherUseGithubLogin
 
 # 链接数据库的一些设置，防止报错
 pymysql.install_as_MySQLdb()
 
+# 初始化flask
 app = Flask(__name__)
-# 设置
+
+# 如果用到了github第三方登录功能，进行github第三方登录的初始化
+# if whetherUseGithubLogin is True:
+#     from flask_github import GitHub
+#     githubApp = GitHub(app)
+
+# 对flask连接的一些设置
+
 # 连接数据库
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://" + config_mysql + f"/{databaseName}?charset=utf8"
-# 如果设置成 True (默认情况)，Flask-SQLAlchemy 将会追踪对象的修改并且发送信号。这需要额外的内存， 如果不必要的可以禁用它。
+# 如果设置成 True (默认情况)，Flask-SQLAlchemy 将会追踪对象的修改并且发送信号。这需要额外的内存，一般情况下是禁用的。
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-#  设置自动回收时间
+#  设置自动回收时间（单位：秒）
 app.config["SQLALCHEMY_POOL_RECYCLE"] = 10
 # 	数据库连接池的大小
 app.config["SQLALCHEMY_POOL_SIZE"] = 100
@@ -29,7 +51,7 @@ app.config["SQLALCHEMY_POOL_SIZE"] = 100
 app.config["SQLALCHEMY_POOL_TIMEOUT"] = 20
 #  控制在连接池达到最大值后可以创建的连接数。当这些额外的 连接回收到连接池后将会被断开和抛弃。
 app.config["SQLALCHEMY_MAX_OVERFLOW"] = 100
-# 是否在使用连接前先进行ping
+# 是否在使用连接前先进行ping（详情参数见官网）
 app.config["pool_pre_ping"] = True
 # 防止报错设置
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -158,6 +180,8 @@ def before():
                     else:
                         pass
 
+# 判断每天自动登录的接口，前端继承baseArticle模板的文件在加载页面的时候会访问该接口
+#  判断是否自动登录领取积分
 @app.route("/judgeAutoLogin",methods=["POST"])
 @logDanger
 def judgeAutoLogin():
@@ -189,6 +213,13 @@ def shutdown_session(exception=None):
     if exception is None:
         db.session.remove()
 
+# 改变网站的一些参数设置，比如，没人每天可评论几次
+# 登录、注册送多少积分等
+@app.route("/changeBlogParams",methods=["POST"])
+def changeBlogParams():
+    pass
+    return "1"
+
 
 #  主运行程序
 if __name__ == '__main__':
@@ -203,6 +234,9 @@ if __name__ == '__main__':
     from controler.comment import comment
     from controler.ueditor import ueditor
     from controler.userManage import userManage
+    from controler.adminManage import adminManage
+    # 导入测试用的蓝图（仅供测试时使用）
+    from controler.test import test
 
     app.register_blueprint(index)
     app.register_blueprint(user)
@@ -211,9 +245,12 @@ if __name__ == '__main__':
     app.register_blueprint(comment)
     app.register_blueprint(ueditor)
     app.register_blueprint(userManage)
+    app.register_blueprint(adminManage)
+    # 注册测试用的蓝图（仅供测试时使用）
+    app.register_blueprint(test)
 
     # 初始化logs（检查log能工作的一些必要目录）
     ininLogDir()
 
     #  以debug模式在指定端口启动
-    app.run(debug=True, port=portNum)
+    app.run(debug=whetherDebug, port=portNum)

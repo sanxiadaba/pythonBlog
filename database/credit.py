@@ -110,4 +110,10 @@ class Credit(DBase):
         else:
             return False
 
+    # 积分明细
+    # 返回积分相关变化
+    def creditChangeLog(self,userid=None):
+        userid = session.get("userid") if userid is None else userid
+        allCreditChangeLog=dbsession.query(Credit).filter_by(userid=userid).all()
+        return allCreditChangeLog
 

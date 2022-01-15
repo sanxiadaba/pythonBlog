@@ -18,15 +18,24 @@ class Favorite(DBase):
             row.canceled = 0
         else:
             now = time.strftime("%Y-%m-%d %H:%M:%S")
-            favorite = Favorite(articleid=articleid, userid=session.get("userid"), canceled=0, createtime=now,
-                                updatetime=now)
+            favorite = Favorite(articleid=articleid, userid=session.get("userid"), canceled=0, createtime=now)
             dbsession.add(favorite)
         dbsession.commit()
 
     # 取消收藏文章
     def cancel_favorite(self, articleid):
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
         row = dbsession.query(Favorite).filter_by(articleid=articleid, userid=session.get("userid")).first()
         row.canceled = 1
+        row.updatetime=now
+        dbsession.commit()
+
+    # 恢复收藏
+    def replyFavorite(self,articleid):
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        row = dbsession.query(Favorite).filter_by(articleid=articleid, userid=session.get("userid")).first()
+        row.canceled = 0
+        row.updatetime = now
         dbsession.commit()
 
     # 判断是否已经已经被收藏
@@ -38,3 +47,16 @@ class Favorite(DBase):
             return False
         else:
             return True
+
+    # 已收藏、已取消收藏
+    def searchAllFavorite(self):
+        userid = session.get("userid")
+        AllFavorite=dbsession.query(Favorite).filter_by(userid=userid).all()
+        return AllFavorite
+
+    # 收藏文章的数量
+    def numOfMyFavoriteArticle(self,userid=None):
+        userid=session.get("userid") if userid is None else userid
+        numOfMyFavoriteArticle=dbsession.query(Favorite).filter_by(userid=userid).count()
+        return numOfMyFavoriteArticle
+

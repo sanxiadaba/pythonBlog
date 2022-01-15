@@ -1,3 +1,17 @@
+"""
+文件说明：
+
+关于整个博客项目的许多配配置参数
+每个参数都有注释说明
+
+encoding: utf-8
+@author: Zhang Jiajun
+@contact: jz272381@gmail.com
+@software: Pycharm
+@time: 2022/1/12
+@gituhb: sanxiadaba/pythonBlog
+"""
+
 from datetime import timedelta
 
 """这里填写mysql配置
@@ -13,6 +27,10 @@ databaseName="myBlog"
 # 设置端口号
 portNum = 1234
 
+# 是否已debug模式进行启动 (开启的话，在后端修改对应的代码后
+# 服务器会自动重启，建议在正式项目中设置为false)
+whetherDebug=True
+
 # 设置session的过期时间  这里还可以设置weeks,months等
 sessionExpirationTime = timedelta(days=30)
 
@@ -23,15 +41,22 @@ sessionRestart = False
 classification = ["Python技巧", "LeetCode刷题", "项目开发", "综合学习", "其它"]
 
 # 发送注册邮箱的账户
-emailAccount = "2190165626@qq.com"
+emailAccount = "*******"
 
 """ 注册邮箱的授权码(不是邮箱的登录密码)  #参考这个网站（https://www.ujcms.com/documentation/351.html）
 现只支持qq邮箱的发送服务，而且注册时也最好使用qq邮箱注册（不便之处，敬请原谅）"""
 
-emailAdmit = "gofsuuskywdpdjec"
+emailAdmit = "*******"
+
+# 是否使用github的第三方登录功能 (需要进行相关配置，详情见readme文档)
+whetherUseGithubLogin=True
+
+# 设置github第三方登录所需要的Client ID 与 Client secrets # 待开发
+# GITHUB_CLIENT_ID = '*********'
+# GITHUB_CLIENT_SECRET = '***********'
 
 # 设置没人每天的最多评论次数
-commentNum = 100
+commentNum = 10
 
 # 图片验证码是否支持大小写不区分（这里指的是登录用的图片验证码，不是注册账号时的文字验证码）
 whetherDistinguishCapital = False

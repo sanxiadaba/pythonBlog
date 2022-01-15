@@ -14,17 +14,50 @@ encoding: utf-8
 
 from flask import Blueprint, session, jsonify, render_template
 
-from database.instanceDatabase import instanceArticle
+from database.instanceDatabase import instanceArticle,instanceFavorite,instanceComment,instanceUser,instanceCredit
 
 userManage = Blueprint("userManage", __name__)
 
 
-@userManage.route("/baseManage", methods=["GET"])
+@userManage.route("/userManage", methods=["GET"])
 def baseManage():
-    if session.get("role") != "admin":
-        return render_template("userManage.html")
-    else:
-        return render_template("adminManage.html")
+    userid=session.get("userid")
+    # 我的已发布文章的个数
+    numOfAllMyArticle=instanceArticle.get_total_count()
+    # 已发布文章的访问量
+    allNumOfAllArticleRead=instanceArticle.allNumOfAllArticleRead()
+    # 我收藏文章的数量
+    numOfMyFavoriteArticle=instanceFavorite.numOfMyFavoriteArticle()
+    # 我评论的个数
+    numOfALLMyComment=instanceComment.numOfALLMyComment()
+    # 我的昵称
+    myNickname=instanceUser.searchNicknameByUserid(userid)[0]
+    # 我的注册邮箱
+    myEmail=instanceUser.searchMyEmail(userid)
+    # 用户角色
+    myRole=session.get("role")
+    # 我的qq
+    myQQ=instanceUser.searchMyQQ(userid)
+    # 总共剩余积分
+    restOfMyCredit=instanceUser.findRestCredit()
+    # 我的头像
+    myAvatar=instanceUser.searchMyAvatar(userid)
+
+    MyInfo={}
+    MyInfo["numOfAllMyArticle"]=numOfAllMyArticle
+    MyInfo["allNumOfAllArticleRead"]=allNumOfAllArticleRead
+    MyInfo["numOfMyFavoriteArticle"]=numOfMyFavoriteArticle
+    MyInfo["numOfALLMyComment"]=numOfALLMyComment
+    MyInfo["myNickname"]=myNickname
+    MyInfo["myEmail"]=myEmail
+    MyInfo["myRole"]=myRole
+    MyInfo["myQQ"]=myQQ
+    MyInfo["restOfMyCredit"]=restOfMyCredit
+    MyInfo["myAvatar"]=myAvatar
+
+    return render_template("userManage.html", myInfo=MyInfo)
+
+
 
 
 #  返回我的资料

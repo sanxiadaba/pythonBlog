@@ -101,7 +101,7 @@
                 bootbox.alert({title: "错误提示", message: "您当天最多只能评论五次"});
 
             } else if (data == "add-pass") {
-                $.get("/replyAndAddCommentCredit",function (data){
+                $.get("/toTransmitParam",function (data){
                     var replyAndAddCommentCredit=data["replyAndAddCommentCredit"]
                 qingti("回复评论成功，积分+"+replyAndAddCommentCredit)
                 setTimeout("location.reload();", 2000)

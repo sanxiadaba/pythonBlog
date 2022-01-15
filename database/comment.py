@@ -21,7 +21,7 @@ class Comment(DBase):
         ipaddr=request.remote_addr
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         comment = Comment(userid=session.get("userid"), articleid=articleid, content=content,
-                          ipaddr=ipaddr, createtime=now, updatetime=now,info=info)
+                          ipaddr=ipaddr, createtime=now,info=info)
         dbsession.add(comment)
         dbsession.commit()
 
@@ -121,5 +121,15 @@ class Comment(DBase):
         data.hide = 1
         dbsession.commit()
 
+    # 我的评论 #评论点赞数 #评论反对数(为求方便，这里先只显有关原始评论的信息)
+    def searchAllMyComment(self):
+        userid = session.get("userid")
+        data = dbsession.query(Comment.content,Comment.agreecount,Comment.opposecount,Comment.articleid,Comment.commentid).filter_by(userid==userid).all()
+        return data  # 注意，返回的是一个列表，列表的每个元素都是包含这五个元素的数组
+
+    def numOfALLMyComment(self,userid=None):
+        userid = session.get("userid") if userid is None else userid
+        numOfALLMyComment=dbsession.query(Comment).filter_by(userid=userid).count()
+        return numOfALLMyComment
 
 

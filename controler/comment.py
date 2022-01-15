@@ -234,6 +234,8 @@ def hideComment():
     authorNickname = instanceUser.searchNicknameByUserid(authorId)[0]
     try:
         instanceComment.hideCommentByCommentid(commentid)
+        # 隐藏评论后，这个文章的回复数减去一
+        instanceArticle.subtract_replycount(articleid=authorId)
         info = f"用户id为{userid} 昵称为{nickname} 取消删除了用户id为{authorId} 昵称为{authorNickname} 的评论id号为{commentid}的评论 "
         instanceLog.insert_detail(type="删除评论", target=commentid, credit=0,
                                   info=info)

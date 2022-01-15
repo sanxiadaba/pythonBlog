@@ -61,11 +61,12 @@
                     <a class="nav-item nav-link" href="#">欢迎你：{{session.get("nickname")}}</a>
                     &nbsp;&nbsp;&nbsp;
                     {%if session.get("role")=="admin"%}
-                    <a class="nav-item nav-link" href="/admin">系统管理</a>&nbsp;&nbsp;&nbsp;
+                    <a class="nav-item nav-link" href="/admainManage">系统管理</a>&nbsp;&nbsp;&nbsp;
                     {%elif session.get("role")=="editor"%}
-<!--                    <a class="nav-item nav-link" href="/ucenter">用户中心</a>&nbsp;&nbsp;&nbsp;-->
+                    <a class="nav-item nav-link" href="/userManage">用户中心</a>&nbsp;&nbsp;&nbsp;
                     <a class="nav-item nav-link" href="/prepost">发表文章</a>&nbsp;&nbsp;&nbsp;
                     {%elif session.get("role")=="user"%}
+                        <a class="nav-item nav-link" href="/userManage">用户中心</a>&nbsp;&nbsp;&nbsp;
                      <a class="nav-item nav-link" href="/prepost">我要投稿</a>&nbsp;&nbsp;&nbsp;
                     {% endif %}
 

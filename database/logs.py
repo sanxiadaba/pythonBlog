@@ -44,3 +44,8 @@ class Log(DBase):
                 return 0
         pass
 
+    # 查看某一个用户的所有记录
+    def searchAllLogOfUser(self,userid):
+        allLogOfUser=dbsession.query(Log).filter_by(userid=userid).all()
+        return allLogOfUser
+

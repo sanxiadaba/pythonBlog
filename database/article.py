@@ -132,12 +132,17 @@ class Article(DBase):
 
         return dict
 
-    # 为评论的的replycount+1
+    # 为文章的的replycount+1
     def update_replycount(self, articleid):
         row = dbsession.query(Article).filter_by(articleid=articleid).first()
         row.replycount += 1
         dbsession.commit()
 
+    # 注意隐藏评论是评论的回复数要减去一
+    def subtract_replycount(self, articleid):
+        row = dbsession.query(Article).filter_by(articleid=articleid).first()
+        row.replycount -= 1
+        dbsession.commit()
 
     # 插入一篇新文章
     def insert_article(self, type, headline, content, thumbnail, credit, drafted=0, checked=1):
@@ -170,6 +175,7 @@ class Article(DBase):
     def searchUseridByArticleid(self, articleid):
         return dbsession.query(Article.userid).filter_by(articleid=articleid).first()
 
+
     # 根据文章的id查询文章的标题和内容
     def searchHeadlineAndContentByArticleid(self,articleid):
         result={}
@@ -178,3 +184,55 @@ class Article(DBase):
         result["content"]=row[1]
         return result
 
+    # 返回我的所有文章的id号、标题、内容、回复数、赞同数、反对数
+    def searchAllMyArticle(self,userid=None):
+        userid = session.get("userid") if userid is None else userid
+        allMyArticle=dbsession.query(Article).filter(Article.userid==userid).order_by(Article.articleid).all()
+        return allMyArticle
+
+
+    # 修改文章标题
+    def modifyArticleHeadline(self,articleid,headline):
+        row=dbsession.query(Article).filter_by(articleid=articleid).first()
+        row.headline=headline
+        dbsession.commit()
+
+    # 修改文章缩略图
+    def modifyArticleThumbnail(self,articleid,thumbnail):
+        row=dbsession.query(Article).filter_by(articleid=articleid).first()
+        row.thumbnail=thumbnail
+        dbsession.commit()
+
+    # 隐藏文章
+    def hideArticle(self,articleid):
+        row=dbsession.query(Article).filter_by(articleid=articleid).first()
+        row.hide=1
+        dbsession.commit()
+
+    # 设置编辑推荐按文章
+    def recommendedArticle(self,articleid):
+        row=dbsession.query(articleid).filter_by(articleid=articleid).first()
+        row.recommended=1
+        dbsession.commit()
+
+    # 所有文章数量
+    def searchAllNumberOfArticle(self):
+        return dbsession.query(Article).count()
+
+    # 所有文章评论数量、访问数量之和
+    def searchALLNumberOfComment(self):
+        result=dbsession.query(Article.replycount,Article.readcount)
+        allReplyCountList=[]
+        allReadCountList=[]
+        for row in result:
+            allReplyCountList.append(row[0])
+            allReadCountList.append(row[1])
+        return sum(allReplyCountList),sum(allReadCountList)
+
+
+    # 已发布文章的访问量
+    def allNumOfAllArticleRead(self,userid=None):
+        userid=session.get("userid") if userid is None else userid
+        allNumOfAllArticleRead=dbsession.query(Article.readcount).filter(Article.hide == 0, Article.drafted == 0, Article.checked == 1,Article.userid==userid).all()
+        allNumOfAllArticleRead=sum([i[0] for i in allNumOfAllArticleRead ])
+        return allNumOfAllArticleRead

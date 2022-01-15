@@ -15,7 +15,58 @@
         </ul>
     </aside>
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="main">
-
+        <h1 class="page-header">信息总览</h1>
+      <div class="row placeholders">
+        <div class="col-xs-6 col-sm-3 placeholder">
+          <h4>文章</h4>
+          <span class="text-muted">{{ myInfo["numOfAllMyArticle"] }} 篇</span> </div>
+        <div class="col-xs-6 col-sm-3 placeholder">
+          <h4>评论</h4>
+          <span class="text-muted">{{ myInfo["numOfALLMyComment"] }} 条</span> </div>
+        <div class="col-xs-6 col-sm-3 placeholder">
+          <h4>收藏文章</h4>
+          <span class="text-muted">{{ myInfo["numOfMyFavoriteArticle"] }} 篇</span> </div>
+        <div class="col-xs-6 col-sm-3 placeholder">
+          <h4>访问量</h4>
+          <span class="text-muted">{{ myInfo["allNumOfAllArticleRead"] }}</span> </div>
+      </div>
+      <h1 class="page-header">个人信息</h1>
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr> </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>我的昵称:</td>
+              <td>{{ myInfo["myNickname"] }}</td>
+            </tr>
+            <tr>
+              <td>我的注册邮箱</td>
+              <td>{{ myInfo["myEmail"] }}</td>
+            </tr>
+            <tr>
+              <td>用户角色</td>
+              <td>{{ myInfo["myRole"] }}</td>
+            </tr>
+            <tr>
+              <td>总共积分</td>
+              <td>{{ myInfo["restOfMyCredit"] }}</td>
+            </tr>
+            <tr>
+              <td>我的qq</td>
+              <td>{{ myInfo["myQQ"] }}</td>
+            </tr>
+            <tr>
+              <td>我的头像</td>
+              <td><img height="150" width="150" src="/static/img/avatar/{{ myInfo["myAvatar"] }}"></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr></tr>
+          </tfoot>
+        </table>
+      </div>
 
     </div>
 
