@@ -14,16 +14,18 @@ encoding: utf-8
 
 import os
 import time
-from common.myLog import rootDir,dirInDir,logDanger,allLogger,listLogger
-from flask import Blueprint, render_template, request, jsonify,session
+
+from flask import Blueprint, request, jsonify, session
+
+from common.myLog import rootDir, dirInDir, logDanger, listLogger
 from common.ueditorConf import returnUeConf
 from common.utility import compress_image
-from database.instanceDatabase import instanceUpload,instanceLog
+from database.instanceDatabase import instanceUpload, instanceLog
 
 ueditor = Blueprint("ueditor", __name__)
 
 # 上传文件的路径
-imgSavePath=rootDir+"\\static\\img\\upload"
+imgSavePath = rootDir + "\\static\\img\\upload"
 
 
 # 具体访问的接口
@@ -45,25 +47,25 @@ def uedit():
                 result = {}
                 # 每天有上传限制、上传次数用完的话前端会提示
                 result["state"] = "每天上传次数已用完"
-                info=f"userid为{userid}的用户因今天的上传次数用完故上传失败"
+                info = f"userid为{userid}的用户因今天的上传次数用完故上传失败"
                 instanceLog.insert_detail(credit=0, target=0, type="上传图片失败", info=info)
-                listLogger(userid,info,8)
-                return  jsonify(result)
+                listLogger(userid, info, 8)
+                return jsonify(result)
             else:
                 f = request.files["upfile"]  # 获取前端图片文件的数据
                 filename = f.filename
                 suffix = filename.split(".")[-1]  # 获取文章的后缀名（不包括.）
                 newname = time.strftime("%Y%m%d_%H%M%S." + suffix)
                 dirInDir(myPictureName, imgSavePath)
-                f.save(myPicturePath+"\\" + newname)  # 保存图片
+                f.save(myPicturePath + "\\" + newname)  # 保存图片
                 # 对图片进行压缩 并覆盖原始文件
-                source = dest = myPicturePath+"\\" + newname
+                source = dest = myPicturePath + "\\" + newname
                 #  压缩图片
                 compress_image(source, dest, 1200)
                 instanceUpload.insert_detail(imgname=source)
-                info=f"userid为{userid}的用户，上传了路径为"+source+"的图片"
-                instanceLog.insert_detail(credit=0,target=0,type="上传图片",info=info)
-                listLogger(userid,info,[8])
+                info = f"userid为{userid}的用户，上传了路径为" + source + "的图片"
+                instanceLog.insert_detail(credit=0, target=0, type="上传图片", info=info)
+                listLogger(userid, info, [8])
                 result = {}
                 # 返回成功的状态码
                 result["state"] = "SUCCESS"
@@ -79,7 +81,7 @@ def uedit():
                 if filename.lower().endswith(".png") or filename.lower().endswith(".jpg") \
                         or filename.lower().endswith(".jpeg") or filename.lower().endswith(".gif") \
                         or filename.lower().endswith(".bmp"):
-                    list.append({r"url": r"static/img/upload/%s/%s" % (myPictureName,filename)})
+                    list.append({r"url": r"static/img/upload/%s/%s" % (myPictureName, filename)})
             result = {}
             result["state"] = "SUCCESS"
             result["list"] = list

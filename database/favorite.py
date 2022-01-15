@@ -27,11 +27,11 @@ class Favorite(DBase):
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         row = dbsession.query(Favorite).filter_by(articleid=articleid, userid=session.get("userid")).first()
         row.canceled = 1
-        row.updatetime=now
+        row.updatetime = now
         dbsession.commit()
 
     # 恢复收藏
-    def replyFavorite(self,articleid):
+    def replyFavorite(self, articleid):
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         row = dbsession.query(Favorite).filter_by(articleid=articleid, userid=session.get("userid")).first()
         row.canceled = 0
@@ -51,12 +51,11 @@ class Favorite(DBase):
     # 已收藏、已取消收藏
     def searchAllFavorite(self):
         userid = session.get("userid")
-        AllFavorite=dbsession.query(Favorite).filter_by(userid=userid).all()
+        AllFavorite = dbsession.query(Favorite).filter_by(userid=userid).all()
         return AllFavorite
 
     # 收藏文章的数量
-    def numOfMyFavoriteArticle(self,userid=None):
-        userid=session.get("userid") if userid is None else userid
-        numOfMyFavoriteArticle=dbsession.query(Favorite).filter_by(userid=userid).count()
+    def numOfMyFavoriteArticle(self, userid=None):
+        userid = session.get("userid") if userid is None else userid
+        numOfMyFavoriteArticle = dbsession.query(Favorite).filter_by(userid=userid).count()
         return numOfMyFavoriteArticle
-

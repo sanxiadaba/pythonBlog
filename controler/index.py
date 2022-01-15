@@ -17,10 +17,10 @@ import math
 from flask import Blueprint, render_template, abort
 from flask.json import jsonify
 
+from common.myLog import logDanger
 from constant import howArticleInWeb
 from database.article import Article
 from database.instanceDatabase import instanceArticle
-from common.myLog import logDanger
 
 index = Blueprint("index", __name__)
 
@@ -37,6 +37,7 @@ def home():
     return render_template("index.html", result=result, total=total, page=1, last=last, most=most,
                            recommended=recommended)
 
+
 # 跳转到第几页 换个参数即可
 @index.route("/page/<int:page>")
 @logDanger
@@ -47,6 +48,7 @@ def paginate(page):
     total = math.ceil((article.get_total_count() / howArticleInWeb))
     return render_template("index.html", result=result, total=total, page=page)
 
+
 # 跳转到不同分类的模块
 @index.route("/type/<int:type>-<int:page>")
 @logDanger
@@ -55,6 +57,7 @@ def classify(type, page):
     result = instanceArticle.find_by_type(type, start, howArticleInWeb)
     total = math.ceil(instanceArticle.get_count_by_type(type) / howArticleInWeb)
     return render_template("type.html", result=result, page=page, total=total, type=type)
+
 
 # 这里实现对文章的搜索功能
 @index.route("/search/<int:page>-<string:keyword>")
@@ -67,6 +70,7 @@ def search(page, keyword):
     result = instanceArticle.find_by_headline(keyword, start, 10)
     total = math.ceil(instanceArticle.get_count_by_headline(keyword) / 10)
     return render_template("search.html", page=page, total=total, result=result, keyword=keyword)
+
 
 # 填充侧边栏推荐
 @index.route("/recommended")

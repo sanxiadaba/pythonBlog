@@ -22,14 +22,14 @@ config_mysql=mysql://root:root@120.28.243.198:3306(这个地址不存在，只�
 config_mysql = "root@localhost:3306"
 
 # 设置所在数据库的名称(下面是我测试用的数据库的名称，具体项目需要更改)
-databaseName="myBlog"
+databaseName = "myBlog"
 
 # 设置端口号
 portNum = 1234
 
 # 是否已debug模式进行启动 (开启的话，在后端修改对应的代码后
 # 服务器会自动重启，建议在正式项目中设置为false)
-whetherDebug=True
+whetherDebug = True
 
 # 设置session的过期时间  这里还可以设置weeks,months等
 sessionExpirationTime = timedelta(days=30)
@@ -49,7 +49,7 @@ emailAccount = "*******"
 emailAdmit = "*******"
 
 # 是否使用github的第三方登录功能 (需要进行相关配置，详情见readme文档)
-whetherUseGithubLogin=True
+whetherUseGithubLogin = True
 
 # 设置github第三方登录所需要的Client ID 与 Client secrets # 待开发
 # GITHUB_CLIENT_ID = '*********'
@@ -132,11 +132,11 @@ whetherLogPrintInConsole = True
 timeoutOfEcode = 120
 
 # 设置每个用户、编辑每天最多投稿、发布文章的数量
-maxUserPostArticleNum=10
-maxUserPostArticleNumOfEditor=20
+maxUserPostArticleNum = 10
+maxUserPostArticleNumOfEditor = 20
 
-#设置每天最多的修改文章次数
-maxModifyArticleNum=10
+# 设置每天最多的修改文章次数
+maxModifyArticleNum = 10
 
 # 每个人每天最多上传图片的数量
-maxUploadPicNum=20
+maxUploadPicNum = 20

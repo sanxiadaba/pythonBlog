@@ -13,35 +13,34 @@ encoding: utf-8
 @gituhb: sanxiadaba/pythonBlog
 """
 
-
 import traceback
 
 from flask import Blueprint, request, session
 
-from common.myLog import listLogger,logDanger,allLogger
-from database.favorite import Favorite
+from common.myLog import listLogger, logDanger, allLogger
 from database.instanceDatabase import instanceFavorite, instanceArticle, instanceUser, instanceLog
 
 favorite = Blueprint("favorite", __name__)
+
 
 # 收藏文章的函数
 @favorite.route("/favorite", methods=["POST"])
 @logDanger
 def add_favorite():
     articleid = request.form.get("articleid")
-    userid=session.get("userid")
+    userid = session.get("userid")
     nickname = session.get("nickname")
     authorid = int(instanceArticle.searchUseridByArticleid(articleid)[0])
-    authorNickname=instanceUser.searchNicknameByUserid(authorid)[0]
+    authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
     try:
-        info=f"userid为{userid},昵称为{nickname}的用户,将用户id为{authorid}，昵称为{authorNickname}，articleid为{articleid}的文章取消了收藏"
+        info = f"userid为{userid},昵称为{nickname}的用户,将用户id为{authorid}，昵称为{authorNickname}，articleid为{articleid}的文章取消了收藏"
         instanceFavorite.insert_favorite(articleid)
         # 打印日志
-        listLogger(userid,info,[4])
-        listLogger(authorid,info,[6])
+        listLogger(userid, info, [4])
+        listLogger(authorid, info, [6])
         # 添加日志表
-        instanceLog.insert_detail(userid=userid,type="添加收藏",credit=0,target=articleid)
-        instanceLog.insert_detail(userid=userid,type="文章被收藏",credit=0,target=articleid)
+        instanceLog.insert_detail(userid=userid, type="添加收藏", credit=0, target=articleid)
+        instanceLog.insert_detail(userid=userid, type="文章被收藏", credit=0, target=articleid)
         return "favorite-pass"
     except:
         e = traceback.format_exc()

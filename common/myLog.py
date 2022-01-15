@@ -16,11 +16,12 @@ encoding: utf-8
 
 # 用来进行项目日志的一些基本设置
 import os
-# 导入这个包是用来消除装饰器的”不良影响“
-from functools import wraps
 # 导入追踪函数哪里出错的库，这样打印的日志更详细
 import traceback
-from flask import session, render_template, request, abort
+# 导入这个包是用来消除装饰器的”不良影响“
+from functools import wraps
+
+from flask import session, request, abort
 # 本项目使用的日志系统是基于loguru进行封装得到的
 from loguru import logger
 
@@ -79,7 +80,6 @@ logUserLog = logDir + "\\" + "userLog"
 
 # D:\Code\Github\pythonBlog\logs\adminLog
 logAdminLog = logDir + "\\" + "adminLog"
-
 
 
 # 在一开始，就创建allLog与ErrorLog文件夹
@@ -152,16 +152,17 @@ def myLogger(n, info, userid=None):
     logger.info(info)
     logger.remove()
 
+
 # 对myLogger又封装了一层，方便控制写入多个文件
 # 日志在放入特定的文件夹后，还会向自己的alllog以及总的alllog写入一份
-def listLogger(userid,info,*logList):
-    logList=logList[0]
+def listLogger(userid, info, *logList):
+    logList = logList[0]
     for logNum in logList:
-        info=info+f" ip地址为{request.remote_addr}"
-        myLogger(logNum,info, userid)
-    if logList[0]!=8:
-        myLogger(8,info,userid)
-    allLogger(1,info)
+        info = info + f" ip地址为{request.remote_addr}"
+        myLogger(logNum, info, userid)
+    if logList[0] != 8:
+        myLogger(8, info, userid)
+    allLogger(1, info)
 
 
 # 向/logs 目录下的 allLogs errorLog 添加日志
@@ -189,8 +190,9 @@ def logDanger(func):
         try:
             return func(*args, **kwargs)
         except:
-            e=traceback.format_exc()
+            e = traceback.format_exc()
             # 打印错误日志并抛出异常
             allLogger(0, e)
             return abort(404)
+
     return logDannerFun

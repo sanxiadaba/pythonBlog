@@ -5,9 +5,9 @@ from flask import session
 from sqlalchemy import Table
 
 from common.connect_db import connect_db
+from common.myLog import dirInDir, rootDir
 from common.utility import genearteMD5
 from constant import thumbNailNum
-from common.myLog import dirInDir,rootDir
 
 dbsession, md, DBase = connect_db()
 
@@ -28,13 +28,13 @@ class Users(DBase):
     # 实现注册，首次注册只需要用户名和密码
     # 通常用户不会填写太多资料，后续可以在用户中心完善
     def do_register(self, username, password):
-        avatarPath=rootDir+"\\static\\img\\avatar"
+        avatarPath = rootDir + "\\static\\img\\avatar"
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         nickname = username.split("@")[0]  # 默认账号前缀作为昵称
-        avatar ="default/"+ str(random.randint(1, thumbNailNum))  # 从十张随机图片中选一张作为初始默认头像
+        avatar = "default/" + str(random.randint(1, thumbNailNum))  # 从十张随机图片中选一张作为初始默认头像
         user = Users(username=username, password=password, role="user", credit=0, nickname=nickname,
                      avatar=avatar + ".png", createtime=now)
-        dirInDir(f"myPic_{user.userid}",avatarPath)
+        dirInDir(f"myPic_{user.userid}", avatarPath)
         dbsession.add(user)
         dbsession.commit()
         return user
@@ -67,7 +67,7 @@ class Users(DBase):
         return dbsession.query(Users.nickname).filter_by(userid=userid).first()
 
     # 根据userid查询注册邮箱
-    def searchMyEmail(self,userid):
+    def searchMyEmail(self, userid):
         return dbsession.query(Users.username).filter_by(userid=userid).first()[0]
 
     # 根据userid查询我QQ
@@ -86,54 +86,54 @@ class Users(DBase):
         dbsession.commit()
 
     # 修改昵称
-    def modifyUserNickname(self,nickname):
-        userid=session.get("userid")
-        user=dbsession.query(Users).filter_by(userid=userid).first()
-        user.nickname=nickname
+    def modifyUserNickname(self, nickname):
+        userid = session.get("userid")
+        user = dbsession.query(Users).filter_by(userid=userid).first()
+        user.nickname = nickname
         dbsession.commit()
 
     # 修改头像
-    def modifyUserThumbnail(self,thumbnail):
-        userid=session.get("userid")
-        user=dbsession.query(Users).filter_by(userid=userid).first()
-        user.nickname=thumbnail
+    def modifyUserThumbnail(self, thumbnail):
+        userid = session.get("userid")
+        user = dbsession.query(Users).filter_by(userid=userid).first()
+        user.nickname = thumbnail
         dbsession.commit()
 
     # 修改qq号
-    def modifyUserQQnum(self,newQQ):
-        userid=session.get("userid")
-        user=dbsession.query(Users).filter_by(userid=userid).first()
-        user.nickname=newQQ
+    def modifyUserQQnum(self, newQQ):
+        userid = session.get("userid")
+        user = dbsession.query(Users).filter_by(userid=userid).first()
+        user.nickname = newQQ
         dbsession.commit()
 
     # 申请成为编辑
     def applyForBecomeEditor(self):
-        userid=session.get("userid")
-        user=dbsession.query(Users).filter_by(userid=userid).first()
-        user.apply=1
+        userid = session.get("userid")
+        user = dbsession.query(Users).filter_by(userid=userid).first()
+        user.apply = 1
         dbsession.commit()
 
     # 查看所有成员信息（用户数量、身份、qq等）
     def searchAllUserInfo(self):
-        result=dbsession.query(Users).all()
+        result = dbsession.query(Users).all()
         return result
 
     # 更改身份（可以将用户改为编辑，也可以将编辑改为用户）
     # changeType 0表示将编辑改为用户，1表示将用户改为编辑
-    def changeIdentity(self,userid,changeType):
-        row=dbsession.query(Users).filter_by(userid=userid).first()
+    def changeIdentity(self, userid, changeType):
+        row = dbsession.query(Users).filter_by(userid=userid).first()
         now = time.strftime("%Y-%m-%d %H:%M:%S")
-        if changeType==1:
-            row.apply=0
-            row.role="user"
+        if changeType == 1:
+            row.apply = 0
+            row.role = "user"
         else:
             row.role = "editor"
-        row.updatetime=now
+        row.updatetime = now
         dbsession.commit()
 
     # 查看成为编辑的申请
     def searchApllyForEditor(self):
-        allApplyForEditor=dbsession.query(Users).filter_by(apply=0).all()
+        allApplyForEditor = dbsession.query(Users).filter_by(apply=0).all()
         return allApplyForEditor
 
     # 修改积分
@@ -147,8 +147,3 @@ class Users(DBase):
         row = dbsession.query(Users).filter_by(userid=userid)
         row.forbidLogin = 1
         dbsession.commit()
-
-
-
-
-

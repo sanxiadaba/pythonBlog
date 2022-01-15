@@ -4,7 +4,7 @@ from flask import session
 from sqlalchemy import Table, func
 
 from common.connect_db import connect_db
-from constant import recommendedNumOfSide,maxUserPostArticleNum,maxUserPostArticleNumOfEditor
+from constant import recommendedNumOfSide
 from database.users import Users
 
 dbsession, md, DBase = connect_db()
@@ -12,8 +12,6 @@ dbsession, md, DBase = connect_db()
 
 class Article(DBase):
     __table__ = Table("article", md, autoload=True)
-
-
 
     # 根据id查询文章<Article,"nickname">
     def find_by_id(self, articleid):
@@ -150,8 +148,8 @@ class Article(DBase):
         userid = int(session.get("userid"))
         # 其他字段在数据库中已经设置好，无需自动插入
         articleP = Article(userid=userid, type=type, headline=headline, \
-                          content=content, thumbnail=thumbnail, credit=credit, drafted=drafted, checked=checked,
-                          createtime=now, updatetime=now)
+                           content=content, thumbnail=thumbnail, credit=credit, drafted=drafted, checked=checked,
+                           createtime=now, updatetime=now)
         dbsession.add(articleP)
         dbsession.commit()
         return articleP.articleid
@@ -175,44 +173,42 @@ class Article(DBase):
     def searchUseridByArticleid(self, articleid):
         return dbsession.query(Article.userid).filter_by(articleid=articleid).first()
 
-
     # 根据文章的id查询文章的标题和内容
-    def searchHeadlineAndContentByArticleid(self,articleid):
-        result={}
-        row=dbsession.query(Article.headline,Article.content).filter_by(articleid=articleid).first()
-        result["headline"]=row[0]
-        result["content"]=row[1]
+    def searchHeadlineAndContentByArticleid(self, articleid):
+        result = {}
+        row = dbsession.query(Article.headline, Article.content).filter_by(articleid=articleid).first()
+        result["headline"] = row[0]
+        result["content"] = row[1]
         return result
 
     # 返回我的所有文章的id号、标题、内容、回复数、赞同数、反对数
-    def searchAllMyArticle(self,userid=None):
+    def searchAllMyArticle(self, userid=None):
         userid = session.get("userid") if userid is None else userid
-        allMyArticle=dbsession.query(Article).filter(Article.userid==userid).order_by(Article.articleid).all()
+        allMyArticle = dbsession.query(Article).filter(Article.userid == userid).order_by(Article.articleid).all()
         return allMyArticle
 
-
     # 修改文章标题
-    def modifyArticleHeadline(self,articleid,headline):
-        row=dbsession.query(Article).filter_by(articleid=articleid).first()
-        row.headline=headline
+    def modifyArticleHeadline(self, articleid, headline):
+        row = dbsession.query(Article).filter_by(articleid=articleid).first()
+        row.headline = headline
         dbsession.commit()
 
     # 修改文章缩略图
-    def modifyArticleThumbnail(self,articleid,thumbnail):
-        row=dbsession.query(Article).filter_by(articleid=articleid).first()
-        row.thumbnail=thumbnail
+    def modifyArticleThumbnail(self, articleid, thumbnail):
+        row = dbsession.query(Article).filter_by(articleid=articleid).first()
+        row.thumbnail = thumbnail
         dbsession.commit()
 
     # 隐藏文章
-    def hideArticle(self,articleid):
-        row=dbsession.query(Article).filter_by(articleid=articleid).first()
-        row.hide=1
+    def hideArticle(self, articleid):
+        row = dbsession.query(Article).filter_by(articleid=articleid).first()
+        row.hide = 1
         dbsession.commit()
 
     # 设置编辑推荐按文章
-    def recommendedArticle(self,articleid):
-        row=dbsession.query(articleid).filter_by(articleid=articleid).first()
-        row.recommended=1
+    def recommendedArticle(self, articleid):
+        row = dbsession.query(articleid).filter_by(articleid=articleid).first()
+        row.recommended = 1
         dbsession.commit()
 
     # 所有文章数量
@@ -221,18 +217,19 @@ class Article(DBase):
 
     # 所有文章评论数量、访问数量之和
     def searchALLNumberOfComment(self):
-        result=dbsession.query(Article.replycount,Article.readcount)
-        allReplyCountList=[]
-        allReadCountList=[]
+        result = dbsession.query(Article.replycount, Article.readcount)
+        allReplyCountList = []
+        allReadCountList = []
         for row in result:
             allReplyCountList.append(row[0])
             allReadCountList.append(row[1])
-        return sum(allReplyCountList),sum(allReadCountList)
-
+        return sum(allReplyCountList), sum(allReadCountList)
 
     # 已发布文章的访问量
-    def allNumOfAllArticleRead(self,userid=None):
-        userid=session.get("userid") if userid is None else userid
-        allNumOfAllArticleRead=dbsession.query(Article.readcount).filter(Article.hide == 0, Article.drafted == 0, Article.checked == 1,Article.userid==userid).all()
-        allNumOfAllArticleRead=sum([i[0] for i in allNumOfAllArticleRead ])
+    def allNumOfAllArticleRead(self, userid=None):
+        userid = session.get("userid") if userid is None else userid
+        allNumOfAllArticleRead = dbsession.query(Article.readcount).filter(Article.hide == 0, Article.drafted == 0,
+                                                                           Article.checked == 1,
+                                                                           Article.userid == userid).all()
+        allNumOfAllArticleRead = sum([i[0] for i in allNumOfAllArticleRead])
         return allNumOfAllArticleRead

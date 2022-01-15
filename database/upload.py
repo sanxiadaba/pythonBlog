@@ -2,6 +2,7 @@ import time
 
 from flask import session, request
 from sqlalchemy import Table
+
 from common.connect_db import connect_db
 from constant import maxUploadPicNum
 
@@ -26,10 +27,8 @@ class Upload(DBase):
         start = time.strftime("%Y-%m-%d 00:00:00")
         end = time.strftime("%Y-%m-%d 23:59:59")
         result = dbsession.query(Upload).filter(Upload.userid == session.get("userid"),
-                                                Upload.createtime.between(start, end),Upload.info!="上传缩略图").count()
+                                                Upload.createtime.between(start, end), Upload.info != "上传缩略图").count()
         if result >= maxUploadPicNum:
             return True
         else:
             return False
-
-

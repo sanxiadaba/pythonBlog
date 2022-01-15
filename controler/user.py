@@ -19,15 +19,17 @@ import time
 import traceback
 
 from flask import Blueprint, make_response, session, request, url_for
-from common.myLog import ininUserDir, logDanger,listLogger,allLogger
+
+from common.myLog import ininUserDir, logDanger, listLogger, allLogger
 from common.utility import ImageCode, gen_email_code, send_email
 from common.utility import genearteMD5
 from constant import whetherDistinguishCapital, regGiveCredit, loginEvereDayCredit, timeoutOfEcode
-from database.instanceDatabase import instanceLog, instanceUser,instanceCredit
+from database.instanceDatabase import instanceLog, instanceUser, instanceCredit
 
 user = Blueprint("user", __name__)
 # 用来判断验证码是否超过时间限制
 timeStart = 0
+
 
 # 这里生成图片验证码 验证码的内容会储存在session里
 @user.route("/vcode", methods=["GET"])
@@ -43,6 +45,7 @@ def vcode():
     else:
         session['vcode'] = code
     return response
+
 
 # 这里生成邮件验证码
 @user.route("/ecode", methods=["POST"])
@@ -100,11 +103,11 @@ def register():
         session["userid"] = result.userid
         session["nickname"] = nickname
         session["role"] = result.role
-        userid=session.get("userid")
+        userid = session.get("userid")
         # 更新积分表 每个新用户注册的话是送积分的
         info = f"userid为{user},昵称为{nickname}的用户注册成功"
-        instanceCredit.insert_detail(type="用户注册", target=0, credit=regGiveCredit,info=info,userid=userid)
-        listLogger(userid,info,[0])
+        instanceCredit.insert_detail(type="用户注册", target=0, credit=regGiveCredit, info=info, userid=userid)
+        listLogger(userid, info, [0])
         ininUserDir()
         return "reg-pass"
 
@@ -125,14 +128,14 @@ def resetUserPassword():
         return "no-user"
 
     # 根据玩完整名查询userid
-    userid=instanceUser.findUseridByUsername(username)
-    userNickname=instanceUser.searchNicknameByUserid(userid)
+    userid = instanceUser.findUseridByUsername(username)
+    userNickname = instanceUser.searchNicknameByUserid(userid)
 
     # 校验邮箱验证码是否正确
     if ecode != session.get("ecode"):
-        info=f"userid为{userid},昵称为{userNickname}的用户尝试找回密码，但邮箱验证码输入错误"
-        instanceLog.insert_detail(userid=userid,type="邮箱验证码错误",credit=0,target=0)
-        listLogger(userid,info,[0])
+        info = f"userid为{userid},昵称为{userNickname}的用户尝试找回密码，但邮箱验证码输入错误"
+        instanceLog.insert_detail(userid=userid, type="邮箱验证码错误", credit=0, target=0)
+        listLogger(userid, info, [0])
         return "ecode-error"
 
     else:
@@ -156,6 +159,7 @@ def resetUserPassword():
             return "fi-fail"
         return "fi-pass"
 
+
 # 实现登录的模块
 @user.route("/login", methods=["POST"])
 @logDanger
@@ -168,7 +172,7 @@ def login():
     userid = instanceUser.findUseridByUsername(username)
 
     if userid is None:
-        allLogger(0,"用户不存在")
+        allLogger(0, "用户不存在")
         return "login-fail"
     # 这个时候就要判断目录了以防万一
     ininUserDir(userid=userid)
@@ -176,7 +180,7 @@ def login():
     #  图片验证码
     if vcode != session.get("vcode"):
         info = f"userid为{userid},昵称为{nickname}登录过程中验图片验证码输入错误"
-        instanceLog.insert_detail(userid=userid, type="登录图片验证码错误", credit=0, target=0,info=info)
+        instanceLog.insert_detail(userid=userid, type="登录图片验证码错误", credit=0, target=0, info=info)
         listLogger(userid, info, [0])
         return "vcode-error"
     else:
@@ -191,7 +195,7 @@ def login():
             # 向log表中添加记录
             # 已经领过登录积分的情况下
             # 判断今天是否已经登陆过了（每天的首次登录才会送积分）
-            whetherGetLoginCredit=instanceCredit.check_limit_login_per_day(userid=userid)
+            whetherGetLoginCredit = instanceCredit.check_limit_login_per_day(userid=userid)
             if whetherGetLoginCredit is False:
                 response = make_response("login-pass")
             else:
@@ -203,12 +207,13 @@ def login():
                 # 不能领取登陆奖励
                 info = f"userid为{userid},昵称为{nickname}登录成功，但已领取过每天的登录奖励"
                 instanceLog.insert_detail(userid=userid, type="成功登录", credit=0, target=0,
-                                             info=info)
+                                          info=info)
                 listLogger(userid, info, [0])
             else:
                 # 领取每天的登陆奖励
                 info = f"userid为{userid},昵称为{nickname}每日登录加分成功"
-                instanceCredit.insert_detail(userid=userid, type="每日登录加分", credit=loginEvereDayCredit, target=0, info=info)
+                instanceCredit.insert_detail(userid=userid, type="每日登录加分", credit=loginEvereDayCredit, target=0,
+                                             info=info)
                 listLogger(userid, info, [0])
             return response
         else:
@@ -224,10 +229,10 @@ def login():
 @logDanger
 def logout():
     # 清空session 页面跳转
-    userid=session.get('userid')
-    info=f"userid为{userid} 昵称为{session.get('nickname')}的用户登出页面"
-    instanceLog.insert_detail(userid=userid,type="登出页面",credit=0,target=0,info=info)
-    listLogger(userid,info,[0])
+    userid = session.get('userid')
+    info = f"userid为{userid} 昵称为{session.get('nickname')}的用户登出页面"
+    instanceLog.insert_detail(userid=userid, type="登出页面", credit=0, target=0, info=info)
+    listLogger(userid, info, [0])
     session.clear()
     response = make_response("注销并重定向", 302)
     response.headers["Location"] = url_for("index.home")

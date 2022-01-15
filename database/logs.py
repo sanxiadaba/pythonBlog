@@ -3,9 +3,7 @@ import time
 from flask import session, request
 from sqlalchemy import Table
 
-from constant import maxModifyArticleNum
 from common.connect_db import connect_db
-from database.users import Users
 
 dbsession, md, DBase = connect_db()
 
@@ -18,14 +16,12 @@ class Log(DBase):
         if userid is None:
             userid = session.get("userid")
         if info is not None:
-            info=info+f" ip地址为{request.remote_addr}"
+            info = info + f" ip地址为{request.remote_addr}"
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         logP = Log(userid=userid, category=type, target=target, credit=credit, createtime=now,
-                      ipaddr=request.remote_addr, info=info)
+                   ipaddr=request.remote_addr, info=info)
         dbsession.add(logP)
         dbsession.commit()
-
-
 
     # 判断是否已赞成或反对该评论
     # 赞成返回1 反对返回2 不赞同不反对返回0
@@ -45,7 +41,6 @@ class Log(DBase):
         pass
 
     # 查看某一个用户的所有记录
-    def searchAllLogOfUser(self,userid):
-        allLogOfUser=dbsession.query(Log).filter_by(userid=userid).all()
+    def searchAllLogOfUser(self, userid):
+        allLogOfUser = dbsession.query(Log).filter_by(userid=userid).all()
         return allLogOfUser
-

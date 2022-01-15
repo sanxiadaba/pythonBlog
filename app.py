@@ -11,7 +11,6 @@ encoding: utf-8
 @gituhb: sanxiadaba/pythonBlog
 """
 
-
 import os
 import traceback
 from collections import defaultdict
@@ -20,11 +19,11 @@ import pymysql
 from flask import Flask, render_template, request, session
 from flask_sqlalchemy import SQLAlchemy
 
-from common.myLog import ininLogDir,logDanger,allLogger
+from common.myLog import ininLogDir, logDanger, allLogger
 from constant import config_mysql, replyAndAddCommentCredit, regGiveCredit, postArticleCredit
 from constant import sessionExpirationTime, sessionRestart, classification, portNum, creditListForReleaseArticle, \
     shufflingFigurePicture, shufflingFigureLink, indexLogoPicture, indexLogoPictureSize, indexAboveStr, \
-    whetherSaveShufflingFigure,databaseName,emailAccount,loginEvereDayCredit,whetherDebug,whetherUseGithubLogin
+    whetherSaveShufflingFigure, databaseName, emailAccount, loginEvereDayCredit, whetherDebug
 
 # 链接数据库的一些设置，防止报错
 pymysql.install_as_MySQLdb()
@@ -65,19 +64,18 @@ app.config['PERMANENT_SESSION_LIFETIME'] = sessionExpirationTime
 db = SQLAlchemy(app)
 
 
-
 # 404处理
 @app.errorhandler(404)
 @logDanger
 def page_not_find(e):
-    return render_template("erroe-404.html",myemail=emailAccount)
+    return render_template("erroe-404.html", myemail=emailAccount)
 
 
 # 500处理
 @app.errorhandler(500)
 @logDanger
 def page_not_find(e):
-    return render_template("error-500.html",myemail=emailAccount)
+    return render_template("error-500.html", myemail=emailAccount)
 
 
 # 把文章的类别”注册“到全局函数中
@@ -170,42 +168,45 @@ def before():
                 userid = session.get("userid")
                 session["nickname"] = nickname
                 session["role"] = result[0].role
-                if islogin =="true":
+                if islogin == "true":
                     if instanceCredit.check_limit_login_per_day(userid) is True:
-                        info=f"userid为{user} 昵称为{nickname}的用户每天登录成功,并且领取{loginEvereDayCredit}积分，这是自动登录"
-                        instanceCredit.insert_detail(type="每日登录",target=0,credit=loginEvereDayCredit,info=info)
-                        listLogger(userid,info,[0])
+                        info = f"userid为{user} 昵称为{nickname}的用户每天登录成功,并且领取{loginEvereDayCredit}积分，这是自动登录"
+                        instanceCredit.insert_detail(type="每日登录", target=0, credit=loginEvereDayCredit, info=info)
+                        listLogger(userid, info, [0])
                         # 用来判定是否每天自动登录，然后自己领积分
-                        session["judgeLin"]="1"
+                        session["judgeLin"] = "1"
                     else:
                         pass
 
+
 # 判断每天自动登录的接口，前端继承baseArticle模板的文件在加载页面的时候会访问该接口
 #  判断是否自动登录领取积分
-@app.route("/judgeAutoLogin",methods=["POST"])
+@app.route("/judgeAutoLogin", methods=["POST"])
 @logDanger
 def judgeAutoLogin():
     try:
-        if session.get("judgeLin")=="1":
+        if session.get("judgeLin") == "1":
             return "1"
         else:
             return "0"
     except:
-        e=traceback.format_exc()
-        allLogger(0,e)
+        e = traceback.format_exc()
+        allLogger(0, e)
     finally:
-        session["judgeLin"]="0"
+        session["judgeLin"] = "0"
+
 
 # 一个传递参数的接口
-@app.route("/toTransmitParam",methods=["GET"])
+@app.route("/toTransmitParam", methods=["GET"])
 @logDanger
 def toTransmitParam():
-    param={}
-    param["loginEvereDayCredit"]=loginEvereDayCredit
-    param["replyAndAddCommentCredit"]=replyAndAddCommentCredit
-    param["regGiveCredit"]=regGiveCredit
-    param["postArticleCredit"]=postArticleCredit
+    param = {}
+    param["loginEvereDayCredit"] = loginEvereDayCredit
+    param["replyAndAddCommentCredit"] = replyAndAddCommentCredit
+    param["regGiveCredit"] = regGiveCredit
+    param["postArticleCredit"] = postArticleCredit
     return param
+
 
 #  用来释放没连接的dbsession 防止出现阻塞
 @app.teardown_appcontext
@@ -213,9 +214,10 @@ def shutdown_session(exception=None):
     if exception is None:
         db.session.remove()
 
+
 # 改变网站的一些参数设置，比如，没人每天可评论几次
 # 登录、注册送多少积分等
-@app.route("/changeBlogParams",methods=["POST"])
+@app.route("/changeBlogParams", methods=["POST"])
 def changeBlogParams():
     pass
     return "1"
@@ -224,7 +226,7 @@ def changeBlogParams():
 #  主运行程序
 if __name__ == '__main__':
     # 导入实例化的数据库操作类
-    from database.instanceDatabase import instanceUser,instanceCredit
+    from database.instanceDatabase import instanceUser, instanceCredit
     from common.myLog import listLogger
     # 注册flask蓝图
     from controler.index import index

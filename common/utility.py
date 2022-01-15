@@ -21,10 +21,12 @@ from email.mime.text import MIMEText
 from hashlib import md5
 from io import BytesIO
 from smtplib import SMTP_SSL
-from common.myLog import rootDir,dirInDir
+
 from PIL import Image, ImageFont, ImageDraw
 from flask import request, session
+
 from common.myLog import listLogger
+from common.myLog import rootDir, dirInDir
 from constant import emailAdmit, emailAccount, portNum
 
 
@@ -173,32 +175,33 @@ def download_image(url, dest):
 
 
 # 解析列表中的图片url并生成缩略图
-def generate_thumb(url_list,userid):
+def generate_thumb(url_list, userid):
     myPictureName = "myPic_" + str(userid)
-    savePath=rootDir+"\\static\\img\\thumb"
+    savePath = rootDir + "\\static\\img\\thumb"
     # 先要确定存在这个文件夹
-    dirInDir(myPictureName,savePath)
+    dirInDir(myPictureName, savePath)
     for url in url_list:
         if url.startswith(f"http://127.0.0.1:{portNum}/static/img/upload/{myPictureName}"):
             filename = url.split("/")[-1]
-            picPathOld=f"{rootDir}\\static\\img\\upload\\{myPictureName}\\" + filename
-            picPathNew=savePath+"\\"+myPictureName+"\\"+filename
+            picPathOld = f"{rootDir}\\static\\img\\upload\\{myPictureName}\\" + filename
+            picPathNew = savePath + "\\" + myPictureName + "\\" + filename
             compress_image(picPathOld, picPathNew, 400)
-            return myPictureName+"/"+filename
+            return myPictureName + "/" + filename
     # 如果在内容中没有找到本地图片，需要将网络图片下载到本地再处理
     # 直接将第一张图片作为缩略图，并生成基于时间戳的标准文件名
-    savePath=rootDir+"\\static\\img\\download"
-    dirInDir(myPictureName,savePath)
+    savePath = rootDir + "\\static\\img\\download"
+    dirInDir(myPictureName, savePath)
     url = url_list[0]
     thumbname = time.strftime("%Y%m%d_%H%M%S." + "jpg")
-    download_image(url, savePath+"\\" +myPictureName+"\\"+ thumbname)
-    compress_image(savePath+"\\" +myPictureName+"\\"+ thumbname, rootDir+"\\"+"static\\img\\thumb\\" +myPictureName +"\\"+thumbname, 400)
-    userid=session.get('userid')
-    info=f"userid为{userid}的用户，下载{url}图片，并将其缩率图并将其保存为thumb/{myPictureName}/{thumbname}"
+    download_image(url, savePath + "\\" + myPictureName + "\\" + thumbname)
+    compress_image(savePath + "\\" + myPictureName + "\\" + thumbname,
+                   rootDir + "\\" + "static\\img\\thumb\\" + myPictureName + "\\" + thumbname, 400)
+    userid = session.get('userid')
+    info = f"userid为{userid}的用户，下载{url}图片，并将其缩率图并将其保存为thumb/{myPictureName}/{thumbname}"
     from database.instanceDatabase import instanceLog
-    instanceLog.insert_detail(userid=userid,target=0,credit=0,info=info,type="下载保存缩略图成功")
-    listLogger(userid,info,[8])
-    return myPictureName+"/" +thumbname
+    instanceLog.insert_detail(userid=userid, target=0, credit=0, info=info, type="下载保存缩略图成功")
+    listLogger(userid, info, [8])
+    return myPictureName + "/" + thumbname
 
 
 # 设置获取时间
@@ -216,6 +219,7 @@ def genearteMD5(strlin):
     # 否则报错为：hl.update(str)    Unicode-objects must be encoded before hashing
     hl.update(strlin.encode(encoding='utf-8'))
     return hl.hexdigest()
+
 
 # 获取访问当前端口的ip地址
 def getIpForFlask():

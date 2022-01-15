@@ -13,18 +13,17 @@ encoding: utf-8
 @gituhb: sanxiadaba/pythonBlog
 """
 
-
 import math
 import traceback
 
-from flask import Blueprint, session, request, abort, render_template, jsonify
+from flask import Blueprint, session, request, abort, render_template
 
+from common.myLog import logDanger, listLogger, allLogger
 from common.utility import parser_image_url, generate_thumb
-from constant import postArticleCredit, rateCreditForArticle, howCommentInArticle, maxUserPostArticleNum, \
+from constant import postArticleCredit, howCommentInArticle, maxUserPostArticleNum, \
     maxUserPostArticleNumOfEditor, maxModifyArticleNum
 from database.instanceDatabase import instanceUser, instanceArticle, instanceComment, instanceLog, instanceFavorite, \
-    instanceCredit,instanceUpload,instanceArticleLog
-from common.myLog import logDanger, listLogger, allLogger
+    instanceCredit, instanceUpload, instanceArticleLog
 
 article = Blueprint("article", __name__)
 
@@ -84,7 +83,7 @@ def readAll():
     # 这里判断积分是否足够的判断已经在前端做过了
     articleid = request.form.get("articleid")
     result = instanceArticle.find_by_id(articleid)
-    userid=session.get("userid")
+    userid = session.get("userid")
     authorid = int(instanceArticle.searchUseridByArticleid(articleid)[0])
     authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
     # 读者花费的的积分
@@ -112,12 +111,12 @@ def pre_post():
     fromUrl = str(request.referrer)
     # 查看是从哪个地方跳转来的，如果是从修改文章处跳转的话会将上一次的内容填充进去以供修改
     s1 = fromUrl
-    judge= True if  (s1.split("/")[-1].isdigit() is True and s1.split("/")[-2] == "article" ) else False
+    judge = True if (s1.split("/")[-1].isdigit() is True and s1.split("/")[-2] == "article") else False
     # 填充修改页面的值 当然到底填充空还是对应的文章需要用articleJudge这个参数来判断
     articleidModify = session.get("articleidModify")
     if articleidModify == "0" or articleidModify is None or judge is False:
-        session["articleidModify"]="0"
-        articleContent=""
+        session["articleidModify"] = "0"
+        articleContent = ""
     else:
         articleContent = instanceArticle.searchHeadlineAndContentByArticleid(articleidModify)["content"]
     return render_template("write.html", maxUserPostArticleNum=maxUserPostArticleNum, articleContent=articleContent,
@@ -135,10 +134,10 @@ def addArticle():
     if (len(headline) < 5 or len(content) < 100):
         return "invalided"
     type = int(request.form.get("type"))
-    typeArticle=type
+    typeArticle = type
     credit = int(request.form.get("credit"))
     credit = 0 if credit is None else credit
-    credit=int(credit)
+    credit = int(credit)
     drafted = int(request.form.get("drafted"))
     checked = int(request.form.get("checked"))
     articleid = int(request.form.get("articleid"))
@@ -149,37 +148,37 @@ def addArticle():
 
     # 再判断今天是否超出了投稿的限制(判断的是1、2、3不判断修改次数)
     # 添加对应log表以及log日志的记录
-    if instanceArticleLog.checkLimitUpload() is True and judgeType in range(1,4):
+    if instanceArticleLog.checkLimitUpload() is True and judgeType in range(1, 4):
         if judgeType == 1:
             info = f"userid为{userid}的用户 超出了每天保存草稿次数次数的限制"
-            type="保存草稿失败"
+            type = "保存草稿失败"
         elif judgeType == 2:
-            type="发布文章失败"
+            type = "发布文章失败"
             info = f"userid为{userid}的用户 超出了编辑每天发布文章次数的限制"
         elif judgeType == 3:
-            type="投递文章失败"
+            type = "投递文章失败"
             info = f"userid为{userid}的用户 超出了投递文章次数的限制"
         instanceLog.insert_detail(type=type, target=0, credit=0, info=info)
         listLogger(userid, info, [3])
-        instanceArticleLog.insert_detail(articleid=articleid,type=type,info=info)
+        instanceArticleLog.insert_detail(articleid=articleid, type=type, info=info)
         return f"limit-error-{judgeType}"
     # 再判断修改次数
     if instanceArticleLog.checkLimitModify() is True and judgeType == 4:
         info = f"userid为{userid}的用户 超出了每天修改文章次数的限制"
-        type="修改失败"
+        type = "修改失败"
         instanceLog.insert_detail(type=type, target=0, credit=0, info=info)
         listLogger(userid, info, [3])
-        instanceArticleLog.insert_detail(articleid=articleid,type=type,info=info)
+        instanceArticleLog.insert_detail(articleid=articleid, type=type, info=info)
         return "modify-limited"
     # 文章生成缩略图，如果没有，就随机生成一张
     url_list = parser_image_url(content)
     # 如果文章中有图片，那就根据一定规则生成该文章的缩略图，否则就为其分配一个对应序号的缩略图
     if len(url_list) > 0:
-        thumbname = generate_thumb(url_list,userid)
-        instanceUpload.insert_detail(imgname=thumbname,info="上传缩略图")
+        thumbname = generate_thumb(url_list, userid)
+        instanceUpload.insert_detail(imgname=thumbname, info="上传缩略图")
     else:
         # 如果文章中没有图片，那么就根据文章类型指定一个
-        thumbname = "default/"+"%d.jpg" % (int(type))
+        thumbname = "default/" + "%d.jpg" % (int(type))
     if judgeType != 4:  # 直接进行插入数据库操作
         try:
             # 返回新插入文章的id
@@ -188,7 +187,7 @@ def addArticle():
             # 编辑发布文章成功的情况下 给积分
             if judgeType == 2:
                 info = f"userid为{userid}的编辑 发布文章的articleid为{id}的需要消耗{credit}的文章，并且奖励{postArticleCredit}积分"
-                type="发布文章"
+                type = "发布文章"
                 # 这里奖励积分
                 instanceCredit.insert_detail(type=type, credit=postArticleCredit, target=id, info=info)
                 # 这里保存log
@@ -196,18 +195,18 @@ def addArticle():
 
             # 普通用户保存草稿
             elif judgeType == 1:
-                type="保存草稿"
+                type = "保存草稿"
                 info = f"userid为{userid}的普通用户 保存文章的articleid为{id}的需要消耗{credit}的文章"
                 instanceLog.insert_detail(type=type, credit=0, target=id, info=info)
                 listLogger(userid, info, [3])
             elif judgeType == 3:
-                type="投递文章"
+                type = "投递文章"
                 info = f"userid为{userid}的普通用户 投递文章的articleid为{id}的需要消耗{credit}的文章"
                 # 这里奖励积分
                 instanceCredit.insert_detail(type=type, credit=postArticleCredit, target=id, info=info)
                 # 这里保存log
                 listLogger(userid, info, [3, 5])
-            instanceArticleLog.insert_detail(articleid=id,type=type,info=info)
+            instanceArticleLog.insert_detail(articleid=id, type=type, info=info)
             return str(id)
         except:
             e = traceback.format_exc()
@@ -221,16 +220,17 @@ def addArticle():
                                                 content=content,
                                                 credit=credit, thumbnail=thumbname, drafted=drafted,
                                                 checked=checked)
-            type="修改文章"
+            type = "修改文章"
             info = f"userid为{userid}的用户 修改了文章的articleid为{id}的需要消耗{credit}的文章"
             instanceLog.insert_detail(type="修改文章", credit=0, target=id, info=info)
-            instanceArticleLog.insert_detail(articleid=articleid,type=type,info=info)
+            instanceArticleLog.insert_detail(articleid=articleid, type=type, info=info)
             listLogger(userid, info, [3])
             return str(id)
         except:
             e = traceback.format_exc()
             allLogger(0, e)
             return "post-fail"
+
 
 # 修改文章的时候访问的端口
 @article.route("/modifyArticle/<int:articleid>", methods=["GET"])
@@ -246,8 +246,8 @@ def modifyArticle(articleid):
 @logDanger
 def centerVar():
     if request.method == 'GET':
-        articleidModify=session.get("articleidModify")
-        if articleidModify is not None or articleidModify !="0":
+        articleidModify = session.get("articleidModify")
+        if articleidModify is not None or articleidModify != "0":
             return str(articleidModify)
         else:
             return "0"

@@ -12,9 +12,7 @@ encoding: utf-8
 @gituhb: sanxiadaba/pythonBlog
 """
 
-from flask import Blueprint, session, jsonify, render_template
-
-from database.instanceDatabase import instanceArticle
+from flask import Blueprint, session, render_template
 
 adminManage = Blueprint("adminManage", __name__)
 
@@ -25,7 +23,6 @@ def baseManage():
         return render_template("userManage.html")
     else:
         return render_template("adminManage.html")
-
 
 # 查看所有成员信息（用户数量、身份、qq等）
 

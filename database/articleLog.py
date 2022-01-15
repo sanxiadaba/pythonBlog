@@ -10,6 +10,7 @@ import time
 
 from flask import session, request
 from sqlalchemy import Table
+
 from common.connect_db import connect_db
 from constant import maxUserPostArticleNum, maxUserPostArticleNumOfEditor, maxModifyArticleNum
 
@@ -50,7 +51,7 @@ class ArticleLog(DBase):
         result = dbsession.query(ArticleLog).filter(ArticleLog.userid == session.get("userid"),
                                                     ArticleLog.createtime.between(start, end),
                                                     ArticleLog.type == "修改文章").count()
-        if result>=maxModifyArticleNum:
+        if result >= maxModifyArticleNum:
             return True
         else:
             return False

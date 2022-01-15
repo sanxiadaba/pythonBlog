@@ -1,6 +1,6 @@
 import time
 
-from flask import session,request
+from flask import session, request
 from sqlalchemy import Table
 
 from common.connect_db import connect_db
@@ -15,13 +15,13 @@ class Comment(DBase):
     __table__ = Table("comment", md, autoload=True)
 
     # 新增一条原始评论
-    def insert_comment(self, articleid, content,info=None):
+    def insert_comment(self, articleid, content, info=None):
         if info is not None:
-            info=info
-        ipaddr=request.remote_addr
+            info = info
+        ipaddr = request.remote_addr
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         comment = Comment(userid=session.get("userid"), articleid=articleid, content=content,
-                          ipaddr=ipaddr, createtime=now,info=info)
+                          ipaddr=ipaddr, createtime=now, info=info)
         dbsession.add(comment)
         dbsession.commit()
 
@@ -50,12 +50,12 @@ class Comment(DBase):
         return result
 
     # 新增一条原始评论的回复
-    def insert_reply(self, articleid, commentid, content, ipaddr,info=None):
-        if info is not  None:
-            info=info
+    def insert_reply(self, articleid, commentid, content, ipaddr, info=None):
+        if info is not None:
+            info = info
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         comment = Comment(userid=session.get("userid"), articleid=articleid, content=content, ipaddr=ipaddr,
-                          replyid=commentid, createtime=now, updatetime=now,info=info)
+                          replyid=commentid, createtime=now, updatetime=now, info=info)
         dbsession.add(comment)
         dbsession.commit()
 
@@ -124,12 +124,11 @@ class Comment(DBase):
     # 我的评论 #评论点赞数 #评论反对数(为求方便，这里先只显有关原始评论的信息)
     def searchAllMyComment(self):
         userid = session.get("userid")
-        data = dbsession.query(Comment.content,Comment.agreecount,Comment.opposecount,Comment.articleid,Comment.commentid).filter_by(userid==userid).all()
+        data = dbsession.query(Comment.content, Comment.agreecount, Comment.opposecount, Comment.articleid,
+                               Comment.commentid).filter_by(userid == userid).all()
         return data  # 注意，返回的是一个列表，列表的每个元素都是包含这五个元素的数组
 
-    def numOfALLMyComment(self,userid=None):
+    def numOfALLMyComment(self, userid=None):
         userid = session.get("userid") if userid is None else userid
-        numOfALLMyComment=dbsession.query(Comment).filter_by(userid=userid).count()
+        numOfALLMyComment = dbsession.query(Comment).filter_by(userid=userid).count()
         return numOfALLMyComment
-
-

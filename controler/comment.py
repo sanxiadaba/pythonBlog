@@ -17,8 +17,7 @@ import traceback
 
 from flask import Blueprint, request, session, jsonify
 
-from common.myLog import myLogger, allLogger, ininUserDir,listLogger,logDanger
-from common.utility import getIpForFlask
+from common.myLog import allLogger, ininUserDir, listLogger, logDanger
 from constant import howCommentInArticle
 from constant import replyAndAddCommentCredit
 from database.instanceDatabase import instanceArticle, instanceLog, instanceComment, instanceCredit, instanceUser
@@ -33,7 +32,7 @@ def addOriginComment():
     if session.get("islogin") == "true":
         articleid = request.form.get("articleid")
         content = request.form.get("content").strip()
-        userid=session.get("userid")
+        userid = session.get("userid")
         authorid = int(instanceArticle.searchUseridByArticleid(articleid)[0])
         # 对评论内容进行校验
         # 如果评论超过1000字或小于五个字
@@ -44,16 +43,16 @@ def addOriginComment():
             try:
                 # 评论成功后，更新积分明细和剩余积分，及文章的回复数量
                 info = f"userid为{userid}的用户 对作者id为{authorid}文章id为{articleid}进行了回复,并且获取{replyAndAddCommentCredit}积分"
-                instanceComment.insert_comment(articleid, content,info=info)
-                instanceCredit.insert_detail(type="添加评论", target=articleid, credit=replyAndAddCommentCredit,info=info)
-                instanceLog.insert_detail(type="文章被评论",target=articleid,credit=0,info=info)
+                instanceComment.insert_comment(articleid, content, info=info)
+                instanceCredit.insert_detail(type="添加评论", target=articleid, credit=replyAndAddCommentCredit, info=info)
+                instanceLog.insert_detail(type="文章被评论", target=articleid, credit=0, info=info)
                 instanceArticle.update_replycount(articleid)
-                listLogger(userid,info,[7,5])
+                listLogger(userid, info, [7, 5])
                 # 接下来是被评论人对应的log日志
-                listLogger(authorid,info,[6,7])
+                listLogger(authorid, info, [6, 7])
                 return "add-pass"
-            except :
-                e=traceback.format_exc()
+            except:
+                e = traceback.format_exc()
                 allLogger(0, e)
                 return "add-fail"
         else:
@@ -74,25 +73,26 @@ def reply():
     commentid = request.form.get("commentid")
     content = request.form.get("content").strip()
     ipaddr = request.remote_addr
-    userid=session.get("userid")
+    userid = session.get("userid")
     # 通过commentid获取原作者id
-    authorid=instanceComment.searchUseridByCommentid(commentid)
+    authorid = instanceComment.searchUseridByCommentid(commentid)
     # 通过userid获取作者的昵称 方便后面的写日志
-    authorNickname=instanceUser.searchNicknameByUserid(authorid)[0]
+    authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
     if len(content) < 5 or len(content) > 1000:
         return "content-invaild"
     # 判断每天的评论限制 （每天的评论次数也有限制，这些都可以在constant文件修改）
     if not instanceComment.check_limit_per_day():
         try:
-            info=f"userid为{userid}的用户，在articleid为{articleid}的文章中回复了userid为{authorid},昵称为{authorNickname}的commentid为{commentid}的评论"
-            instanceComment.insert_reply(articleid=articleid, commentid=commentid, ipaddr=ipaddr, content=content,info=info)
+            info = f"userid为{userid}的用户，在articleid为{articleid}的文章中回复了userid为{authorid},昵称为{authorNickname}的commentid为{commentid}的评论"
+            instanceComment.insert_reply(articleid=articleid, commentid=commentid, ipaddr=ipaddr, content=content,
+                                         info=info)
             instanceCredit.insert_detail(type="回复原始评论", target=articleid, credit=replyAndAddCommentCredit, info=info)
             instanceLog.insert_detail(type="评论被回复", target=articleid, credit=0, info=info)
             # 回复原始评论也算文章的评论
             instanceArticle.update_replycount(articleid)
             listLogger(userid, info, [7, 5])
             # 接下来是被评论人对应的log日志
-            listLogger(authorid, info, [6,10])
+            listLogger(authorid, info, [6, 10])
             return "reply-pass"
         except:
             e = traceback.format_exc()
@@ -117,9 +117,11 @@ def comment_page(articleid, page):
         list[i]["agreeOrdisAgreeType"] = instanceLog.whetherAgreeOrDisInThisComment(list[i]["commentid"])
     return jsonify(list)
 
+
 """
 下面四个函数主要是执行赞同、反对评论以及取消赞同、反对评论的操作
 """
+
 
 # 为赞同加一
 @comment.route("/agreeComment", methods=["POST"])
@@ -130,22 +132,23 @@ def agreeComment():
     authorId = instanceComment.searchUseridByCommentid(commentid)
     userid = session.get("userid")
     nickname = session.get("nickname")
-    authorNickname=instanceUser.searchNicknameByUserid(authorId)[0]
+    authorNickname = instanceUser.searchNicknameByUserid(authorId)[0]
     ininUserDir(userid=authorId)
     try:
         instanceComment.update_agreecount(commentid)
-        info=f"用户id为{userid} 昵称为{nickname} 赞同了用户id为{authorId} 昵称为{authorNickname} 的评论id号为{commentid}的评论 "
+        info = f"用户id为{userid} 昵称为{nickname} 赞同了用户id为{authorId} 昵称为{authorNickname} 的评论id号为{commentid}的评论 "
         instanceLog.insert_detail(type="赞同评论", target=commentid, credit=0,
                                   info=info)
         instanceLog.insert_detail(type="评论被赞同", target=commentid, credit=0,
                                   info=info)
-        listLogger(userid,info,[9])
-        listLogger([authorId,info,[10]])
+        listLogger(userid, info, [9])
+        listLogger([authorId, info, [10]])
         return "1"
     except:
         e = traceback.format_exc()
         allLogger(0, e)
         return "0"
+
 
 # 反对加一
 @comment.route("/disagreeComment", methods=["POST"])
@@ -155,7 +158,7 @@ def disagreeComment():
     authorId = instanceComment.searchUseridByCommentid(commentid)
     userid = session.get("userid")
     nickname = session.get("nickname")
-    authorNickname  = instanceUser.searchNicknameByUserid(authorId)[0]
+    authorNickname = instanceUser.searchNicknameByUserid(authorId)[0]
     ininUserDir(userid=authorId)
     try:
         instanceComment.update_agreecount(commentid)

@@ -13,6 +13,7 @@ encoding: utf-8
 
 from sqlalchemy import MetaData
 
+
 def connect_db():
     from app import db
     dbsession = db.session
