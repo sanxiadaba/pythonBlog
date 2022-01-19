@@ -2,11 +2,11 @@ import time
 
 from flask import session
 from sqlalchemy import Table, func
-
+from constant import classification
 from common.connect_db import connect_db
 from constant import recommendedNumOfSide
 from database.users import Users
-
+from app import my_truncate
 dbsession, md, DBase = connect_db()
 
 
@@ -184,8 +184,9 @@ class Article(DBase):
     # 返回我的所有文章的id号、标题、内容、回复数、赞同数、反对数
     def searchAllMyArticle(self, userid=None):
         userid = session.get("userid") if userid is None else userid
-        allMyArticle = dbsession.query(Article).filter(Article.userid == userid).order_by(Article.articleid).all()
+        allMyArticle = dbsession.query(Article).filter(Article.userid == userid,Article.hide == 0, Article.drafted == 0, Article.checked == 1).order_by(Article.articleid).all()
         return allMyArticle
+
 
     # 修改文章标题
     def modifyArticleHeadline(self, articleid, headline):
@@ -205,6 +206,14 @@ class Article(DBase):
         row.hide = 1
         dbsession.commit()
 
+    # 作者本人删除文章
+    def deleteArticle(self, articleid):
+        row = dbsession.query(Article).filter_by(articleid=articleid).first()
+        row.hide = 1
+        row.delete=1
+        dbsession.commit()
+
+
     # 设置编辑推荐按文章
     def recommendedArticle(self, articleid):
         row = dbsession.query(articleid).filter_by(articleid=articleid).first()
@@ -214,6 +223,22 @@ class Article(DBase):
     # 所有文章数量
     def searchAllNumberOfArticle(self):
         return dbsession.query(Article).count()
+
+    #  查询自己已经删除的文章的数量
+    def searchDeleteArticleCount(self):
+        userid=session.get("userid")
+        return dbsession.query(Article).filter_by(userid=userid,delete=1).count()
+
+    # 作者所有文章的数量
+    def searchAllArticleNum(self):
+        userid = session.get("userid")
+        return dbsession.query(Article).filter_by(userid=userid).count()
+
+    # 作者除了已删除的文章的数量
+    def exceptDeleteNum(self):
+        return self.searchAllArticleNum()-self.searchDeleteArticleCount()
+
+
 
     # 所有文章评论数量、访问数量之和
     def searchALLNumberOfComment(self):
@@ -233,3 +258,21 @@ class Article(DBase):
                                                                            Article.userid == userid).all()
         allNumOfAllArticleRead = sum([i[0] for i in allNumOfAllArticleRead])
         return allNumOfAllArticleRead
+
+    # 文章编号、文章标题、栏目、评论数量、阅读数量、创建日期
+    def articleInfo(self,userid):
+        result=dbsession.query(Article.articleid,Article.headline,Article.type,Article.replycount,Article.readcount,Article.createtime,Article.credit,Article.drafted,Article.checked,Article.hide,Article.recommended,Article.delete).filter(Article.userid==userid,Article.delete==0).all()
+        return result
+    # 根据查询articleid是否是草稿
+    def searchWhetherDrafted(self,articleid):
+        result=dbsession.query(Article.drafted).filter_by(articleid=articleid).first()[0]
+        return True if result is 1 else False
+
+    # 查看文章是否被隐藏
+    def searchWhetherHide(self,articleid):
+        result = dbsession.query(Article.hide).filter_by(articleid=articleid).first()[0]
+        return True if result is 1 else False
+
+
+
+

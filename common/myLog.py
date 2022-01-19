@@ -81,6 +81,9 @@ logUserLog = logDir + "\\" + "userLog"
 # D:\Code\Github\pythonBlog\logs\adminLog
 logAdminLog = logDir + "\\" + "adminLog"
 
+# 存放头像的路径
+avatarPath=rootDir+"\\static\\img\\avatar"
+
 
 # 在一开始，就创建allLog与ErrorLog文件夹
 def ininLogDir():
@@ -117,7 +120,7 @@ def ininUserDir(userid=None):
     # 存放用户的目录路径
     logUserLogLin = logUserLog + "\\" + f"userLog_{useridInMyLog}"
 
-    # 用户注册、登录、登出、找回密码的表  0
+    # 用户注册、登录、登出、找回密码、修改信息的表  0
     dirInDir(userLogNameList[0], logUserLogLin)
     # 购买文章的记录   1
     dirInDir(userLogNameList[1], logUserLogLin)

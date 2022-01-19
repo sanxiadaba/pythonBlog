@@ -110,11 +110,14 @@
 {#    保存草稿为1 发布文章为2 投稿为3 修改文章为4#}
 
         <button class="form-control btn-default col-2" onclick="doPost('-1','1')" id="biaoji1">保存草稿</button>
+        {% if whetherHide is false %}
         {% if session.get("role")=="editor" %}
             <button class="form-control btn-primary col-2" onclick="doPost('-1','2')" id="xiugaiwenzhang">发布文章</button>
         {% else %}
             <button class="form-control btn-primary col-2" onclick="doPost('-1','3')" id="xiugaiwenzhang">投稿</button>
         {% endif %}
+        {% endif %}
+
         </select>
     </div>
     <div>
@@ -200,6 +203,10 @@
                     }
                 else if (data==="modify-limited"){
                     bootbox.alert({title: "错误提示", message: "每天最多修改文章数量为"+maxModifyArticleNum+"次，敬请谅解"});
+                }
+                else if (data==="xiu"){
+                    bootbox.alert({title: "信息提示", message: "修改草稿成功"});
+                        qingti("保存草稿成功")
                 }
                 else{
                     if (t===1){

@@ -163,14 +163,14 @@ def before():
                 session["islogin"] = "true"
                 session["username"] = username
                 session["userid"] = result[0].userid
-                nickname = username.split("@")[0]
                 islogin = session.get("islogin")
                 userid = session.get("userid")
+                nickname = instanceUser.searchNicknameByUserid(userid)
                 session["nickname"] = nickname
                 session["role"] = result[0].role
                 if islogin == "true":
                     if instanceCredit.check_limit_login_per_day(userid) is True:
-                        info = f"userid为{user} 昵称为{nickname}的用户每天登录成功,并且领取{loginEvereDayCredit}积分，这是自动登录"
+                        info = f"userid为{userid} 昵称为{nickname}的用户每天登录成功,并且领取{loginEvereDayCredit}积分，这是自动登录"
                         instanceCredit.insert_detail(type="每日登录", target=0, credit=loginEvereDayCredit, info=info)
                         listLogger(userid, info, [0])
                         # 用来判定是否每天自动登录，然后自己领积分

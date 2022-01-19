@@ -20,7 +20,7 @@ import traceback
 
 from flask import Blueprint, make_response, session, request, url_for
 
-from common.myLog import ininUserDir, logDanger, listLogger, allLogger
+from common.myLog import ininUserDir, logDanger, listLogger, allLogger,dirInDir,avatarPath
 from common.utility import ImageCode, gen_email_code, send_email
 from common.utility import genearteMD5
 from constant import whetherDistinguishCapital, regGiveCredit, loginEvereDayCredit, timeoutOfEcode
@@ -105,9 +105,10 @@ def register():
         session["role"] = result.role
         userid = session.get("userid")
         # 更新积分表 每个新用户注册的话是送积分的
-        info = f"userid为{user},昵称为{nickname}的用户注册成功"
+        info = f"userid为{userid},昵称为{nickname}的用户注册成功"
         instanceCredit.insert_detail(type="用户注册", target=0, credit=regGiveCredit, info=info, userid=userid)
         listLogger(userid, info, [0])
+        dirInDir(f"myPic_{userid}",avatarPath)
         ininUserDir()
         return "reg-pass"
 

@@ -140,3 +140,6 @@ maxModifyArticleNum = 10
 
 # 每个人每天最多上传图片的数量
 maxUploadPicNum = 20
+
+# 设置在管理文章的后台页面，没几个文章分页
+everyPageInHou=2

@@ -362,10 +362,10 @@ function cancle_opposeComment(s,j,n){
  function  modifyArticle(articleid){
     $.post("/centerVar",param="articleid="+articleid,function (data){
         if (data==="1"){
-            return false
+            location.href="/prepost"
         }
     })
-    location.href="/prepost"
+
      }
 
 // 自动加载的函数
@@ -403,3 +403,259 @@ else {
 }
     })
 }
+
+// 修改昵称
+function modifyNickname(s,yuan) {
+    var newNickname = $.trim($(s).parent().prev().children("input").val());
+    if (newNickname === yuan) {
+        return false
+    }
+    else if (newNickname.length<30){
+        bootbox.alert({title: "错误提示", message: "要修改的昵称超过限制，请修改"});
+        return false
+    }
+    bootbox.confirm({
+        title: "操作提示",
+        message: "是否确定修改你的昵称",
+        buttons: {
+            cancel: {
+                label: '再考虑一下'
+            },
+            confirm: {
+                label: '确定修改'
+            }
+        },
+        callback: function (result) {
+            if (result.toString() === "true") {
+                $.post("/modifyNickname",param="newNickname="+newNickname,function (data) {
+                    if(data==="1"){
+                        qingti("修改昵称成功")
+                        $(s).parent().prev().children("input").attr("value", newNickname)
+                        $(s).parent().prev().children("input").focus()
+                    }
+                    else {
+                         bootbox.alert({title: "错误提示", message: "修改昵称失败，请联系管理员"});
+                    }
+
+                })
+            }
+        }
+
+    })
+}
+
+// 申请成为编辑
+ function applyEditor(s){
+    bootbox.confirm({
+        title: "操作提示",
+        message: "是否申请成为编辑,经过管理员同意后，编辑可直接不经过管理员审核而发布文章",
+        buttons: {
+            cancel: {
+                label: '再考虑一下'
+            },
+            confirm: {
+                label: '确定申请'
+            }
+        },
+        callback: function (result) {
+            if (result.toString() === "true") {
+                $.post("/applyEditor",function (data){
+                    if (data==="1"){
+                        bootbox.alert({title: "操作提示", message: "申请成功，请等待管理员的审核"});
+                        $(s).text("已申请")
+                    }
+                })
+            }
+        }
+
+    })
+ }
+
+// 修改qq号
+ function modifyQQ(s,yuan) {
+    var newQQ = $.trim($(s).parent().prev().children("input").val());
+    var reg = new RegExp("^[0-9]*$");
+    if (newQQ === yuan) {
+        return false
+    }
+    else if (newQQ.length>11||!reg.test(newQQ)){
+        bootbox.alert({title: "错误提示", message: "QQ号格式错误，请重试"});
+        return false
+    }
+    bootbox.confirm({
+        title: "操作提示",
+        message: "是否确定修改你的QQ",
+        buttons: {
+            cancel: {
+                label: '再考虑一下'
+            },
+            confirm: {
+                label: '确定修改'
+            }
+        },
+        callback: function (result) {
+            if (result.toString() === "true") {
+                $.post("/modifyQQ",param="newQQ="+newQQ,function (data) {
+                    if(data==="1"){
+                        qingti("修改QQ成功")
+                        $(s).parent().prev().children("input").attr("value", newQQ)
+                        $(s).parent().prev().children("input").focus()
+                    }
+                    else {
+                         bootbox.alert({title: "错误提示", message: "修改QQ失败，请联系管理员"});
+                    }
+
+                })
+            }
+        }
+
+    })
+}
+
+// 删除文章
+ function hideArticle(articleid){
+    bootbox.confirm({
+        title: "操作提示",
+        message: "是否确定永久删除该文章",
+        buttons: {
+            cancel: {
+                label: '再考虑一下'
+            },
+            confirm: {
+                label: '确定删除'
+            }
+        },
+        callback: function (result) {
+            if (result.toString() === "true") {
+                $.post("/hideArticle",param="articleid="+articleid,function (data) {
+                    if(data==="1"){
+                        qingti("删除文章成功")
+                        var lin="#article__"+articleid
+                        $(lin).css("display","none")
+                        var num= $("#allMyArticleNum").text()
+                        var newNum=parseInt(num)-1
+                        $("#allMyArticleNum").text(newNum)
+
+                    }
+                    else {
+                         bootbox.alert({title: "错误提示", message: "删除文章失败，请联系管理员"});
+                    }
+
+                })
+            }
+        }
+
+    })
+ }
+
+// 更改userManage模块的函数
+ function changeUserManageModel(m){
+    $("#myInfo_1").removeClass("active");
+    $("#myArticle_1").removeClass("active");
+    $("#myComment_1").removeClass("active");
+    $("#myContact_1").removeClass("active");
+    $("#myCredit_1").removeClass("active");
+    $("#myLog_1").removeClass("active");
+    $("#myFavo_1").removeClass("active");
+
+    $("#myInfo").css("display","none")
+    $("#myArticle").css("display","none")
+    $("#myComment").css("display","none")
+    $("#myContact").css("display","none")
+    $("#myCredit").css("display","none")
+    $("#myLog").css("display","none")
+    $("#myFavo").css("display","none")
+
+    var mainContent=("#"+m).slice(0,-2)
+
+    $("#"+m).addClass("active");
+    $(mainContent).css("display","block")
+ }
+
+// 更改管理页面中文章分页
+ function changeManagePage(id,howManyPage,everyPageInHou,myArticleNum){
+    howManyPage=parseInt(howManyPage)
+    everyPageInHou=parseInt(everyPageInHou)
+    myArticleNum=parseInt(myArticleNum)
+    id=parseInt(id)
+    var arr = [1];
+    for(var i = 2; i <= howManyPage; i++){
+      arr.push(i);
+    }
+    for (const v of arr) {
+        var lin="#biao_"+v.toString()
+        $(lin).removeClass("active")
+
+    }
+    lin="#biao_"+id.toString()
+     $(lin).addClass("active")
+
+     //上面是变化下面的页数
+
+     var arr1=[]
+     for(var j = 1; j <= myArticleNum; j++){
+      arr1.push(j);
+    }
+
+     for (const w of arr1) {
+        var lin_1=".index_"+w.toString()
+        $(lin_1).css("display","none")
+    }
+
+     if (myArticleNum<everyPageInHou){
+         var arr5=[]
+         for(var mn1 = 1; mn1 <= myArticleNum; mn1++){
+        arr5.push(mn1);
+    }
+
+         for (const op1 of arr5) {
+        var lin_6=".index_"+op1.toString()
+        $(lin_6).css("display","")
+    }
+     }
+     else {
+         if(id===1){
+         var arr4=[]
+         for(var mn = 1; mn <= everyPageInHou; mn++){
+        arr4.push(mn);
+    }
+
+         for (const op of arr4) {
+        var lin_5=".index_"+op.toString()
+        $(lin_5).css("display","")
+    }
+     }
+     else {
+         if (id<howManyPage){
+         var arr2=[]
+         for(var k = (id-1)*everyPageInHou+1; k <= id*everyPageInHou; k++){
+        arr2.push(k);
+    }
+
+         for (const p of arr2) {
+        var lin_3=".index_"+p.toString()
+        $(lin_3).css("display","")
+    }
+     }
+     else {
+         var arr3=[]
+         for(var l = (id-1)*everyPageInHou+1; l <= myArticleNum; l++){
+        arr3.push(l);
+    }
+
+         for (const y of arr3) {
+        var lin_4=".index_"+y.toString()
+        $(lin_4).css("display","")
+    }
+
+     }
+
+     }
+     }
+
+
+
+
+
+
+ }

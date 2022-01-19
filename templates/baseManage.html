@@ -9,8 +9,13 @@
     <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="/static/css/style.css">
     <link rel="stylesheet" type="text/css" href="/static/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="/static/css/toastr.min.css">
     <script src="/static/js/jquery-3.5.1.min.js"></script>
     <script src="/static/js/vue.min.js"></script>
+    <script src="/static/js/myFunction.js"></script>
+    <script src="/static/js/bootbox.min.js"></script>
+    <script src="/static/js/toastr.min.js"></script>
+
 </head>
 
 <body class="user-select">
@@ -56,5 +61,25 @@
 
 <script src="/static/js/bootstrap.min.js"></script>
 <script src="/static/js/admin-scripts.js"></script>
+
+<script type="text/javascript">
+
+　　function myfun_3(){ 　
+    $.get("/controlBiaoNum",function (data){
+        if (data==="0"){
+            return false
+        }
+        else if(data==="1") {
+            changeUserManageModel('myArticle_1')
+        }
+
+    })
+    　
+
+
+} 　　
+window.onload = myfun_3;//不要括号
+</script>
+
 </body>
 </html>

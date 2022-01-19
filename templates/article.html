@@ -197,7 +197,7 @@
             for (var i in comment) {
                 content += `<div class="col-12 list row" id="returnArticle${i}" style="">`;
                 content += '<div class="col-2 icon">';
-                content += '<img src="/static/img/avatar/' + comment[i]['avatar'] + '"class="img-fluid" style="width: 70px;"/>';
+                content += '<img src="/static/img/avatar/' + comment[i]['avatar'] + '"class="img-fluid" style="width: 80px;height: 80px;border-radius: 50%"/>';
                 content += '</div>'
                 content += '<div class="col-10 comment">'
                 content += '<div class="col-12 row" style="padding: 0px">'
@@ -274,7 +274,7 @@
                     for (var j in reply) {
                         content += `<div class="col-12 list row" id="returnComment${i}${j}" style="">`;
                         content += '<div class="col-2 icon">';
-                        content += '<img src="/static/img/avatar/' + reply[j]["avatar"] + '"class="img-fluid" style="width:45px;"/>';
+                        content += '<img src="/static/img/avatar/' + reply[j]["avatar"] + '"class="img-fluid" style="width:55px;height: 55px;border-radius: 50%"/>';
                         content += '</div>';
                         content += '<div class="col-10 comment" style="border: solid 1px #ccc;">';
                         content += '<div class="col-12 row" style="color: #337AB7;">';
@@ -525,8 +525,8 @@
                     {% set thisIndex=loop.index0 %}
                     <div class="col-12 list row" id="returnArticle{{ thisIndex }}" style="">
                         <div class="col-2 icon">
-                            <img src="/static/img/avatar/{{ comment['avatar'] }}" class="img-fluid"
-                                 style="width: 70px;"/>
+                            <img  src="/static/img/avatar/{{ comment['avatar'] }}" class="img-fluid img-circle"
+                                 style="width: 80px;height: 80px;border-radius: 50%" />
                         </div>
                         <div class="col-10 comment">
                             <div class="col-12 row" style="padding: 0px">
@@ -600,7 +600,7 @@
                                 {#                            style="display: block" id="returnArticle2"#}
                                 <div class="col-2 icon">
                                     <img src="/static/img/avatar/{{ reply['avatar'] }}" class="img-fluid"
-                                         style="width: 45px;"/>
+                                         style="width: 55px;height: 55px ;border-radius: 50%"/>
                                 </div>
 
                                 <div class="col-10 comment" style="border: solid 1px #ccc">

@@ -72,7 +72,11 @@ class Users(DBase):
 
     # 根据userid查询我QQ
     def searchMyQQ(self, userid):
-        return dbsession.query(Users.qq).filter_by(userid=userid).first()[0]
+        row= dbsession.query(Users.qq).filter_by(userid=userid).first()[0]
+        if row is None:
+            return "None"
+        else:
+            return row
 
     # 根据userid查询我的头像
     def searchMyAvatar(self, userid):
@@ -96,14 +100,15 @@ class Users(DBase):
     def modifyUserThumbnail(self, thumbnail):
         userid = session.get("userid")
         user = dbsession.query(Users).filter_by(userid=userid).first()
-        user.nickname = thumbnail
+        user.avatar = thumbnail
+        print(thumbnail,userid)
         dbsession.commit()
 
     # 修改qq号
     def modifyUserQQnum(self, newQQ):
         userid = session.get("userid")
         user = dbsession.query(Users).filter_by(userid=userid).first()
-        user.nickname = newQQ
+        user.qq = newQQ
         dbsession.commit()
 
     # 申请成为编辑
@@ -147,3 +152,8 @@ class Users(DBase):
         row = dbsession.query(Users).filter_by(userid=userid)
         row.forbidLogin = 1
         dbsession.commit()
+
+    # 查看是否申请成为编辑
+    def whetherApplyForEditor(self,userid):
+        whetherApplyForEditor=dbsession.query(Users.apply).filter_by(userid=userid).first()[0]
+        return whetherApplyForEditor
