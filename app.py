@@ -200,11 +200,8 @@ def judgeAutoLogin():
 @app.route("/toTransmitParam", methods=["GET"])
 @logDanger
 def toTransmitParam():
-    param = {}
-    param["loginEvereDayCredit"] = loginEvereDayCredit
-    param["replyAndAddCommentCredit"] = replyAndAddCommentCredit
-    param["regGiveCredit"] = regGiveCredit
-    param["postArticleCredit"] = postArticleCredit
+    param = {"loginEvereDayCredit": loginEvereDayCredit, "replyAndAddCommentCredit": replyAndAddCommentCredit,
+             "regGiveCredit": regGiveCredit, "postArticleCredit": postArticleCredit}
     return param
 
 

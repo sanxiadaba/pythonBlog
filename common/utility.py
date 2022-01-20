@@ -142,7 +142,7 @@ def model_list(result):
 def compress_image(source, dest, width):
     from PIL import Image
     im = Image.open(source)
-    im=im.convert('RGB')
+    im = im.convert('RGB')
     x, y = im.size
     if x > width:
         ys = int(y * width / x)

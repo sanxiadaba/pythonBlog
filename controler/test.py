@@ -48,9 +48,10 @@ def test_3():
     print(a, b)
     return "3"
 
+
 # 测试四 查看当前nickname
 @test.route("/test_4", methods=["GET"])
 def test_4():
-    nickname=session.get("nickname")
+    nickname = session.get("nickname")
     print(nickname)
     return "3"

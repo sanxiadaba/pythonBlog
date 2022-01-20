@@ -14,12 +14,13 @@ import base64
 import os
 import time
 import traceback
-import snoop
 from math import ceil
+
 from flask import Blueprint, session, jsonify, render_template, request
-from constant import everyPageInHou
+
 from common.myLog import logDanger, dirInDir, avatarPath, listLogger, allLogger
 from common.utility import compress_image
+from constant import everyPageInHou
 from database.instanceDatabase import instanceArticle, instanceFavorite, instanceComment, instanceUser, instanceLog
 
 userManage = Blueprint("userManage", __name__)
@@ -53,19 +54,19 @@ def baseManage():
     whetherApplyForEditor = instanceUser.whetherApplyForEditor(userid)
 
     # 用户后台管理文章的信息
-    articleInfo=instanceArticle.articleInfo(userid)
+    articleInfo = instanceArticle.articleInfo(userid)
 
     #  查询我的所有文章的数量（除了已删除）
-    myArticleNum=instanceArticle.exceptDeleteNum()
+    myArticleNum = instanceArticle.exceptDeleteNum()
 
     #  管理页面的文章页面分几页
-    howManyPage=ceil(myArticleNum/everyPageInHou)
-    howManyPage_1=howManyPage
-    howManyPage=list(range(2,howManyPage+1))
+    howManyPage = ceil(myArticleNum / everyPageInHou)
+    howManyPage_1 = howManyPage
+    howManyPage = list(range(2, howManyPage + 1))
 
     # 判断跳转到哪个页面
-    controlBiaoNum=session.get("controlBiaoNum")
-    controlBiaoNum =0 if controlBiaoNum is None else int(controlBiaoNum)
+    controlBiaoNum = session.get("controlBiaoNum")
+    controlBiaoNum = 0 if controlBiaoNum is None else int(controlBiaoNum)
 
     MyInfo = {}
     MyInfo["numOfAllMyArticle"] = numOfAllMyArticle
@@ -81,18 +82,20 @@ def baseManage():
     MyInfo["whetherApplyForEditor"] = whetherApplyForEditor
 
     # 我的评论，评论点赞数、评论赞同数、目标文章        隐藏评论
-    myComment,allMyCommentNum =instanceComment.searchMyComment(userid)
+    myComment, allMyCommentNum = instanceComment.searchMyComment(userid)
     # with snoop:
-    guo=[]
+    guo = []
     for i in myComment:
-        lin=[]
+        lin = []
         for j in i:
             lin.append(j)
         lin.append(instanceArticle.searchHeadlineByArticleid(i[3]))
         guo.append(lin)
-    myComment=guo
+    myComment = guo
 
-    return render_template("userManage.html", myInfo=MyInfo,articleInfo=articleInfo,everyPageInHou=everyPageInHou,myArticleNum=myArticleNum,howManyPage=howManyPage,howManyPage_1=howManyPage_1,controlBiaoNum=controlBiaoNum,myComment=myComment,allMyCommentNum=allMyCommentNum)
+    return render_template("userManage.html", myInfo=MyInfo, articleInfo=articleInfo, everyPageInHou=everyPageInHou,
+                           myArticleNum=myArticleNum, howManyPage=howManyPage, howManyPage_1=howManyPage_1,
+                           controlBiaoNum=controlBiaoNum, myComment=myComment, allMyCommentNum=allMyCommentNum)
 
 
 #  返回我的资料
@@ -168,7 +171,7 @@ def applyEditor():
 @userManage.route("/hideArticle", methods=["POST"])
 @logDanger
 def hideArticle():
-    userid=session.get("userid")
+    userid = session.get("userid")
     articleid = request.form.get('articleid')
     try:
         instanceArticle.deleteArticle(articleid)
@@ -181,6 +184,7 @@ def hideArticle():
         e = traceback.format_exc()
         allLogger(0, e)
         return "0"
+
 
 # 修改头像
 @userManage.route("/uploadUserAvatar", methods=["POST", "GET"])
@@ -221,6 +225,8 @@ def upload():
         listLogger(userid, info, [0])
         instanceLog.insert_detail(type="更换头像", target=userid, credit=0, info=info)
         return "1"
+
+
 # 已收藏、已取消收藏
 
 # 取消收藏
@@ -234,12 +240,12 @@ def upload():
 # 如何获取积分
 
 # 控制再次刷新页面时，出现在哪个标签
-@userManage.route("/controlBiaoNum",methods=["POST","GET"])
+@userManage.route("/controlBiaoNum", methods=["POST", "GET"])
 @logDanger
 def controlBiaoNum():
     if request.method == 'GET':
         controlBiaoNum = session.get("controlBiaoNum")
-        session["controlBiaoNum"]=0
+        session["controlBiaoNum"] = 0
         if controlBiaoNum is not None or controlBiaoNum != "0":
             return str(controlBiaoNum)
         else:

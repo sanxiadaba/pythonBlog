@@ -66,15 +66,13 @@ class Users(DBase):
     def searchNicknameByUserid(self, userid):
         return dbsession.query(Users.nickname).filter_by(userid=userid).first()
 
-
-
     # 根据userid查询注册邮箱
     def searchMyEmail(self, userid):
         return dbsession.query(Users.username).filter_by(userid=userid).first()[0]
 
     # 根据userid查询我QQ
     def searchMyQQ(self, userid):
-        row= dbsession.query(Users.qq).filter_by(userid=userid).first()[0]
+        row = dbsession.query(Users.qq).filter_by(userid=userid).first()[0]
         if row is None:
             return "None"
         else:
@@ -103,7 +101,7 @@ class Users(DBase):
         userid = session.get("userid")
         user = dbsession.query(Users).filter_by(userid=userid).first()
         user.avatar = thumbnail
-        print(thumbnail,userid)
+        print(thumbnail, userid)
         dbsession.commit()
 
     # 修改qq号
@@ -156,6 +154,6 @@ class Users(DBase):
         dbsession.commit()
 
     # 查看是否申请成为编辑
-    def whetherApplyForEditor(self,userid):
-        whetherApplyForEditor=dbsession.query(Users.apply).filter_by(userid=userid).first()[0]
+    def whetherApplyForEditor(self, userid):
+        whetherApplyForEditor = dbsession.query(Users.apply).filter_by(userid=userid).first()[0]
         return whetherApplyForEditor

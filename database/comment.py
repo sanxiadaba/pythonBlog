@@ -134,21 +134,23 @@ class Comment(DBase):
         return numOfALLMyComment
 
     # 后台管理之我的评论的模块
-    def searchMyComment(self,userid):
-        result=dbsession.query(Comment.content,Comment.agreecount,Comment.opposecount,Comment.articleid,Comment.createtime,Comment.commentid).filter(Comment.hide==0,Comment.replyid==0,Comment.userid==userid).all()
-        return result,len(result)
+    def searchMyComment(self, userid):
+        result = dbsession.query(Comment.content, Comment.agreecount, Comment.opposecount, Comment.articleid,
+                                 Comment.createtime, Comment.commentid).filter(Comment.hide == 0, Comment.replyid == 0,
+                                                                               Comment.userid == userid).all()
+        return result, len(result)
 
     # 查询articleid下的所有评论
-    def searchAllComment(self,articleid):
-        row=dbsession.query(Comment.commentid).filter_by(articleid=articleid).all()
-        result=[]
+    def searchAllComment(self, articleid):
+        row = dbsession.query(Comment.commentid).filter_by(articleid=articleid).all()
+        result = []
         for i in row:
             result.append(i[0])
         return result
 
     # 删除文章的时候将所有该文章底下的评论设置为隐藏
-    def hideCommnetWhenHideArticle(self,articleid):
+    def hideCommnetWhenHideArticle(self, articleid):
         for i in self.searchAllComment(articleid):
-            lin=dbsession.query(Comment).filter_by(commentid=i).first()
-            lin.hide=1
+            lin = dbsession.query(Comment).filter_by(commentid=i).first()
+            lin.hide = 1
         dbsession.commit()

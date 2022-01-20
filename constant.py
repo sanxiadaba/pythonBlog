@@ -142,4 +142,4 @@ maxModifyArticleNum = 10
 maxUploadPicNum = 20
 
 # 设置在管理文章的后台页面，没几个文章分页
-everyPageInHou=2
+everyPageInHou = 2

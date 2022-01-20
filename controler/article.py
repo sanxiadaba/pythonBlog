@@ -107,25 +107,26 @@ def readAll():
 @article.route("/prepost")
 @logDanger
 def pre_post():
-    whetherHide=False
+    whetherHide = False
     #  上一个跳转的页面,如果不是从文章哪里跳转的，都不会填充
     fromUrl = str(request.referrer)
     # 查看是从哪个地方跳转来的，如果是从修改文章处跳转的话会将上一次的内容填充进去以供修改
     s1 = fromUrl
-    if s1.split("/")[-1]=="userManage":
-        session["controlBiaoNum"]=1
-    judge = True if ((s1.split("/")[-1].isdigit() is True and s1.split("/")[-2] == "article") or s1.split("/")[-1]=="userManage") else False
+    if s1.split("/")[-1] == "userManage":
+        session["controlBiaoNum"] = 1
+    judge = True if ((s1.split("/")[-1].isdigit() is True and s1.split("/")[-2] == "article") or s1.split("/")[
+        -1] == "userManage") else False
     # 填充修改页面的值 当然到底填充空还是对应的文章需要用articleJudge这个参数来判断
     articleidModify = session.get("articleidModify")
     if articleidModify == "0" or articleidModify is None or judge is False:
         session["articleidModify"] = "0"
         articleContent = ""
     else:
-        whetherHide=instanceArticle.searchWhetherHide(articleidModify)
+        whetherHide = instanceArticle.searchWhetherHide(articleidModify)
         articleContent = instanceArticle.searchHeadlineAndContentByArticleid(articleidModify)["content"]
     return render_template("write.html", maxUserPostArticleNum=maxUserPostArticleNum, articleContent=articleContent,
                            maxUserPostArticleNumOfEditor=maxUserPostArticleNumOfEditor,
-                           maxModifyArticleNum=maxModifyArticleNum,whetherHide=whetherHide)
+                           maxModifyArticleNum=maxModifyArticleNum, whetherHide=whetherHide)
 
 
 # 发布文章的按钮
@@ -219,9 +220,9 @@ def addArticle():
     else:
         # 如果是已经添加过的文章，只做修改操作
         try:
-            whetherDrafted=instanceArticle.searchWhetherDrafted(articleid)
+            whetherDrafted = instanceArticle.searchWhetherDrafted(articleid)
             if whetherDrafted is True:
-                drafted=1
+                drafted = 1
 
             id = instanceArticle.update_article(articleid=articleid, type=typeArticle, headline=headline,
                                                 content=content,

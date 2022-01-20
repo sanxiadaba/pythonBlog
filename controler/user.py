@@ -20,7 +20,7 @@ import traceback
 
 from flask import Blueprint, make_response, session, request, url_for
 
-from common.myLog import ininUserDir, logDanger, listLogger, allLogger,dirInDir,avatarPath
+from common.myLog import ininUserDir, logDanger, listLogger, allLogger, dirInDir, avatarPath
 from common.utility import ImageCode, gen_email_code, send_email
 from common.utility import genearteMD5
 from constant import whetherDistinguishCapital, regGiveCredit, loginEvereDayCredit, timeoutOfEcode
@@ -108,7 +108,7 @@ def register():
         info = f"userid为{userid},昵称为{nickname}的用户注册成功"
         instanceCredit.insert_detail(type="用户注册", target=0, credit=regGiveCredit, info=info, userid=userid)
         listLogger(userid, info, [0])
-        dirInDir(f"myPic_{userid}",avatarPath)
+        dirInDir(f"myPic_{userid}", avatarPath)
         ininUserDir()
         return "reg-pass"
 
@@ -174,7 +174,7 @@ def login():
     if userid is None:
         allLogger(0, "用户不存在")
         return "login-fail"
-    nickname=instanceUser.searchNicknameByUserid(userid)[0]
+    nickname = instanceUser.searchNicknameByUserid(userid)[0]
     # 这个时候就要判断目录了以防万一
     ininUserDir(userid=userid)
     # 再验证验证码对不对

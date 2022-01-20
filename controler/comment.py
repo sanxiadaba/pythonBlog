@@ -142,7 +142,7 @@ def agreeComment():
         instanceLog.insert_detail(type="评论被赞同", target=commentid, credit=0,
                                   info=info)
         listLogger(userid, info, [9])
-        listLogger([authorId, info, [10]])
+        listLogger(authorId, info, [10])
         return "1"
     except:
         e = traceback.format_exc()
@@ -168,7 +168,7 @@ def disagreeComment():
         instanceLog.insert_detail(type="评论被反对", target=commentid, credit=0,
                                   info=info)
         listLogger(userid, info, [9])
-        listLogger([authorId, info, [10]])
+        listLogger(authorId, info, [10])
         return "1"
     except:
         e = traceback.format_exc()
@@ -194,7 +194,7 @@ def cancle_agreeComment():
         instanceLog.insert_detail(type="评论取消被赞同", target=commentid, credit=0,
                                   info=info)
         listLogger(userid, info, [9])
-        listLogger([authorId, info, [10]])
+        listLogger(authorId, info, [10])
         return "1"
     except:
         e = traceback.format_exc()
@@ -219,7 +219,7 @@ def cancle_disagreeComment():
         instanceLog.insert_detail(type="评论被取消反对", target=commentid, credit=0,
                                   info=info)
         listLogger(userid, info, [9])
-        listLogger([authorId, info, [10]])
+        listLogger(authorId, info, [10])
         return "1"
     except:
         e = traceback.format_exc()
@@ -243,7 +243,7 @@ def hideComment():
         instanceLog.insert_detail(type="删除评论", target=commentid, credit=0,
                                   info=info)
         listLogger(userid, info, [9])
-        if userid!=authorId:
+        if userid != authorId:
             listLogger(authorId, info, [10])
         return "1"
     except:

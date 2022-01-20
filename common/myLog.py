@@ -82,7 +82,7 @@ logUserLog = logDir + "\\" + "userLog"
 logAdminLog = logDir + "\\" + "adminLog"
 
 # 存放头像的路径
-avatarPath=rootDir+"\\static\\img\\avatar"
+avatarPath = rootDir + "\\static\\img\\avatar"
 
 
 # 在一开始，就创建allLog与ErrorLog文件夹
