@@ -181,6 +181,11 @@ class Article(DBase):
         result["content"] = row[1]
         return result
 
+    # 根据文章的id查询文章的标题
+    def searchHeadlineByArticleid(self, articleid):
+        row = dbsession.query(Article.headline).filter_by(articleid=articleid).first()[0]
+        return row
+
     # 返回我的所有文章的id号、标题、内容、回复数、赞同数、反对数
     def searchAllMyArticle(self, userid=None):
         userid = session.get("userid") if userid is None else userid

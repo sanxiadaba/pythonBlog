@@ -130,7 +130,7 @@ def resetUserPassword():
 
     # 根据玩完整名查询userid
     userid = instanceUser.findUseridByUsername(username)
-    userNickname = instanceUser.searchNicknameByUserid(userid)
+    userNickname = instanceUser.searchNicknameByUserid(userid)[0]
 
     # 校验邮箱验证码是否正确
     if ecode != session.get("ecode"):
@@ -168,13 +168,13 @@ def login():
     username = request.form.get("username").strip()
     password = request.form.get("password").strip()
     vcode = request.form.get("logincode").lower().strip()
-    nickname = username.split("@")[0]
     # 先判断账户是否存在
     userid = instanceUser.findUseridByUsername(username)
 
     if userid is None:
         allLogger(0, "用户不存在")
         return "login-fail"
+    nickname=instanceUser.searchNicknameByUserid(userid)[0]
     # 这个时候就要判断目录了以防万一
     ininUserDir(userid=userid)
     # 再验证验证码对不对

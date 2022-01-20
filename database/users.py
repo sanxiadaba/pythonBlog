@@ -66,6 +66,8 @@ class Users(DBase):
     def searchNicknameByUserid(self, userid):
         return dbsession.query(Users.nickname).filter_by(userid=userid).first()
 
+
+
     # 根据userid查询注册邮箱
     def searchMyEmail(self, userid):
         return dbsession.query(Users.username).filter_by(userid=userid).first()[0]

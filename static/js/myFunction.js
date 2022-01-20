@@ -288,6 +288,40 @@ function hideComment(s,commentid,num,numLocate,j){
      )
 }
 
+
+function hideComment_1(commentid){
+    bootbox.confirm({
+    title: "操作提示",
+    message: "是否确定永久删除该评论",
+    buttons: {
+        cancel: {
+            label: '再考虑一下'
+        },
+        confirm: {
+            label: '确定删除'
+        }
+    },
+    callback: function (result) {
+        if (result.toString() ==="true" ){
+        $.post("/hideComment", param="commentid="+commentid, function (data) {
+            if (data==="1"){
+            var lin="#comment__"+commentid.toString()
+                $(lin).css("display","none")
+             bootbox.alert({title: "操作提示", message: "删除评论成功，可在用户中心查看记录"});
+             qingti("删除评论成功")
+         }
+            else {
+                bootbox.alert({title: "错误提示", message: "删除评论失败，请联系管理员"});
+            }
+        })
+    }
+    }
+}
+
+
+     )
+}
+
 // 写反对函数
 function opposeComment(s,j,n){
     $.post("/disagreeComment", param="commentid="+j, function (data) {
@@ -410,8 +444,8 @@ function modifyNickname(s,yuan) {
     if (newNickname === yuan) {
         return false
     }
-    else if (newNickname.length<30){
-        bootbox.alert({title: "错误提示", message: "要修改的昵称超过限制，请修改"});
+    else if (newNickname.length>30){
+        bootbox.alert({title: "错误提示", message: "要修改的昵长度超过限制，请修改"});
         return false
     }
     bootbox.confirm({
@@ -566,6 +600,39 @@ function modifyNickname(s,yuan) {
     $("#myLog").css("display","none")
     $("#myFavo").css("display","none")
 
+     var tiao="0"
+     if (m==="myInfo_1"){
+        tiao="0";
+     }
+     else if(m==="myArticle_1")
+     {tiao="1";
+
+     }
+     else if(m==="myComment_1")
+     {tiao="2";
+
+     }
+     else if(m==="myCredit_1")
+     {tiao="3";
+
+     }
+     else if(m==="myArticle_1")
+     {tiao="4";
+
+     }
+     else if(m==="myLog_1")
+     {tiao="5";
+
+     }
+     else if(m==="myFavo_1")
+     {tiao="6";
+
+     }
+     $.post("/controlBiaoNum",param="controlBiaoNum="+tiao,function (data){
+         return false
+     })
+
+
     var mainContent=("#"+m).slice(0,-2)
 
     $("#"+m).addClass("active");
@@ -658,4 +725,12 @@ function modifyNickname(s,yuan) {
 
 
 
+ }
+
+ // 跳转到指定文章
+ function tiaoArticle(articleid){
+    location.href="/article/"+articleid.toString();
+    $.post("/controlBiaoNum",param="controlBiaoNum=2",function (data){
+        return false
+    })
  }

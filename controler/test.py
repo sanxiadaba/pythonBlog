@@ -12,7 +12,7 @@ encoding: utf-8
 @gituhb: sanxiadaba/pythonBlog
 """
 
-from flask import Blueprint
+from flask import Blueprint, session
 
 from database.instanceDatabase import *
 
@@ -46,4 +46,11 @@ def test_2():
 def test_3():
     a, b = instanceArticle.searchALLNumberOfComment()
     print(a, b)
+    return "3"
+
+# 测试四 查看当前nickname
+@test.route("/test_4", methods=["GET"])
+def test_4():
+    nickname=session.get("nickname")
+    print(nickname)
     return "3"

@@ -14,6 +14,7 @@ import base64
 import os
 import time
 import traceback
+import snoop
 from math import ceil
 from flask import Blueprint, session, jsonify, render_template, request
 from constant import everyPageInHou
@@ -78,7 +79,20 @@ def baseManage():
     MyInfo["restOfMyCredit"] = restOfMyCredit
     MyInfo["myAvatar"] = myAvatar
     MyInfo["whetherApplyForEditor"] = whetherApplyForEditor
-    return render_template("userManage.html", myInfo=MyInfo,articleInfo=articleInfo,everyPageInHou=everyPageInHou,myArticleNum=myArticleNum,howManyPage=howManyPage,howManyPage_1=howManyPage_1,controlBiaoNum=controlBiaoNum)
+
+    # 我的评论，评论点赞数、评论赞同数、目标文章        隐藏评论
+    myComment,allMyCommentNum =instanceComment.searchMyComment(userid)
+    # with snoop:
+    guo=[]
+    for i in myComment:
+        lin=[]
+        for j in i:
+            lin.append(j)
+        lin.append(instanceArticle.searchHeadlineByArticleid(i[3]))
+        guo.append(lin)
+    myComment=guo
+
+    return render_template("userManage.html", myInfo=MyInfo,articleInfo=articleInfo,everyPageInHou=everyPageInHou,myArticleNum=myArticleNum,howManyPage=howManyPage,howManyPage_1=howManyPage_1,controlBiaoNum=controlBiaoNum,myComment=myComment,allMyCommentNum=allMyCommentNum)
 
 
 #  返回我的资料
@@ -150,6 +164,7 @@ def applyEditor():
 # 我的评论 #评论点赞数 #评论反对数
 
 # 删除评论（注意到时候设置文章评论数要减去1）
+# 注意还要将该文章下的所有评论设置为隐藏
 @userManage.route("/hideArticle", methods=["POST"])
 @logDanger
 def hideArticle():
@@ -160,21 +175,12 @@ def hideArticle():
         info = f"userid为{userid}的用户删除了articleid为{articleid}的文章"
         listLogger(userid, info, [0])
         instanceLog.insert_detail(type="删除文章", target=userid, credit=0, info=info)
+        instanceComment.hideCommnetWhenHideArticle(articleid)
         return "1"
     except:
         e = traceback.format_exc()
         allLogger(0, e)
         return "0"
-
-# 我的文章
-
-# 文章评论数
-
-# 文章浏览数
-
-# 修改文章标题
-
-# 修改文章内容
 
 # 修改头像
 @userManage.route("/uploadUserAvatar", methods=["POST", "GET"])
