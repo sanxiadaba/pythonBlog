@@ -46,7 +46,8 @@ class Credit(DBase):
                 # 文章作者的userid 和nickname 以及应该获取的积分
                 authorid = int(instanceArticle.searchUseridByArticleid(target)[0])
                 authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
-                authorGetCredit = math.ceil(rateCreditForArticle * credit)
+                #  注意这里credit要乘以-1给变回来
+                authorGetCredit = math.ceil(rateCreditForArticle * credit*-1)
 
                 # 购买者在上面已经减去对应积分
                 # 文章作者获取对应的积分
@@ -114,6 +115,24 @@ class Credit(DBase):
     # 积分明细
     # 返回积分相关变化
     def creditChangeLog(self, userid=None):
+        a=Article()
         userid = session.get("userid") if userid is None else userid
-        allCreditChangeLog = dbsession.query(Credit).filter_by(userid=userid).all()
+        allCreditChangeLog = dbsession.query(Credit.category,Credit.credit,Credit.target).filter_by(userid=userid).all()
+        result=[]
+        for i in allCreditChangeLog:
+            lin=[]
+            for j in i:
+                lin.append(j)
+            if i[2] !=0:
+                # 如果文章没被隐藏的话
+                lin.append(a.searchHeadlineByArticleid(i[2]))
+            else:
+                lin.append(" ")
+            # 再判断文章是否已经被隐藏
+            if a.searchWhetherHide(i[2]) is False:
+                lin.append("0")
+            else:
+                lin.append("1")
+            result.append(lin)
+        allCreditChangeLog=result
         return allCreditChangeLog

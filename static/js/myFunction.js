@@ -1,4 +1,7 @@
- // 发送邮箱验证码
+//  先定义一些事先需要的变量
+
+
+// 发送邮箱验证码
 //  参数里的n用来判断这是发送注册验证码还是找回密码验证码
 function doSendMail(obj,n) {
     var email=""
@@ -273,7 +276,7 @@ function hideComment(s,commentid,num,numLocate,j){
                     idNum="#returnComment"+numLocate.toString()+j.toString()
                 }
              $(idNum).css("display","none");
-             bootbox.alert({title: "操作提示", message: "删除评论成功，可在用户中心查看记录"});
+             bootbox.alert({title: "操作提示", message: "删除评论成功"});
              qingti("删除评论成功")
          }
             else {
@@ -307,7 +310,7 @@ function hideComment_1(commentid){
             if (data==="1"){
             var lin="#comment__"+commentid.toString()
                 $(lin).css("display","none")
-             bootbox.alert({title: "操作提示", message: "删除评论成功，可在用户中心查看记录"});
+             bootbox.alert({title: "操作提示", message: "删除评论成功"});
              qingti("删除评论成功")
          }
             else {
@@ -591,6 +594,7 @@ function modifyNickname(s,yuan) {
     $("#myCredit_1").removeClass("active");
     $("#myLog_1").removeClass("active");
     $("#myFavo_1").removeClass("active");
+    $("#getCredit_1").removeClass("active");
 
     $("#myInfo").css("display","none")
     $("#myArticle").css("display","none")
@@ -599,6 +603,7 @@ function modifyNickname(s,yuan) {
     $("#myCredit").css("display","none")
     $("#myLog").css("display","none")
     $("#myFavo").css("display","none")
+    $("#getCredit").css("display","none")
 
      var tiao="0"
      if (m==="myInfo_1"){
@@ -616,7 +621,7 @@ function modifyNickname(s,yuan) {
      {tiao="3";
 
      }
-     else if(m==="myArticle_1")
+     else if(m==="myContact_1")
      {tiao="4";
 
      }
@@ -626,6 +631,10 @@ function modifyNickname(s,yuan) {
      }
      else if(m==="myFavo_1")
      {tiao="6";
+
+     }
+     else if(m==="getCredit_1")
+     {tiao="7";
 
      }
      $.post("/controlBiaoNum",param="controlBiaoNum="+tiao,function (data){
@@ -728,9 +737,406 @@ function modifyNickname(s,yuan) {
  }
 
  // 跳转到指定文章
- function tiaoArticle(articleid){
+ function tiaoArticle(articleid,n){
     location.href="/article/"+articleid.toString();
-    $.post("/controlBiaoNum",param="controlBiaoNum=2",function (data){
+    $.post("/controlBiaoNum",param="controlBiaoNum="+n.toString(),function (data){
         return false
     })
  }
+
+ // 取消收藏
+ function cancel_favorite(articleid,n=-1) {
+        $.ajax({
+            url: "/favorite/" + articleid,
+            type: "delete",
+            success: function (data) {
+                if (data == "not-login") {
+                    bootbox.alert({title: "错误提示", message: "请先登录本界面"})
+                } else if (data == "cancel-pass") {
+                    bootbox.alert({title: "信息提示", message: "取消收藏成功"})
+                    //    菜单名称改为感谢收藏
+                    $(".favorite-btn").html('<span class=\"oi oi-heart \" aria-hidden=\"true\" ></span> 欢迎再来')
+                    //    取消收藏按钮的单击事件
+                    $(".favorite-btn").attr("onclick", "").unbind("click");
+                    if(n===-1){
+                        return false
+                    }
+                    else {
+                        var lin="#favorite__"+n.toString();
+                        $(lin).hide()
+                    }
+
+                } else {
+                    bootbox.alert({title: "错误提示", message: "取消收藏失败，请联系管理员"})
+                }
+            }
+        })
+    }
+
+
+
+// 添加文章收藏
+ function add_favorite(articleid) {
+        $.post("/favorite", "articleid=" + articleid, function (data) {
+            if (data == "not-login") {
+                bootbox.alert({title: "错误提示", message: "请先登录本界面"})
+            } else if (data == "favorite-pass") {
+                bootbox.alert({title: "信息提示", message: "本文收藏成功，可在我的收藏中查看,再次刷新页面可选择取消收藏"})
+                //    菜单名称改为感谢收藏
+                $(".favorite-btn").html('<span class=\"oi oi-heart \" aria-hidden=\"true\" style=\"color: red\"></span> 感谢收藏')
+                //    取消收藏按钮的单击事件
+                $(".favorite-btn").attr("onclick", "").unbind("click");
+            } else {
+                bootbox.alert({title: "错误提示", message: "收藏失败，请联系管理员"})
+            }
+        })
+    }
+
+ // 添加评论
+ function addCommnet(articleid) {
+        var content = $.trim($("#comment").val());
+        if (content.length < 5 || content.length > 1000) {
+            bootbox.alert({title: "错误提示", message: "评论内容在5~1000字之间"});
+            return false
+        }
+        var param = "articleid=" + articleid + "&content=" + content;
+        $.post("/comment", param, function (data) {
+            if (data == "not-login") {
+                bootbox.alert({title: "错误提示", message: "请先登录再评论"});
+            } else if (data == "add-limit") {
+                bootbox.alert({title: "错误提示", message: "您当天最多只能评论五次"});
+
+            } else if (data == "add-pass") {
+                $.get("/toTransmitParam",function (data){
+                    var replyAndAddCommentCredit=data["replyAndAddCommentCredit"]
+                qingti("回复评论成功，积分+"+replyAndAddCommentCredit)
+                setTimeout("location.reload();", 2000)
+
+    })
+
+
+            } else {
+                bootbox.alert({title: "错误提示", message: "发表评论出错，请联系管理员"});
+
+            }
+        })
+    }
+
+ // 填充评论（前端填充）
+ function fillComment(articleid, pageid) {
+        $("#commentDiv").empty();  // 清空现有评论
+        var content = "";
+        $.get("/comment/" + articleid + "-" + pageid, function (data) {
+            var comment = data;
+            for (var i in comment) {
+                content += `<div class="col-12 list row" id="returnArticle${i}" style="">`;
+                content += '<div class="col-2 icon">';
+                content += '<img src="/static/img/avatar/' + comment[i]['avatar'] + '"class="img-fluid" style="width: 80px;height: 80px;border-radius: 50%"/>';
+                content += '</div>'
+                content += '<div class="col-10 comment">'
+                content += '<div class="col-12 row" style="padding: 0px">'
+                content += '<div class="col-sm-6 col-12 commenter">';
+                content += comment[i]["nickname"];
+                content += '&nbsp;&nbsp;&nbsp;' + comment[i]["createtime"];
+                content += '</div>';
+                content += '<div class="col-sm-6 col-12 reply">';
+
+                if ("{{article.userid}}" === "{{session.get('userid')}}" ||
+                    "{{session.get('role')}}" == "admin" || comment[i]['userid'] + "" == "{{session.get('userid')}}") {
+                    content += '<label onclick="gotoReply(' + comment[i]['commentid'] + ')"';
+                    content += '<span class="oi oi-arrow-circle-right"aria-hidden="true"></span> ';
+                    content += '回复</label>&nbsp;&nbsp;&nbsp;'
+                    content += `<label onclick="hideComment(this,${comment[i]['commentid']},1,${i},-1)"`;
+
+                    content += '<span class="oi oi-delete"aria-hidden="true"></span>删除评论</label> ';
+                } else {
+                    if (comment[i]["agreeOrdisAgreeType"] === 0) {
+                        content += `<label onclick="gotoReply(${comment[i]['commentid']})">
+                                            <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>回复
+                                        </label>&nbsp;&nbsp;
+
+                                        <label onclick="agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: visible;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font>赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                        </label>&nbsp;&nbsp;
+
+                                        <label onclick="opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: visible;" id="opposeComment1">
+                                <font color=""><span class="oi oi-x"
+                                      aria-hidden="true"></span>反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                        </label>`
+                    } else if (comment[i]["agreeOrdisAgreeType"] === 1) {
+                        content += `<label onclick="gotoReply(${comment[i]['commentid']})">
+                                            <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>回复
+                                        </label>&nbsp;&nbsp;
+
+                                        <label onclick="cancle_agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: visible;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font color="red">取消赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                        </label>&nbsp;&nbsp;
+
+                                        <label onclick="opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: hidden;" id="opposeComment1">
+                                <font color=""><span class="oi oi-x"
+                                      aria-hidden="true"></span>反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                        </label>`
+                    } else if (comment[i]["agreeOrdisAgreeType"] === -1) {
+                        content += `<label onclick="gotoReply(${comment[i]['commentid']})">
+                                            <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>回复
+                                        </label>&nbsp;&nbsp;
+
+                                        <label onclick="agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: hidden;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font>赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                        </label>&nbsp;&nbsp;
+
+                                        <label onclick="cancle_opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: hidden id="opposeComment1">
+                                <font color="red"><span class="oi oi-x"
+                                      aria-hidden="true"></span>取消反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                        </label>`
+                    }
+                }
+                content += '</div>';
+                content += '</div>';
+                content += '<div class="col-12 content">';
+                content += comment[i]["content"];
+                content += '</div>';
+                content += '</div>';
+                content += '</div>';
+
+                //    在当前评论下面填充回复评论
+                if (comment[i]["reply_list"].length > 0) {
+                    var reply = comment[i]["reply_list"];
+                    for (var j in reply) {
+                        content += `<div class="col-12 list row" id="returnComment${i}${j}" style="">`;
+                        content += '<div class="col-2 icon">';
+                        content += '<img src="/static/img/avatar/' + reply[j]["avatar"] + '"class="img-fluid" style="width:55px;height: 55px;border-radius: 50%"/>';
+                        content += '</div>';
+                        content += '<div class="col-10 comment" style="border: solid 1px #ccc;">';
+                        content += '<div class="col-12 row" style="color: #337AB7;">';
+                        content += '<div class="col-sm-7 col-12 commenter" style="color:#337AB7;">';
+
+                        //    填充用户昵称
+                        content += reply[j]["nickname"]
+                        content += "回复";
+                        content += comment[i]["nickname"];
+                        content += '&nbsp;&nbsp;&nbsp;';
+                        content += reply[j]["createtime"];
+                        content += '</div>';
+                        content += '<div class="col-sm-5 col-12 reply">';
+
+                        //    回复的评论不能继续评论，但可以删除评论和点赞(作者或管理员的话)
+                        if ("{{article.userid}}" == "{{session.get('userid')}}" ||
+                            "{{session.get('role')}}" == "admin" || reply[j]["userid"] + "" == "{{session.get('userid')}}") {
+                            content += `<label onclick="hideComment(this,${reply[j]["commentid"]},2,${i},${j})">`;
+                            content += '<span class="oi oi-delete" aria-hideen="true"></span>删除评论';
+                            content += '</label>&nbsp;&nbsp;';
+                        }
+                        if (comment[i]["agreeOrdisAgreeType"] === 0) {
+                            content += `<label onclick="agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: visible;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font>赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                        </label>&nbsp;&nbsp;
+
+                                        <label onclick="opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: visible;" id="opposeComment1">
+                                <font color=""><span class="oi oi-x"
+                                      aria-hidden="true"></span>反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                        </label>`
+                        } else if (comment[i]["agreeOrdisAgreeType"] === 1) {
+                            content += `<label onclick="cancle_agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: visible;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font color="red">取消赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                        </label>&nbsp;&nbsp;
+
+                                        <label onclick="opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: hidden;"  id="opposeComment1">
+                                <font color=""><span class="oi oi-x"
+                                      aria-hidden="true"></span>反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                        </label>`
+                        } else if (comment[i]["agreeOrdisAgreeType"] === -1) {
+                            content += `<label onclick="agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: hidden;" id="agreeComment1">
+                                            <span class="oi oi-chevron-bottom"
+                                                  aria-hidden="true"></span><font>赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                        </label>&nbsp;&nbsp;
+                                        <label onclick="cancle_opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility:visible;" id="opposeComment1">
+                                <font color="red"><span class="oi oi-x"
+                                      aria-hidden="true"></span>取消反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                        </label>`
+                        }
+
+                        content += '</div>';
+                        content += '</div>';
+                        content += '<div class="col-12">';
+                        content += '回复内容' + reply[j]["content"];
+                        content += '</div>';
+                        content += '</div>';
+                        content += '</div>';
+
+
+                    }
+                }
+            }
+            $("#commentDiv").html(content);  //填充到评论区
+
+        });
+    }
+
+ //  回复原始评论
+ function replyComment(articleid) {
+        var content = $.trim($("#comment").val());
+        if (content.length < 5 || content.length > 1000) {
+            bootbox.alert({title: "错误提示", message: "评论内容再5~1000字之间"});
+            return false
+        }
+        var param = "articleid=" + articleid;
+        param += "&content=" + content;
+        param += "&commentid=" + COMMENTID;
+        $.post("/reply", param, function (data) {
+            if (data == "not-login") {
+                bootbox.alert({title: "错误提示", message: "请先登录"});
+            } else if (data == "reply-limit") {
+                bootbox.alert({title: "错误提示", message: "当天已用完五次评论的限额"});
+            } else if (data == "reply-pass") {
+                $.get("/replyAndAddCommentCredit",function (data){
+                    var replyAndAddCommentCredit=data["replyAndAddCommentCredit"]
+                qingti("回复评论成功，积分+"+replyAndAddCommentCredit)
+                setTimeout("location.reload();", 2000)
+
+    })
+                gotoPage(articleid,PAGE)
+
+            } else if (data == "reply-fail") {
+                bootbox.alert({title: "错误提示", message: "回复评论错误，请联系管理员"});
+            }
+        })
+
+    }
+
+ // 添加文章的评论
+ function gotoReply(commentid) {
+        $("#replyBtn").show();
+        $("#submitBtn").hide();
+        if ("{{session.get('islogin')}}" === "true") {
+            $("#nickname_1").val("请在此回复编号为" + commentid + "的评论");
+        } else {
+            $("#nickname_2").val("请在此回复编号为" + commentid + "的评论");
+        }
+
+        $("#comment").focus();
+        COMMENTID = commentid;
+
+    }
+
+ // 评论跳转到哪一页
+ function gotoPage(articleid, type) {
+        //    如果当前是第一页，那么上一页还是第一页
+        if (type === "prev") {
+            if (PAGE > 1) {
+                PAGE -= 1;
+            }
+        } else if (type === "next") {
+            if (PAGE < TOTAL) {
+                PAGE += 1;
+            }
+        } else {
+            PAGE = parseInt(type);
+        }
+        fillComment(articleid, PAGE)
+    }
+
+// 定义搜索函数
+function dosearch(e) {
+        if (e != null && e.keyCode != 13) {
+            return false
+        }
+        var keyword = $.trim($("#keyword").val());
+        if (keyword.length === 0 || keyword.length > 10 || keyword.indexOf("%") >= 0) {
+            bootbox.alert({"title": "错误提示", "message": "你输入的关键字不合法"});
+            $("#keyword").focus();
+            return false
+        }
+        location.href = "/search/1-" + keyword;
+    }
+
+// 截取字符串
+function truncate(headline, length) {
+        var count = 1;
+        var output = "";
+        for (var i in headline) {
+            output += headline.charAt(i);
+            var code = headline.charCodeAt(i);
+            if (code <= 128) {
+                count += 0.5;
+            } else {
+                count += 1;
+            }
+            if (count > length) {
+                break;
+            }
+        }
+        return output + "..."
+
+    }
+
+//   定义删除多个文章的函数
+function delMany(){
+				var names=document.getElementsByName("checkbox[]");
+                var arr=[]
+                bootbox.confirm({
+        title: "操作提示",
+        message: "是否确定删除文章",
+        buttons: {
+            cancel: {
+                label: '再考虑一下'
+            },
+            confirm: {
+                label: '确定修改'
+            }
+        },
+        callback: function (result) {
+            if (result.toString() === "true") {
+                for(var x=0;x<names.length;x++){
+					if(names[x].checked){//选中的全部加起来
+						arr.push(parseInt(names[x].value));//将选中的值添加到一个列表
+
+					}
+				}
+                for (const w of arr) {
+
+        $.post("/hideArticle",param="articleid="+w.toString(),function (data) {
+                    if(data==="1"){
+                        return false
+                    }
+                    else {
+                         bootbox.alert({title: "错误提示", message: "删除文章失败，请联系管理员"});
+                    }
+
+                })
+
+
+    }
+                $.post("/controlBiaoNum",param="controlBiaoNum="+"1",function (data){
+                    if (data==="1"){
+                        qingti("删除文章成功")
+                bootbox.alert({title: "操作提示", message: "删除文章成功"});
+                setTimeout(function (){location.reload()}, 1000)
+                    }
+                    else {
+                        bootbox.alert({title: "操作提示", message: "删除文章失败，请联系管理员"});
+                    }
+
+                })
+
+
+
+
+
+            }
+        }
+
+    })
+
+
+
+			}
+
+
+
+

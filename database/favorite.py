@@ -2,7 +2,7 @@ import time
 
 from flask import session
 from sqlalchemy import Table
-
+from database.article import Article
 from common.connect_db import connect_db
 
 dbsession, md, DBase = connect_db()
@@ -54,8 +54,24 @@ class Favorite(DBase):
         AllFavorite = dbsession.query(Favorite).filter_by(userid=userid).all()
         return AllFavorite
 
-    # 收藏文章的数量
-    def numOfMyFavoriteArticle(self, userid=None):
+    # 收藏的文章
+    def myFavoriteArticle(self, userid=None):
         userid = session.get("userid") if userid is None else userid
-        numOfMyFavoriteArticle = dbsession.query(Favorite).filter_by(userid=userid).count()
-        return numOfMyFavoriteArticle
+        a=Article()
+        myFavoriteArticle = dbsession.query(Favorite.articleid,Favorite.createtime).filter_by(userid=userid,canceled=0).all()
+        result=[]
+        for i in myFavoriteArticle:
+            lin=[]
+            for j in i:
+                lin.append(j)
+            lin.append(a.searchHeadlineByArticleid(i[0]))
+            result.append(lin)
+        myFavoriteArticle=result
+        return myFavoriteArticle,len(myFavoriteArticle)
+
+    # 根据articleid查询哪些收藏了
+    def hideFavoByArticleid(self,articleid):
+        result=dbsession.query(Favorite).filter_by(articleid=articleid).all()
+        for i in result:
+            i.canceled=1
+        dbsession.commit()

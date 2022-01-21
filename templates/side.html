@@ -39,41 +39,6 @@
 </div>
 
 <script type="text/javascript">
-    {#    这里定义搜索函数#}
-
-    function dosearch(e) {
-        if (e != null && e.keyCode != 13) {
-            return false
-        }
-        var keyword = $.trim($("#keyword").val());
-        if (keyword.length === 0 || keyword.length > 10 || keyword.indexOf("%") >= 0) {
-            bootbox.alert({"title": "错误提示", "message": "你输入的关键字不合法"});
-            $("#keyword").focus();
-            return false
-        }
-        location.href = "/search/1-" + keyword;
-    }
-
-    //利用js截取字符串 自定义函数
-    function truncate(headline, length) {
-        var count = 1;
-        var output = "";
-        for (var i in headline) {
-            output += headline.charAt(i);
-            var code = headline.charCodeAt(i);
-            if (code <= 128) {
-                count += 0.5;
-            } else {
-                count += 1;
-            }
-            if (count > length) {
-                break;
-            }
-        }
-        return output + "..."
-
-    }
-
 
     // 文档加载后开始执行 不需要触发
     $(document).ready(function () {

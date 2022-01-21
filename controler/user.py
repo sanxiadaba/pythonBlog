@@ -152,7 +152,7 @@ def resetUserPassword():
         try:
             instanceUser.modifyUserPassword(userid, password)
             info = f"userid为{userid},昵称为{userNickname}通过邮箱验证码成功重设密码"
-            instanceLog.insert_detail(userid=userid, type="重设置密码", credit=0, target=0)
+            instanceLog.insert_detail(userid=userid, type="重设密码", credit=0, target=0)
             listLogger(userid, info, [0])
         except:
             e = traceback.format_exc()
@@ -231,7 +231,7 @@ def login():
 def logout():
     # 清空session 页面跳转
     userid = session.get('userid')
-    info = f"userid为{userid} 昵称为{session.get('nickname')}的用户登出页面"
+    info = f"userid为{userid} 昵称为{session.get('nickname')}的用户登出账户"
     instanceLog.insert_detail(userid=userid, type="登出页面", credit=0, target=0, info=info)
     listLogger(userid, info, [0])
     session.clear()

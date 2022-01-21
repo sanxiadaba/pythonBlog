@@ -130,7 +130,7 @@ class Comment(DBase):
 
     def numOfALLMyComment(self, userid=None):
         userid = session.get("userid") if userid is None else userid
-        numOfALLMyComment = dbsession.query(Comment).filter_by(userid=userid).count()
+        numOfALLMyComment = dbsession.query(Comment).filter_by(userid=userid,hide=0,replyid = 0).count()
         return numOfALLMyComment
 
     # 后台管理之我的评论的模块

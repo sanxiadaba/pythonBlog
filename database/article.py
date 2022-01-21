@@ -277,5 +277,8 @@ class Article(DBase):
 
     # 查看文章是否被隐藏
     def searchWhetherHide(self, articleid):
-        result = dbsession.query(Article.hide).filter_by(articleid=articleid).first()[0]
-        return True if result is 1 else False
+        try:
+            result = dbsession.query(Article.hide).filter_by(articleid=articleid).first()[0]
+            return True if result is 1 else False
+        except:
+            return True

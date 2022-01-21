@@ -44,3 +44,8 @@ class Log(DBase):
     def searchAllLogOfUser(self, userid):
         allLogOfUser = dbsession.query(Log).filter_by(userid=userid).all()
         return allLogOfUser
+
+    # 查看用户的登录、登出、注册、找回密码的记录
+    def searchLoginLog(self,userid):
+        result=dbsession.query(Log.category,Log.createtime).filter(Log.userid==userid,Log.category.in_(["每日登录","登录成功","登出账户","重设密码"])).all()
+        return result
