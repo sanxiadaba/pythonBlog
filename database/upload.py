@@ -12,7 +12,7 @@ dbsession, md, DBase = connect_db()
 class Upload(DBase):
     __table__ = Table("upload", md, autoload=True)
 
-    # 插入上传图片的相关信息
+    # Insert information about the uploaded image
     def insertDetail(self, imgname, info=None):
         userid = session.get("userid")
         now = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -22,12 +22,12 @@ class Upload(DBase):
         dbsession.add(uploadP)
         dbsession.commit()
 
-    # 判断用户上传次数是否超过当日限制
+    # Determine if the number of user uploads exceeds the daily limit
     def checkLimitUpload(self):
         start = time.strftime("%Y-%m-%d 00:00:00")
         end = time.strftime("%Y-%m-%d 23:59:59")
         result = dbsession.query(Upload).filter(Upload.userid == session.get("userid"),
-                                                Upload.createtime.between(start, end), Upload.info != "上传缩略图").count()
+                                                Upload.createtime.between(start, end), Upload.info != "Upload thumbnails").count()
         if result >= maxUploadPicNum:
             return True
         else:

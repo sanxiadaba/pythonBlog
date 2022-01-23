@@ -1,8 +1,6 @@
 {%  extends "baseArticle.html" %}
 {%  block content %}
 <div class="col-lg-9 col-sm-12" style="padding-top:0px" id="" left>
-    {# 轮播图#}
-
     <div class="col-12" style="padding: 15px 0px">
         <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
             <ol class="carousel-indicators">
@@ -43,9 +41,8 @@
         </div>
         <div class="col-sm-9 col-xs-12 detail">
             <div class="title"><a href="/article/{{article.articleid}}">{{article.headline}}</a></div>
-            <div class="info">作者：{{nickname}}&nbsp;&nbsp;&nbsp; 类别：{{article_type[article.type |string]}}
-                &nbsp;日期：{{article.createtime}}&nbsp;&nbsp;&nbsp;阅读：{{article.readcount}} 次&nbsp;&nbsp;&nbsp;消耗积分：{{article.credit}}
-                分
+            <div class="info">Author：{{nickname}}&nbsp;&nbsp;&nbsp; Category：{{article_type[article.type |string]}}
+                &nbsp;Date：{{article.createtime}}&nbsp;&nbsp;&nbsp;Reads：{{article.readcount}}&nbsp;&nbsp;&nbsp;Points consumption：{{article.credit}}
             </div>
             <div class="intro">
                 {{article.content | striptags |truncate(80)}}
@@ -55,9 +52,9 @@
     {% endfor %}
     <div class="col-12 paginate article-list">
         {% if page==1 %}
-        <a href="/type/{{type}}-1">上一页</a>&nbsp;&nbsp;
+        <a href="/type/{{type}}-1">Previous page</a>&nbsp;&nbsp;
         {% else %}
-        <a href="/type/{{type}}-{{page-1}}">上一页</a>&nbsp;&nbsp;
+        <a href="/type/{{type}}-{{page-1}}">Previous page</a>&nbsp;&nbsp;
         {% endif %}
 
         {% for i in range(total) %}
@@ -65,9 +62,9 @@
         {% endfor %}
 
         {% if page==total %}
-        <a href="/type/{{type}}-{{total}}">下一页</a>
+        <a href="/type/{{type}}-{{total}}">Next page</a>
         {% else %}
-        <a href="/type/{{type}}-{{page | numAddNum(1) }}">下一页</a>
+        <a href="/type/{{type}}-{{page | numAddNum(1) }}">Next page</a>
         {% endif %}
     </div>
 </div>

@@ -1,8 +1,5 @@
-//  先定义一些事先需要的变量
-
-
-// 发送邮箱验证码
-//  参数里的n用来判断这是发送注册验证码还是找回密码验证码
+// Send email verification code
+// The n in the parameter is used to determine whether to send a registration verification code or a password recovery verification code
 function doSendMail(obj,n) {
     var email=""
     if(n===1){
@@ -13,30 +10,30 @@ function doSendMail(obj,n) {
     }
 
     if (!email.match(/.+@.+\..+/)) {
-        bootbox.alert({title: "错误提示", message: "邮箱格式不正确"});
+        bootbox.alert({title: "Error Alert", message: "Incorrect email format"});
         $("#regname").focus;
         return false;
     }
     $.post("/ecode", "email=" + email+"&n="+n, function (data) {
         if (data == "eamil-invalid") {
-            bootbox.alert({title: "错误提示", message: "邮箱地址格式不正确"});
+            bootbox.alert({title: "Error Alert", message: "Incorrect email address format"});
             $("#regname").focus;
             return false;
         }
 
         if (data == "send-pass") {
-            bootbox.alert({title: "信息提示", message: "邮箱已成功发送，请查收"});
-            $("#regname").attr("disabled", true);// 验证码发送完成后禁止修改注册邮箱
-            $(obj).attr("disabled", true); //发送邮件按钮变为不可用
+            bootbox.alert({title: "Information Tips", message: "E-mail has been successfully sent, please check"});
+            $("#regname").attr("disabled", true);// After the verification code is sent, it is forbidden to modify the registered email address.
+            $(obj).attr("disabled", true); //Send Email button becomes unavailable
             return false;
         } else {
-            bootbox.alert({title: "错误提示", message: "邮箱验证码未发送成功,请联系管理员"});
+            bootbox.alert({title: "Error Alert", message: "E-mail verification code was not sent successfully, please contact the administrator"});
             return false;
         }
     })
 }
 
-// 注册
+// Registration
 function doRegister(e) {
     if (e != null && e.keyCode != 13) {
         return false
@@ -47,46 +44,46 @@ function doRegister(e) {
     var regcode = $.trim($("#regcode").val());
 
     if (!regname.match(/.+@.+\..+/) || regpass.length < 5) {
-        bootbox.alert({title: "错误提示", message: "注册邮箱不正确或密码小于五位"});
+        bootbox.alert({title: "Error Alert", message: "Incorrect registration email or password less than five digits"});
         return false;
     } else {
-        // 构建post请求正文
+        // Build post request body
         var param = "username=" + regname;
         param += "&password=" + regpass;
         param += "&ecode=" + regcode;
-        // 利用jquery框架发送post请求
+        // Sending post requests using the jquery framework
         $.post("/user", param, function (data) {
             if (data == "ecode-error") {
-                bootbox.alert({title: "错误提示", message: "验证码错误"})
-                $("#regcode").val(""); //清除验证码的值
-                $("#regcode").focus(); // 让验证码框获取到焦点供用户输入
+                bootbox.alert({title: "Error Alert", message: "Error in verification code"})
+                $("#regcode").val(""); //Clear the value of the CAPTCHA
+                $("#regcode").focus(); // Let the captcha box get the focus for the user to enter
             } else if (data == "up-invalid") {
-                bootbox.alert({title: "错误提示", message: "注册邮箱不正确或密码少于5位"})
+                bootbox.alert({title: "Error Alert", message: "Incorrect registration email or password less than 5 digits"})
             } else if (data == "reg-pass") {
-                bootbox.alert({title: "信息提示", message: "恭喜你注册成功"})
-                // 注册成功后 延迟二秒钟刷新当前页面
+                bootbox.alert({title: "Information Tips", message: "Congratulations on your successful registration!"})
+                // After successful registration, there is a two-second delay in refreshing the current page
                 $.get("/replyAndAddCommentCredit",function (data){
                     var regGiveCredit=data["regGiveCredit"]
-                qingti("注册成功，已增加"+regGiveCredit+"积分")
+                qingti("Registration was successful and has been added"+regGiveCredit+"Points")
 
     })
 
                 setTimeout("location.reload();", 2000)
             } else if (data == "reg-fail") {
-                bootbox.alert({title: "错误提示", message: "注册失败，请联系管理员"})
+                bootbox.alert({title: "Error Alert", message: "Registration failed, please contact the administrator"})
             }
             else if (data=="user-repeated"){
-        bootbox.alert({title: "错误提示", message: "该账户已注册"})
+        bootbox.alert({title: "Error Alert", message: "This account is registered"})
             }
             else if (data==="ecode-timeout"){
-                bootbox.alert({title: "错误提示", message: "验证码已过期"})
+                bootbox.alert({title: "Error Alert", message: "The verification code has expired"})
             }
         })
     }
 
 }
 
-// 找回密码
+// Retrieve password
  function findPassword(e){
     if (e != null && e.keyCode != 13) {
         return false
@@ -97,41 +94,41 @@ function doRegister(e) {
     var ficode = $.trim($("#ficode").val());
 
     if (!finame.match(/.+@.+\..+/) || fipass.length < 5) {
-        bootbox.alert({title: "错误提示", message: "邮箱不正确或密码小于五位"});
+        bootbox.alert({title: "Error Alert", message: "Incorrect email address or password less than five digits"});
         return false;
     } else {
-        // 构建post请求正文
+        // Build post request body
         var param = "username=" + finame;
         param += "&password=" + fipass;
         param += "&ecode=" + ficode;
-        // 利用jquery框架发送post请求
+        // Sending post requests using the jquery framework
         $.post("/resetUserPassword", param, function (data) {
             if(data=="no-user"){
-                bootbox.alert({title: "错误提示", message: "没有找到该用户，无法重置密码"})
+                bootbox.alert({title: "Error Alert", message: "The user was not found and the password could not be reset"})
             }
             else if (data == "ecode-error") {
-                bootbox.alert({title: "错误提示", message: "验证码错误"})
-                $("#ficode").val(""); //清除验证码的值
-                $("#ficode").focus(); // 让验证码框获取到焦点供用户输入
+                bootbox.alert({title: "Error Alert", message: "Error in verification code"})
+                $("#ficode").val(""); //Clear the value of the CAPTCHA
+                $("#ficode").focus(); // Let the captcha box get the focus for the user to enter
             } else if (data == "up-invalid") {
-                bootbox.alert({title: "错误提示", message: "邮箱不正确或密码少于5位"})
+                bootbox.alert({title: "Error Alert", message: "Incorrect email address or password less than 5 digits"})
             } else if (data == "fi-pass") {
-                qingti("找回密码成功")
+                qingti("Retrieve password successfully")
                 setTimeout(function (){}, 1500)
-                bootbox.alert({title: "信息提示", message: "重置密码成功，请重新登录",callbacks:function (){location.reload()}})
+                bootbox.alert({title: "Information Tips", message: "Reset password successfully, please log in again",callbacks:function (){location.reload()}})
                 showLogin()
             } else if (data == "fi-fail") {
-                bootbox.alert({title: "错误提示", message: "找回密码失败，请联系管理员"})
+                bootbox.alert({title: "Error Alert", message: "Failed to retrieve password, please contact the administrator"})
             }
             else if (data==="ecode-timeout"){
-                bootbox.alert({title: "错误提示", message: "验证码已过期"})
+                bootbox.alert({title: "Error Alert", message: "The verification code has expired"})
             }
         })
     }
 
 }
 
-// 显示登录模块
+// Show Login Module
 function showLogin() {
 
     $("#login").children("a").addClass("active");
@@ -148,7 +145,7 @@ function showLogin() {
 
 
 
-// 显示注册
+// Show Registration
 function showReg() {
     $("#login").children("a").removeClass("active");
     $("#reg").children("a").addClass("active");
@@ -161,7 +158,7 @@ function showReg() {
     $("#mymodal").modal("show");
 }
 
-// 显示重置密码
+// Show Reset Password
 function showReset() {
     $("#login").children("a").removeClass("active");
     $("#reg").children("a").removeClass("active");
@@ -174,7 +171,7 @@ function showReset() {
     $("#mymodal").modal("show");
 }
 
-// 登录
+// Login
  function doLogin(e) {
     if (e != null && e.keyCode != 13) {
         return false
@@ -183,7 +180,7 @@ function showReset() {
     var loginpass = $.trim($("#loginpass").val());
     var logincode = $.trim($("#logincode").val());
     if (loginname.length < 5 || loginpass < 5) {
-        bootbox.alert({title: "错误提示", message: "用户名或密码少于五位"});
+        bootbox.alert({title: "Error Alert", message: "Username or password less than five bits"});
         return false;
     } else {
         var param = "username=" + loginname;
@@ -191,23 +188,24 @@ function showReset() {
         param += "&logincode=" + logincode;
         $.post("/login", param, function (data) {
             if (data == "vcode-error") {
-                bootbox.alert({title: "错误提示", message: "验证码错误且已刷新，请重新输入"});
+                bootbox.alert({title: "Error Alert", message: "The verification code is wrong and has been refreshed, please re-enter"});
                 $("#logincode").val("");
                 $("#logincode").focus();
                 $("#loginvcode").attr("src",'/vcode?'+Math.random())
 
             } else if (data == "login-pass") {
-                bootbox.alert({title: "信息提示", message: "恭喜你，登录成功"});
+                bootbox.alert({title: "Information Tips", message: "Congratulations, your login was successful!"});
                 setTimeout("location.reload();", 1000)
             } else if (data == "login-fail") {
-                bootbox.alert({title: "错误提示", message: "没有该用户或密码错误，如有其他问题，请联系管理员"});
+                $("#loginvcode").attr("src",'/vcode?'+Math.random())
+                bootbox.alert({title: "Error Alert", message: "No such user or wrong password, if you have other questions, please contact the administrator (verification code has been refreshed)"});
 
             }
             else if (data=="add-credit"){
                 $.get("/loginEvereDayCredit",function (data){
                     var loginEvereDayCredit=data["loginEvereDayCredit"]
-                qingti("登录成功，积分+"+loginEvereDayCredit)
-                    bootbox.alert({title: "信息提示", message: "恭喜你登录成功"});
+                qingti("Login successfully, points+"+loginEvereDayCredit)
+                    bootbox.alert({title: "Information Tips", message: "Congratulations on your successful login!"});
                 setTimeout("location.reload();", 2000)
 
     })
@@ -217,51 +215,51 @@ function showReset() {
 
 }
 
-// 轻量级提示框
+// Lightweight alert box
 function  qingti(s) {
         toastr.info(s)
     }
 
 
-// 写赞同函数
+// Write approval function
 function agreeComment(s,j,n){
     $.post("/agreeComment", param="commentid="+j, function (data) {
 
             if(data==="1"){
-                $(s).children("font").text("取消赞同("+(parseInt(n)+1).toString()+")")
+                $(s).children("font").text("Cancel endorsement("+(parseInt(n)+1).toString()+")")
                 $(s).children("font").attr('color','red')
                 $(s).next().css("visibility","hidden");
-                // 移除响应事件
+                // Remove response events
                 $(s).removeAttr('onclick')
-                // 修改响应事件
+                // Modify response events
                 $(s).click(function (){
                     cancle_agreeComment(this,j,n)
                 })
-                qingti("已赞同该评论")
+                qingti("Have agreed with the comment")
                 ;
             }
             else {
-                bootbox.alert({title: "错误提示", message: "赞同失败，请联系管理员"});
+                bootbox.alert({title: "Error Alert", message: "Agree to fail, please contact the administrator"});
             }
             }
         )
 }
 
-// 第一个参数是div的位置即:this 第二个参数为评论的commentid 第三个参数用来判断这是原始评论还是回复评论的评论
- // 第四个参数用来定位该原始评论或回复评论的评论的原始评论在这一页的位置
-// 如果第三个参数为1 那定位的原始评论的div的id为"returnArticle(numLocate)" 如果为2
-//  那么其评论div的id为"returnComment(numLocate)(j)"
+// The first parameter is the location of the div i.e. :this The second parameter is the commentid of the comment The third parameter is used to determine whether this is the original comment or a reply to the comment
+ // The fourth parameter is used to locate the original comment on this page for the original comment or the comment in reply to the comment
+// if the third parameter is 1, then the id of the original comment div is "returnArticle(numLocate)" if it is 2
+// then the id of its comment div is "returnComment(numLocate)(j)"
 function hideComment(s,commentid,num,numLocate,j){
 
     bootbox.confirm({
-    title: "操作提示",
-    message: "是否确定永久删除该评论",
+    title: "Operation Tips",
+    message: "Is it OK to permanently delete the comment",
     buttons: {
         cancel: {
-            label: '<i class="fa fa-times"></i> 再考虑一下'
+            label: '<i class="fa fa-times"></i> Reconsider'
         },
         confirm: {
-            label: '<i class="fa fa-check"></i> 确定删除'
+            label: '<i class="fa fa-check"></i> OK to delete'
         }
     },
     callback: function (result) {
@@ -276,11 +274,11 @@ function hideComment(s,commentid,num,numLocate,j){
                     idNum="#returnComment"+numLocate.toString()+j.toString()
                 }
              $(idNum).css("display","none");
-             bootbox.alert({title: "操作提示", message: "删除评论成功"});
+             bootbox.alert({title: "Operation Tips", message: "Delete comment successfully"});
              qingti("删除评论成功")
          }
             else {
-                bootbox.alert({title: "错误提示", message: "删除评论失败，请联系管理员"});
+                bootbox.alert({title: "Error Alert", message: "Delete comment failed, please contact the administrator"});
             }
         })
     }
@@ -294,14 +292,14 @@ function hideComment(s,commentid,num,numLocate,j){
 
 function hideComment_1(commentid){
     bootbox.confirm({
-    title: "操作提示",
-    message: "是否确定永久删除该评论",
+    title: "Operation Tips",
+    message: "Is it OK to permanently delete the comment",
     buttons: {
         cancel: {
-            label: '再考虑一下'
+            label: 'Reconsider'
         },
         confirm: {
-            label: '确定删除'
+            label: 'OK to delete'
         }
     },
     callback: function (result) {
@@ -310,11 +308,11 @@ function hideComment_1(commentid){
             if (data==="1"){
             var lin="#comment__"+commentid.toString()
                 $(lin).css("display","none")
-             bootbox.alert({title: "操作提示", message: "删除评论成功"});
-             qingti("删除评论成功")
+             bootbox.alert({title: "Operation Tips", message: "Delete comment successfully"});
+             qingti("Delete comment successfully")
          }
             else {
-                bootbox.alert({title: "错误提示", message: "删除评论失败，请联系管理员"});
+                bootbox.alert({title: "Error Alert", message: "Delete comment failed, please contact the administrator"});
             }
         })
     }
@@ -325,77 +323,77 @@ function hideComment_1(commentid){
      )
 }
 
-// 写反对函数
+// Writing the opposition function
 function opposeComment(s,j,n){
     $.post("/disagreeComment", param="commentid="+j, function (data) {
             if(data==="1"){
-                $(s).children("font").text("取消反对("+(parseInt(n)+1).toString()+")")
+                $(s).children("font").text("Cancel Objections("+(parseInt(n)+1).toString()+")")
                 $(s).children("font").attr('color','red')
                 $(s).prev().css("visibility","hidden");
-                // 移除响应事件
+                // Remove response events
                 $(s).removeAttr('onclick')
-                // 修改响应事件
+                // Modify response events
                 $(s).click(function (){
                     cancle_opposeComment(this,j,n)
                 })
-                qingti("已反对该评论")
+                qingti("Have objected to the comment")
                 ;
 
             }
             else {
-                bootbox.alert({title: "错误提示", message: "反对失败，请联系管理员"});
+                bootbox.alert({title: "Error Alert", message: "Objection failed, please contact the administrator"});
             }
             }
         )
 }
 
-// 写取消赞同函数
+// Write the cancel endorsement function
 function cancle_agreeComment(s,j,n){
     $.post("/cancle_agreeComment", param="commentid="+j, function (data) {
             if(data==="1"){
-                $(s).children("font").text("赞同("+(parseInt(n)).toString()+")")
+                $(s).children("font").text("Agree with("+(parseInt(n)).toString()+")")
                 $(s).children("font").attr('color','')
                 $(s).next().css("visibility","visible");
-                // 移除响应事件
+                // Remove response events
                 $(s).removeAttr('onclick')
                 $(s).click(function (){
                     agreeComment(this,j,n)
                 })
                 ;
-                qingti("已取消赞同该评论")
+                qingti("Disapproved the comment")
             }
             else {
-                bootbox.alert({title: "错误提示", message: "取消赞同失败，请联系管理员"});
+                bootbox.alert({title: "Error Alert", message: "Cancel approval failed, please contact the administrator"});
             }
             }
         )
 }
 
 
-// 写取消反对函数
+// Write cancel objection function
 function cancle_opposeComment(s,j,n){
     $.post("/cancle_disagreeComment", param="commentid="+j, function (data) {
             if(data==="1"){
-                $(s).children("font").text("反对("+(parseInt(n)).toString()+")")
+                $(s).children("font").text("Against("+(parseInt(n)).toString()+")")
                 $(s).children("font").attr('color','')
                 $(s).prev().css("visibility","visible");
-                // 移除响应事件
+                // Remove response events
                 $(s).removeAttr('onclick')
                 $(s).click(function (){
                     opposeComment(this,j,n)
                 })
                 ;
-                qingti("已取消反对该评论")
+                qingti("Unopposed this comment")
             }
             else {
-                bootbox.alert({title: "错误提示", message: "取消反对失败，请联系管理员"});
+                bootbox.alert({title: "Error Alert", message: "Cancel objection failed, please contact the administrator"});
             }
             }
         )
 }
 
 
-// 写跳转页面并修改文章的函数
+// Write functions to jump pages and modify articles
  function  modifyArticle(articleid){
     $.post("/centerVar",param="articleid="+articleid,function (data){
         if (data==="1"){
@@ -405,15 +403,15 @@ function cancle_opposeComment(s,j,n){
 
      }
 
-// 自动加载的函数
-// load_1函数用来自动登录
+// Functions for automatic loading
+// The load_1 function is used to automatically log in
  function load_1(){ 　
     $.get("/toTransmitParam",function (param){
         var loginEvereDayCredit=param["loginEvereDayCredit"]
         $.post("/judgeAutoLogin",function (data){
         if (data==="1"){
-            bootbox.alert({title: "信息提示", message: "恭喜你，登录成功"});
-                qingti("每天登录成功，积分+"+loginEvereDayCredit)
+            bootbox.alert({title: "Information Tips", message: "Congratulations, your login was successful!"});
+                qingti("Daily login success and points+"+loginEvereDayCredit)
                 setTimeout("location.reload();", 2000)
 }
     })
@@ -422,7 +420,7 @@ function cancle_opposeComment(s,j,n){
 
 }
 
-// load_2函数用来判定修改文章的值（如果作者点击的是修改按钮的话）
+// The load_2 function is used to determine the value of the modified article (if the author is clicking on the modify button)
 function load_2(){ 　
     $.get("/centerVar",function (data){
         var PAN=parseInt(data)
@@ -433,7 +431,7 @@ else {
     $.get("/modifyArticle/" + PAN, function (data) {
           var headline=data["headline"]
         $("#headline").val(headline)
-        $("#xiugaiwenzhang").text("修改文章")
+        $("#xiugaiwenzhang").text("Modify article")
         $("#xiugaiwenzhang").attr("onclick","doPost(" + "\'" +PAN+"\'" + "," + "\'" + 4 + "\'" +")")
         $("#biaoji1").css("display","none");
 })
@@ -441,37 +439,37 @@ else {
     })
 }
 
-// 修改昵称
+// Change nickname
 function modifyNickname(s,yuan) {
     var newNickname = $.trim($(s).parent().prev().children("input").val());
     if (newNickname === yuan) {
         return false
     }
     else if (newNickname.length>30){
-        bootbox.alert({title: "错误提示", message: "要修改的昵长度超过限制，请修改"});
+        bootbox.alert({title: "Error Alert", message: "The intimate length to be modified exceeds the limit, please modify"});
         return false
     }
     bootbox.confirm({
-        title: "操作提示",
-        message: "是否确定修改你的昵称",
+        title: "Operation Tips",
+        message: "Are you sure to change your nickname",
         buttons: {
             cancel: {
-                label: '再考虑一下'
+                label: 'Reconsider'
             },
             confirm: {
-                label: '确定修改'
+                label: 'Determine the modification'
             }
         },
         callback: function (result) {
             if (result.toString() === "true") {
                 $.post("/modifyNickname",param="newNickname="+newNickname,function (data) {
                     if(data==="1"){
-                        qingti("修改昵称成功")
+                        qingti("Change nickname successfully")
                         $(s).parent().prev().children("input").attr("value", newNickname)
                         $(s).parent().prev().children("input").focus()
                     }
                     else {
-                         bootbox.alert({title: "错误提示", message: "修改昵称失败，请联系管理员"});
+                         bootbox.alert({title: "Error Alert", message: "Nickname change failed, please contact the administrator"});
                     }
 
                 })
@@ -481,25 +479,25 @@ function modifyNickname(s,yuan) {
     })
 }
 
-// 申请成为编辑
+// Apply to become an editor
  function applyEditor(s){
     bootbox.confirm({
-        title: "操作提示",
-        message: "是否申请成为编辑,经过管理员同意后，编辑可直接不经过管理员审核而发布文章",
+        title: "Operation Tips",
+        message: "Whether to apply to become an editor, after the consent of the administrator, the editor can publish articles directly without the review of the administrator",
         buttons: {
             cancel: {
-                label: '再考虑一下'
+                label: 'Reconsider'
             },
             confirm: {
-                label: '确定申请'
+                label: 'Determine the application'
             }
         },
         callback: function (result) {
             if (result.toString() === "true") {
                 $.post("/applyEditor",function (data){
                     if (data==="1"){
-                        bootbox.alert({title: "操作提示", message: "申请成功，请等待管理员的审核"});
-                        $(s).text("已申请")
+                        bootbox.alert({title: "Operation Tips", message: "Application is successful, please wait for the administrator's review"});
+                        $(s).text("Applied for")
                     }
                 })
             }
@@ -508,7 +506,7 @@ function modifyNickname(s,yuan) {
     })
  }
 
-// 修改qq号
+// Modify qq number
  function modifyQQ(s,yuan) {
     var newQQ = $.trim($(s).parent().prev().children("input").val());
     var reg = new RegExp("^[0-9]*$");
@@ -516,30 +514,30 @@ function modifyNickname(s,yuan) {
         return false
     }
     else if (newQQ.length>11||!reg.test(newQQ)){
-        bootbox.alert({title: "错误提示", message: "QQ号格式错误，请重试"});
+        bootbox.alert({title: "Error Alert", message: "QQ number format error, please try again"});
         return false
     }
     bootbox.confirm({
-        title: "操作提示",
-        message: "是否确定修改你的QQ",
+        title: "Operation Tips",
+        message: "Are you sure to modify your QQ",
         buttons: {
             cancel: {
-                label: '再考虑一下'
+                label: 'Reconsider'
             },
             confirm: {
-                label: '确定修改'
+                label: 'Determine the modification'
             }
         },
         callback: function (result) {
             if (result.toString() === "true") {
                 $.post("/modifyQQ",param="newQQ="+newQQ,function (data) {
                     if(data==="1"){
-                        qingti("修改QQ成功")
+                        qingti("Modify QQ successfully")
                         $(s).parent().prev().children("input").attr("value", newQQ)
                         $(s).parent().prev().children("input").focus()
                     }
                     else {
-                         bootbox.alert({title: "错误提示", message: "修改QQ失败，请联系管理员"});
+                         bootbox.alert({title: "Error Alert", message: "Modify QQ failure, please contact the administrator"});
                     }
 
                 })
@@ -549,24 +547,24 @@ function modifyNickname(s,yuan) {
     })
 }
 
-// 删除文章
+// Delete article
  function hideArticle(articleid){
     bootbox.confirm({
-        title: "操作提示",
-        message: "是否确定永久删除该文章",
+        title: "Operation Tips",
+        message: "Is it OK to permanently delete the article",
         buttons: {
             cancel: {
-                label: '再考虑一下'
+                label: 'Reconsider'
             },
             confirm: {
-                label: '确定删除'
+                label: 'OK to delete'
             }
         },
         callback: function (result) {
             if (result.toString() === "true") {
                 $.post("/hideArticle",param="articleid="+articleid,function (data) {
                     if(data==="1"){
-                        qingti("删除文章成功")
+                        qingti("Delete article successfully")
                         var lin="#article__"+articleid
                         $(lin).css("display","none")
                         var num= $("#allMyArticleNum").text()
@@ -575,7 +573,7 @@ function modifyNickname(s,yuan) {
 
                     }
                     else {
-                         bootbox.alert({title: "错误提示", message: "删除文章失败，请联系管理员"});
+                         bootbox.alert({title: "Error Alert", message: "Delete article failed, please contact the administrator"});
                     }
 
                 })
@@ -585,7 +583,7 @@ function modifyNickname(s,yuan) {
     })
  }
 
-// 更改userManage模块的函数
+// Change the function of the userManage module
  function changeUserManageModel(m){
     $("#myInfo_1").removeClass("active");
     $("#myArticle_1").removeClass("active");
@@ -648,7 +646,7 @@ function modifyNickname(s,yuan) {
     $(mainContent).css("display","block")
  }
 
-// 更改管理页面中文章分页
+// Change the article pagination in the admin page
  function changeManagePage(id,howManyPage,everyPageInHou,myArticleNum){
     howManyPage=parseInt(howManyPage)
     everyPageInHou=parseInt(everyPageInHou)
@@ -666,7 +664,7 @@ function modifyNickname(s,yuan) {
     lin="#biao_"+id.toString()
      $(lin).addClass("active")
 
-     //上面是变化下面的页数
+     //Above is the number of pages below the change
 
      var arr1=[]
      for(var j = 1; j <= myArticleNum; j++){
@@ -736,7 +734,7 @@ function modifyNickname(s,yuan) {
 
  }
 
- // 跳转到指定文章
+ // Jump to the specified article
  function tiaoArticle(articleid,n){
     location.href="/article/"+articleid.toString();
     $.post("/controlBiaoNum",param="controlBiaoNum="+n.toString(),function (data){
@@ -744,19 +742,19 @@ function modifyNickname(s,yuan) {
     })
  }
 
- // 取消收藏
+ // Cancel Favorites
  function cancel_favorite(articleid,n=-1) {
         $.ajax({
             url: "/favorite/" + articleid,
             type: "delete",
             success: function (data) {
                 if (data == "not-login") {
-                    bootbox.alert({title: "错误提示", message: "请先登录本界面"})
+                    bootbox.alert({title: "Error Alert", message: "Please login to this screen first"})
                 } else if (data == "cancel-pass") {
-                    bootbox.alert({title: "信息提示", message: "取消收藏成功"})
-                    //    菜单名称改为感谢收藏
-                    $(".favorite-btn").html('<span class=\"oi oi-heart \" aria-hidden=\"true\" ></span> 欢迎再来')
-                    //    取消收藏按钮的单击事件
+                    bootbox.alert({title: "Information Tips", message: "Cancel favorite successfully"})
+                    //    Menu name changed to Thank You Collection
+                    $(".favorite-btn").html('<span class=\"oi oi-heart \" aria-hidden=\"true\" ></span> Welcome back')
+                    //    Cancel the click event of the Favorites button
                     $(".favorite-btn").attr("onclick", "").unbind("click");
                     if(n===-1){
                         return false
@@ -767,7 +765,7 @@ function modifyNickname(s,yuan) {
                     }
 
                 } else {
-                    bootbox.alert({title: "错误提示", message: "取消收藏失败，请联系管理员"})
+                    bootbox.alert({title: "Error Alert", message: "Failed to cancel the collection, please contact the administrator"})
                 }
             }
         })
@@ -775,56 +773,56 @@ function modifyNickname(s,yuan) {
 
 
 
-// 添加文章收藏
+// Add article collection
  function add_favorite(articleid) {
         $.post("/favorite", "articleid=" + articleid, function (data) {
             if (data == "not-login") {
-                bootbox.alert({title: "错误提示", message: "请先登录本界面"})
+                bootbox.alert({title: "Error Alert", message: "Please login to this screen first"})
             } else if (data == "favorite-pass") {
-                bootbox.alert({title: "信息提示", message: "本文收藏成功，可在我的收藏中查看,再次刷新页面可选择取消收藏"})
-                //    菜单名称改为感谢收藏
+                bootbox.alert({title: "Information Tips", message: "This article is successfully collected, you can view in my favorites, refresh the page again can choose to cancel the collection"})
+                //    Menu name changed to Thank You Collection
                 $(".favorite-btn").html('<span class=\"oi oi-heart \" aria-hidden=\"true\" style=\"color: red\"></span> 感谢收藏')
-                //    取消收藏按钮的单击事件
+                //    Cancel the click event of the Favorites button
                 $(".favorite-btn").attr("onclick", "").unbind("click");
             } else {
-                bootbox.alert({title: "错误提示", message: "收藏失败，请联系管理员"})
+                bootbox.alert({title: "Error Alert", message: "Collection failure, please contact the administrator"})
             }
         })
     }
 
- // 添加评论
+ // Add a comment
  function addCommnet(articleid) {
         var content = $.trim($("#comment").val());
         if (content.length < 5 || content.length > 1000) {
-            bootbox.alert({title: "错误提示", message: "评论内容在5~1000字之间"});
+            bootbox.alert({title: "Error Alert", message: "Comments are between 5~1000 words"});
             return false
         }
         var param = "articleid=" + articleid + "&content=" + content;
         $.post("/comment", param, function (data) {
             if (data == "not-login") {
-                bootbox.alert({title: "错误提示", message: "请先登录再评论"});
+                bootbox.alert({title: "Error Alert", message: "Please login before commenting"});
             } else if (data == "add-limit") {
-                bootbox.alert({title: "错误提示", message: "您当天最多只能评论五次"});
+                bootbox.alert({title: "Error Alert", message: "You can only comment up to five times that day"});
 
             } else if (data == "add-pass") {
                 $.get("/toTransmitParam",function (data){
                     var replyAndAddCommentCredit=data["replyAndAddCommentCredit"]
-                qingti("回复评论成功，积分+"+replyAndAddCommentCredit)
+                qingti("Reply to comments successfully, points+"+replyAndAddCommentCredit)
                 setTimeout("location.reload();", 2000)
 
     })
 
 
             } else {
-                bootbox.alert({title: "错误提示", message: "发表评论出错，请联系管理员"});
+                bootbox.alert({title: "Error Alert", message: "There was an error posting a comment, please contact the administrator"});
 
             }
         })
     }
 
- // 填充评论（前端填充）
+ // Filling comments (front-end filling)
  function fillComment(articleid, pageid) {
-        $("#commentDiv").empty();  // 清空现有评论
+        $("#commentDiv").empty();  // Clear existing comments
         var content = "";
         $.get("/comment/" + articleid + "-" + pageid, function (data) {
             var comment = data;
@@ -845,14 +843,14 @@ function modifyNickname(s,yuan) {
                     "{{session.get('role')}}" == "admin" || comment[i]['userid'] + "" == "{{session.get('userid')}}") {
                     content += '<label onclick="gotoReply(' + comment[i]['commentid'] + ')"';
                     content += '<span class="oi oi-arrow-circle-right"aria-hidden="true"></span> ';
-                    content += '回复</label>&nbsp;&nbsp;&nbsp;'
+                    content += 'Reply</label>&nbsp;&nbsp;&nbsp;'
                     content += `<label onclick="hideComment(this,${comment[i]['commentid']},1,${i},-1)"`;
 
-                    content += '<span class="oi oi-delete"aria-hidden="true"></span>删除评论</label> ';
+                    content += '<span class="oi oi-delete"aria-hidden="true"></span>Delete Comments</label> ';
                 } else {
                     if (comment[i]["agreeOrdisAgreeType"] === 0) {
                         content += `<label onclick="gotoReply(${comment[i]['commentid']})">
-                                            <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>回复
+                                            <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>Reply
                                         </label>&nbsp;&nbsp;
 
                                         <label onclick="agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: visible;" id="agreeComment1">
@@ -862,35 +860,35 @@ function modifyNickname(s,yuan) {
 
                                         <label onclick="opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: visible;" id="opposeComment1">
                                 <font color=""><span class="oi oi-x"
-                                      aria-hidden="true"></span>反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                      aria-hidden="true"></span>Against(<span>${comment[i]["opposecount"]}</span>)</font>
                                         </label>`
                     } else if (comment[i]["agreeOrdisAgreeType"] === 1) {
                         content += `<label onclick="gotoReply(${comment[i]['commentid']})">
-                                            <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>回复
+                                            <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>Reply
                                         </label>&nbsp;&nbsp;
 
                                         <label onclick="cancle_agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: visible;" id="agreeComment1">
                                             <span class="oi oi-chevron-bottom"
-                                                  aria-hidden="true"></span><font color="red">取消赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                                  aria-hidden="true"></span><font color="red">Cancel Favor(<span>${comment[i]["agreecount"]}</span>)</font>
                                         </label>&nbsp;&nbsp;
 
                                         <label onclick="opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: hidden;" id="opposeComment1">
                                 <font color=""><span class="oi oi-x"
-                                      aria-hidden="true"></span>反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                      aria-hidden="true"></span>Against(<span>${comment[i]["opposecount"]}</span>)</font>
                                         </label>`
                     } else if (comment[i]["agreeOrdisAgreeType"] === -1) {
                         content += `<label onclick="gotoReply(${comment[i]['commentid']})">
-                                            <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>回复
+                                            <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>Reply
                                         </label>&nbsp;&nbsp;
 
                                         <label onclick="agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: hidden;" id="agreeComment1">
                                             <span class="oi oi-chevron-bottom"
-                                                  aria-hidden="true"></span><font>赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                                  aria-hidden="true"></span><font>Agree(<span>${comment[i]["agreecount"]}</span>)</font>
                                         </label>&nbsp;&nbsp;
 
                                         <label onclick="cancle_opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: hidden id="opposeComment1">
                                 <font color="red"><span class="oi oi-x"
-                                      aria-hidden="true"></span>取消反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                      aria-hidden="true"></span>Cancel Objections(<span>${comment[i]["opposecount"]}</span>)</font>
                                         </label>`
                     }
                 }
@@ -902,7 +900,7 @@ function modifyNickname(s,yuan) {
                 content += '</div>';
                 content += '</div>';
 
-                //    在当前评论下面填充回复评论
+                //    Fill in the reply comments below the current comment
                 if (comment[i]["reply_list"].length > 0) {
                     var reply = comment[i]["reply_list"];
                     for (var j in reply) {
@@ -914,20 +912,20 @@ function modifyNickname(s,yuan) {
                         content += '<div class="col-12 row" style="color: #337AB7;">';
                         content += '<div class="col-sm-7 col-12 commenter" style="color:#337AB7;">';
 
-                        //    填充用户昵称
+                        //    Populate user nickname
                         content += reply[j]["nickname"]
-                        content += "回复";
+                        content += "Reply";
                         content += comment[i]["nickname"];
                         content += '&nbsp;&nbsp;&nbsp;';
                         content += reply[j]["createtime"];
                         content += '</div>';
                         content += '<div class="col-sm-5 col-12 reply">';
 
-                        //    回复的评论不能继续评论，但可以删除评论和点赞(作者或管理员的话)
+                        //    Replying comments can not continue to comment, but you can delete comments and likes (in the words of the author or administrator)
                         if ("{{article.userid}}" == "{{session.get('userid')}}" ||
                             "{{session.get('role')}}" == "admin" || reply[j]["userid"] + "" == "{{session.get('userid')}}") {
                             content += `<label onclick="hideComment(this,${reply[j]["commentid"]},2,${i},${j})">`;
-                            content += '<span class="oi oi-delete" aria-hideen="true"></span>删除评论';
+                            content += '<span class="oi oi-delete" aria-hideen="true"></span>Delete Comments';
                             content += '</label>&nbsp;&nbsp;';
                         }
                         if (comment[i]["agreeOrdisAgreeType"] === 0) {
@@ -938,33 +936,33 @@ function modifyNickname(s,yuan) {
 
                                         <label onclick="opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: visible;" id="opposeComment1">
                                 <font color=""><span class="oi oi-x"
-                                      aria-hidden="true"></span>反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                      aria-hidden="true"></span>Against(<span>${comment[i]["opposecount"]}</span>)</font>
                                         </label>`
                         } else if (comment[i]["agreeOrdisAgreeType"] === 1) {
                             content += `<label onclick="cancle_agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: visible;" id="agreeComment1">
                                             <span class="oi oi-chevron-bottom"
-                                                  aria-hidden="true"></span><font color="red">取消赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                                  aria-hidden="true"></span><font color="red">Cancel Favor(<span>${comment[i]["agreecount"]}</span>)</font>
                                         </label>&nbsp;&nbsp;
 
                                         <label onclick="opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: hidden;"  id="opposeComment1">
                                 <font color=""><span class="oi oi-x"
-                                      aria-hidden="true"></span>反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                      aria-hidden="true"></span>Against(<span>${comment[i]["opposecount"]}</span>)</font>
                                         </label>`
                         } else if (comment[i]["agreeOrdisAgreeType"] === -1) {
                             content += `<label onclick="agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: hidden;" id="agreeComment1">
                                             <span class="oi oi-chevron-bottom"
-                                                  aria-hidden="true"></span><font>赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                                  aria-hidden="true"></span><font>Agree(<span>${comment[i]["agreecount"]}</span>)</font>
                                         </label>&nbsp;&nbsp;
                                         <label onclick="cancle_opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility:visible;" id="opposeComment1">
                                 <font color="red"><span class="oi oi-x"
-                                      aria-hidden="true"></span>取消反对(<span>${comment[i]["opposecount"]}</span>)</font>
+                                      aria-hidden="true"></span>Cancel Objections(<span>${comment[i]["opposecount"]}</span>)</font>
                                         </label>`
                         }
 
                         content += '</div>';
                         content += '</div>';
                         content += '<div class="col-12">';
-                        content += '回复内容' + reply[j]["content"];
+                        content += 'Reply content' + reply[j]["content"];
                         content += '</div>';
                         content += '</div>';
                         content += '</div>';
@@ -973,16 +971,16 @@ function modifyNickname(s,yuan) {
                     }
                 }
             }
-            $("#commentDiv").html(content);  //填充到评论区
+            $("#commentDiv").html(content);  //Fill in the comment section
 
         });
     }
 
- //  回复原始评论
+ //  Reply to original comment
  function replyComment(articleid) {
         var content = $.trim($("#comment").val());
         if (content.length < 5 || content.length > 1000) {
-            bootbox.alert({title: "错误提示", message: "评论内容再5~1000字之间"});
+            bootbox.alert({title: "Error Alert", message: "Comment content between 5~1000 words again"});
             return false
         }
         var param = "articleid=" + articleid;
@@ -990,33 +988,33 @@ function modifyNickname(s,yuan) {
         param += "&commentid=" + COMMENTID;
         $.post("/reply", param, function (data) {
             if (data == "not-login") {
-                bootbox.alert({title: "错误提示", message: "请先登录"});
+                bootbox.alert({title: "Error Alert", message: "Please login first"});
             } else if (data == "reply-limit") {
-                bootbox.alert({title: "错误提示", message: "当天已用完五次评论的限额"});
+                bootbox.alert({title: "Error Alert", message: "Number of times comments have been used up for the day"});
             } else if (data == "reply-pass") {
                 $.get("/replyAndAddCommentCredit",function (data){
                     var replyAndAddCommentCredit=data["replyAndAddCommentCredit"]
-                qingti("回复评论成功，积分+"+replyAndAddCommentCredit)
+                qingti("Reply to comments successfully, points+"+replyAndAddCommentCredit)
                 setTimeout("location.reload();", 2000)
 
     })
                 gotoPage(articleid,PAGE)
 
             } else if (data == "reply-fail") {
-                bootbox.alert({title: "错误提示", message: "回复评论错误，请联系管理员"});
+                bootbox.alert({title: "Error Alert", message: "Reply to a comment error, please contact the administrator"});
             }
         })
 
     }
 
- // 添加文章的评论
+ // Add a comment to the article
  function gotoReply(commentid) {
         $("#replyBtn").show();
         $("#submitBtn").hide();
         if ("{{session.get('islogin')}}" === "true") {
-            $("#nickname_1").val("请在此回复编号为" + commentid + "的评论");
+            $("#nickname_1").val("Please reply here with the number" + commentid + "Comments");
         } else {
-            $("#nickname_2").val("请在此回复编号为" + commentid + "的评论");
+            $("#nickname_2").val("Please reply here with the number" + commentid + "Comments");
         }
 
         $("#comment").focus();
@@ -1024,9 +1022,9 @@ function modifyNickname(s,yuan) {
 
     }
 
- // 评论跳转到哪一页
+ // Comments jump to which page
  function gotoPage(articleid, type) {
-        //    如果当前是第一页，那么上一页还是第一页
+        //    If the current page is the first page, then the previous page is still the first page
         if (type === "prev") {
             if (PAGE > 1) {
                 PAGE -= 1;
@@ -1041,21 +1039,21 @@ function modifyNickname(s,yuan) {
         fillComment(articleid, PAGE)
     }
 
-// 定义搜索函数
+// Define the search function
 function dosearch(e) {
         if (e != null && e.keyCode != 13) {
             return false
         }
         var keyword = $.trim($("#keyword").val());
         if (keyword.length === 0 || keyword.length > 10 || keyword.indexOf("%") >= 0) {
-            bootbox.alert({"title": "错误提示", "message": "你输入的关键字不合法"});
+            bootbox.alert({"title": "Error Alert", "message": "The keyword you entered is not legal"});
             $("#keyword").focus();
             return false
         }
         location.href = "/search/1-" + keyword;
     }
 
-// 截取字符串
+// Intercept string
 function truncate(headline, length) {
         var count = 1;
         var output = "";
@@ -1075,26 +1073,26 @@ function truncate(headline, length) {
 
     }
 
-//   定义删除多个文章的函数
+//   Define a function to delete multiple articles
 function delMany(){
 				var names=document.getElementsByName("checkbox[]");
                 var arr=[]
                 bootbox.confirm({
-        title: "操作提示",
-        message: "是否确定删除文章",
+        title: "Operation Tips",
+        message: "Is it OK to delete the article",
         buttons: {
             cancel: {
-                label: '再考虑一下'
+                label: 'Reconsider'
             },
             confirm: {
-                label: '确定修改'
+                label: 'Determine the modification'
             }
         },
         callback: function (result) {
             if (result.toString() === "true") {
                 for(var x=0;x<names.length;x++){
-					if(names[x].checked){//选中的全部加起来
-						arr.push(parseInt(names[x].value));//将选中的值添加到一个列表
+					if(names[x].checked){//Add up all the selected ones
+						arr.push(parseInt(names[x].value));//Add the selected values to a list
 
 					}
 				}
@@ -1105,7 +1103,7 @@ function delMany(){
                         return false
                     }
                     else {
-                         bootbox.alert({title: "错误提示", message: "删除文章失败，请联系管理员"});
+                         bootbox.alert({title: "Error Alert", message: "Delete article failed, please contact the administrator"});
                     }
 
                 })
@@ -1114,12 +1112,12 @@ function delMany(){
     }
                 $.post("/controlBiaoNum",param="controlBiaoNum="+"1",function (data){
                     if (data==="1"){
-                        qingti("删除文章成功")
-                bootbox.alert({title: "操作提示", message: "删除文章成功"});
+                        qingti("Delete article successfully")
+                bootbox.alert({title: "Operation Tips", message: "Delete article successfully"});
                 setTimeout(function (){location.reload()}, 1000)
                     }
                     else {
-                        bootbox.alert({title: "操作提示", message: "删除文章失败，请联系管理员"});
+                        bootbox.alert({title: "Operation Tips", message: "Delete article failed, please contact the administrator"});
                     }
 
                 })

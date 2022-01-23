@@ -2,7 +2,7 @@
 {% block writeConfig %}
     <script type="text/javascript" src="/static/ue/ueditor.config.js"></script>
     <script type="text/javascript" src="/static/ue/ueditor.all.min.js"></script>
-    <script type="text/javascript" src="/static/ue/lang/zh-cn/zh-cn.js"></script>
+    <script type="text/javascript" src="/static/ue/lang/{{ language }}"></script>
     <script type="text/javascript">
         var ue = UE.getEditor('content', {
             initialFrameHeight: 400,

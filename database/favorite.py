@@ -23,7 +23,7 @@ class Favorite(DBase):
             dbsession.add(favorite)
         dbsession.commit()
 
-    # 取消收藏文章
+    # Cancel Favorite Articles
     def cancelFavorite(self, articleid):
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         row = dbsession.query(Favorite).filter_by(articleid=articleid, userid=session.get("userid")).first()
@@ -31,7 +31,7 @@ class Favorite(DBase):
         row.updatetime = now
         dbsession.commit()
 
-    # 恢复收藏
+    # Restore Collection
     def replyFavorite(self, articleid):
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         row = dbsession.query(Favorite).filter_by(articleid=articleid, userid=session.get("userid")).first()
@@ -39,7 +39,7 @@ class Favorite(DBase):
         row.updatetime = now
         dbsession.commit()
 
-    # 判断是否已经已经被收藏
+    # Determine if it has already been bookmarked
     def checkFavorite(self, articleid):
         row = dbsession.query(Favorite).filter_by(articleid=articleid, userid=session.get("userid")).first()
         if row is None:
@@ -49,13 +49,13 @@ class Favorite(DBase):
         else:
             return True
 
-    # 已收藏、已取消收藏
+    # Bookmarked, unbookmarked
     def searchAllFavorite(self):
         userid = session.get("userid")
         AllFavorite = dbsession.query(Favorite).filter_by(userid=userid).all()
         return AllFavorite
 
-    # 收藏的文章
+    # Collected Articles
     def myFavoriteArticle(self, userid=None):
         userid = session.get("userid") if userid is None else userid
         myFavoriteArticle = dbsession.query(Favorite.articleid,Favorite.createtime).filter_by(userid=userid,canceled=0).all()
@@ -69,7 +69,7 @@ class Favorite(DBase):
         myFavoriteArticle=result
         return myFavoriteArticle,len(myFavoriteArticle)
 
-    # 根据articleid查询哪些收藏了
+    # Search by articleid for which collections are
     def hideFavoByArticleid(self,articleid):
         result=dbsession.query(Favorite).filter_by(articleid=articleid).all()
         for i in result:

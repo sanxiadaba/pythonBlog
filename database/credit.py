@@ -21,66 +21,66 @@ dbsession, md, DBase = connect_db()
 class Credit(DBase):
     __table__ = Table("credit", md, autoload=True)
 
-    # 插入credit表数据  # 随后向log表插入相同数据
+    # Insert credit table data # then insert the same data into the log table
     def insertDetail(self, type, target, credit, userid=None, info=None):
-        # userid确定要写入的用户目录 不输入的userid的话就默认为当前用户
+        # userid determines the user directory to write to. If you don't enter a userid, it defaults to the current user.
         userid = session.get("userid") if userid is None else userid
         # 设置时间
         now = time.strftime("%Y-%m-%d %H:%M:%S")
-        # 查看当前的访问人的ip接口
+        # View the current visitor's ip interface
         ipaddr = request.remote_addr
 
-        # 插入credit表
+        # Insert credit table
         creditP1 = Credit(userid=userid, category=type, target=target, credit=credit, createtime=now,
                           ipaddr=ipaddr, info=info)
-        # 插入log表
+        # Insert log table
         instanceLog.insertDetail(userid=userid, type=type, target=target, credit=credit, info=info)
 
-        # 如果积分不为0 更新用户的积分表
+        # If the points are not 0, update the user's points table.
         if credit != 0:
             instanceUser.updateCredit(credit, userid)
 
-        # 开始插入插入log日志（不同的type对应插入不同的表，不同的信息）
+        # Start inserting insert log logs (different types correspond to insert different tables, different information)
         try:
             if type == "购买文章":
-                # 文章作者的userid 和nickname 以及应该获取的积分
+                # The userid and nickname of the author of the article and the number of points that should be earned
                 authorid = int(instanceArticle.searchUseridByArticleid(target)[0])
                 authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
-                #  注意这里credit要乘以-1给变回来
+                #  Note that here the credit should be multiplied by -1 to change back
                 authorGetCredit = math.ceil(rateCreditForArticle * credit*-1)
 
-                # 购买者在上面已经减去对应积分
-                # 文章作者获取对应的积分
+                # The purchaser has subtracted the corresponding points above
+                # The author of the article gets the corresponding points
                 instanceUser.updateCredit(authorGetCredit, authorid)
 
-                # 购买人的日志
-                userPaidInfo = f"用户userid为{userid}的读者 花费{credit}积分，阅读了作者id为{authorid}昵称为`{authorNickname}`的articleid号为‘{target}’文章"
+                # Buyer's Journal
+                userPaidInfo = f"The reader with userid {userid} spent {credit} points to read the article with articleid number '{target}' by authorid {authorid} with nickname `{authorNickname}`."
                 listLogger(userid, userPaidInfo, [1, 2, 5])
-                # 作者获取积分的日志
-                authorInfo = f"用户userid为{userid}的读者 花费{credit}积分，阅读了作者id为{authorid}昵称为`{authorNickname}`的articleid号为‘{target}’文章,作者获取了{authorGetCredit}积分 "
+                # Author's log for getting points
+                authorInfo = f"The reader with userid {userid} spent {credit} points to read the article with articleid number '{target}' with authorid {authorid} nickname '{authorNickname}', and the author got {authorGetCredit} points. "
                 listLogger(authorid, authorInfo, [5, 6])
 
-                # 作者也需要进入credit表
-                creditP2 = Credit(userid=authorid, category="文章被购买", target=target, credit=authorGetCredit,
+                # The author also needs access to the credit form
+                creditP2 = Credit(userid=authorid, category="Article was purchased", target=target, credit=authorGetCredit,
                                   createtime=now,
                                   ipaddr=ipaddr, info=authorInfo)
 
-                instanceLog.insertDetail(type="文章被购买", target=target, credit=authorGetCredit, info=authorInfo)
+                instanceLog.insertDetail(type="Article was purchased", target=target, credit=authorGetCredit, info=authorInfo)
                 dbsession.add(creditP2)
-            elif type == "阅读文章":
-                # 文章作者的userid 和nickname 以及应该获取的积分
+            elif type == "Read the article":
+                # The userid and nickname of the author of the article and the number of points that should be earned
                 authorid = int(instanceArticle.searchUseridByArticleid(target)[0])
                 authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
 
-                # 阅读人的日志
-                userPaidInfo = f"用户userid为{userid}的读者 ，阅读了作者id为{authorid}昵称为`{authorNickname}`的articleid号为‘{target}’文章"
+                # Read people's logs
+                userPaidInfo = f"The reader with userid {userid} has read the article with articleid number '{target}' with authorid {authorid} and nickname `{authorNickname}`."
                 listLogger(userid, userPaidInfo, [2])
                 # 作者获取积分的日志
-                authorInfo = f"用户userid为{userid}的读者 ，阅读了作者id为{authorid}昵称为`{authorNickname}`的articleid号为‘{target}’文章 "
+                authorInfo = f"The reader with userid {userid} has read the article with articleid number '{target}' with authorid {authorid} and nickname `{authorNickname}`. "
                 listLogger(authorid, authorInfo, [6])
-                instanceLog.insertDetail(type="文章被阅读", target=target, credit=0, info=authorInfo)
-                # 作者也需要进入credit表
-                creditP2 = Credit(userid=authorid, category="文章被阅读", target=target, credit=0,
+                instanceLog.insertDetail(type="Articles are read", target=target, credit=0, info=authorInfo)
+                # The author also needs access to the credit form
+                creditP2 = Credit(userid=authorid, category="Articles are read", target=target, credit=0,
                                   createtime=now,
                                   ipaddr=ipaddr, info=authorInfo)
                 dbsession.add(creditP2)
@@ -89,11 +89,11 @@ class Credit(DBase):
             e = traceback.format_exc()
             allLogger(0, e)
         finally:
-            # 提交表
+            # Submission Form
             dbsession.add(creditP1)
             dbsession.commit()
 
-    # 判断用户是否已经购买了该文章，已经购买的话，不会显示再让其购买
+    # Determine whether the user has already purchased the article, if already purchased, it will not show again to let them buy
     def whetherPaidForArticle(self, articleid):
         result = dbsession.query(Credit).filter_by(userid=session.get("userid"), target=articleid).all()
         if len(result) > 0:
@@ -101,7 +101,7 @@ class Credit(DBase):
         else:
             return False
 
-    # 每天登录加一分
+    # Login every day plus one point
     def whetherFirstLoginThisDay(self, userid):
         start = time.strftime("%Y-%m-%d 00:00:00")
         end = time.strftime("%Y-%m-%d 23:59:59")
@@ -112,8 +112,8 @@ class Credit(DBase):
         else:
             return False
 
-    # 积分明细
-    # 返回积分相关变化
+    # Points breakdown
+    # Back to point-related changes
     def creditChangeLog(self, userid=None):
         userid = session.get("userid") if userid is None else userid
         allCreditChangeLog = dbsession.query(Credit.category,Credit.credit,Credit.target).filter_by(userid=userid).all()
@@ -123,11 +123,11 @@ class Credit(DBase):
             for j in i:
                 lin.append(j)
             if i[2] !=0:
-                # 如果文章没被隐藏的话
+                # If the article is not hidden
                 lin.append(instanceArticle.searchHeadlineByArticleid(i[2]))
             else:
                 lin.append(" ")
-            # 再判断文章是否已经被隐藏
+            # Then determine if the article has been hidden
             if instanceArticle.searchWhetherHide(i[2]) is False:
                 lin.append("0")
             else:

@@ -1,6 +1,6 @@
 """
-文件说明：
-此文件用来修改ueitor的值（为了让ueitor适应项目参数的变化）
+File description.
+This file is used to modify the value of the ueitor (in order to adapt the ueitor to changes in the project parameters)
 
 
 encoding: utf-8
@@ -18,13 +18,13 @@ from common.myLog import allLogger, rootDir
 from constant import portNum
 
 
-# 核心作用是读取指定的json文件并且更改一些字段，比如说端口号，存放目录
+# The core function is to read the specified json file and change some fields, such as the port number, the storage directory
 def returnUeConf(userid):
     myDirName = "myPic_" + str(userid)
     urlPort = f"http://127.0.0.1:{portNum}/"
     ueFormat = "../library/ueditor/jsp/upload/image" + f"/{myDirName}/" + "/{yyyy}{mm}{dd}/{time}{rand:6}"
     filename = "uecConfig" + '.json'
-    directory = f"{rootDir}\\static\\ue"  # json文件所在的目录路径
+    directory = f"{rootDir}\\static\\ue"  # The path to the directory where the json file is located
     jsonStr = {}
     dic = {
         "imageUrlPrefix": urlPort,
@@ -45,16 +45,16 @@ def returnUeConf(userid):
         "fileManagerUrlPrefix": urlPort,
     }
 
-    #  改变json的值
+    #  Changing the value of json
     def changeDic(name, value):
         jsonStr[f"{name}"] = value
 
-    # 批量传入要改变的东西，一键更改
+    # Batch pass in what you want to change and change it with one click
     def doChange(dic):
         for name, value in dic.items():
             changeDic(name, value)
 
-    #  打开文件夹，加载json
+    #  Open the folder and load the json
     try:
         with open(directory + '\\' + filename) as f:
             jsonStr = json.load(f)

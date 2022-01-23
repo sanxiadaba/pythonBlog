@@ -1,44 +1,44 @@
 {% extends "baseManage.html" %}
 {% block content %}
 
-    {#    侧边栏模块#}
+    {#    Sidebar Module#}
     <aside class="col-sm-3 col-md-2 col-lg-2 sidebar">
         <ul class="nav nav-sidebar">
-            <li class="active" id="myInfo_1" onclick="changeUserManageModel('myInfo_1')"><a>我的资料</a></li>
+            <li class="active" id="myInfo_1" onclick="changeUserManageModel('myInfo_1')"><a>My Profile</a></li>
         </ul>
         <ul class="nav nav-sidebar">
-            <li id="myArticle_1" onclick="changeUserManageModel('myArticle_1')"><a>我的文章</a></li>
-            <li id="myComment_1" onclick="changeUserManageModel('myComment_1')"><a>我的评论</a></li>
-            <li id="myFavo_1" onclick="changeUserManageModel('myFavo_1')"><a>我的收藏</a></li>
-            <li id="myLog_1" onclick="changeUserManageModel('myLog_1')"><a>登录记录</a></li>
-            <li id="myCredit_1" onclick="changeUserManageModel('myCredit_1')"><a>积分详情</a></li>
+            <li id="myArticle_1" onclick="changeUserManageModel('myArticle_1')"><a>My Articles</a></li>
+            <li id="myComment_1" onclick="changeUserManageModel('myComment_1')"><a>My Comments</a></li>
+            <li id="myFavo_1" onclick="changeUserManageModel('myFavo_1')"><a>My Collection</a></li>
+            <li id="myLog_1" onclick="changeUserManageModel('myLog_1')"><a>Login Record</a></li>
+            <li id="myCredit_1" onclick="changeUserManageModel('myCredit_1')"><a>Points Details</a></li>
         </ul>
         <ul class="nav nav-sidebar">
-            <li id="myContact_1" onclick="changeUserManageModel('myContact_1')"><a>联系管理员</a></li>
-            <li id="getCredit_1" onclick="changeUserManageModel('getCredit_1')"><a>如何获取积分?</a></li>
+            <li id="myContact_1" onclick="changeUserManageModel('myContact_1')"><a>Contact Administrator</a></li>
+            <li id="getCredit_1" onclick="changeUserManageModel('getCredit_1')"><a>How to get points?</a></li>
         </ul>
     </aside>
-    {#    我的信息模块#}
+    {#    My Information Module#}
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="myInfo" style="display: block">
-        <h1 class="page-header">信息总览</h1>
+        <h1 class="page-header">Information Overview</h1>
         <div class="row placeholders">
             <div class="col-xs-6 col-sm-2 placeholder" onclick="changeUserManageModel('myArticle_1')">
-                <h4>文章</h4>
-                <span class="text-muted" >{{ myInfo["numOfAllMyArticle"] }} 篇</span></div>
+                <h4>Articles</h4>
+                <span class="text-muted" >{{ myInfo["numOfAllMyArticle"] }}</span></div>
             <div class="col-xs-6 col-sm-2 placeholder" onclick="changeUserManageModel('myComment_1')">
-                <h4>评论</h4>
-                <span class="text-muted" >{{ myInfo["numOfALLMyComment"] }} 条</span></div>
+                <h4>Comments</h4>
+                <span class="text-muted" >{{ myInfo["numOfALLMyComment"] }}</span></div>
             <div class="col-xs-6 col-sm-2 placeholder" onclick="changeUserManageModel('myFavo_1')">
-                <h4>收藏文章</h4>
-                <span class="text-muted" >{{ myInfo["numOfMyFavoriteArticle"] }} 篇</span></div>
+                <h4>Collected Articles</h4>
+                <span class="text-muted" >{{ myInfo["numOfMyFavoriteArticle"] }}</span></div>
             <div class="col-xs-6 col-sm-3 placeholder">
-                <h4>文章访问量</h4>
+                <h4>Article Visits</h4>
                 <span class="text-muted">{{ myInfo["allNumOfAllArticleRead"] }}</span></div>
             <div class="col-xs-6 col-sm-3 placeholder" onclick="changeUserManageModel('myCredit_1')">
-                <h4>剩余积分</h4>
+                <h4>Remaining points</h4>
                 <span class="text-muted" >{{ myInfo["restOfMyCredit"] }}</span></div>
         </div>
-        <h1 class="page-header">个人信息</h1>
+        <h1 class="page-header">Personal Information</h1>
         <div class="table-responsive">
             <table class="table table-striped table-hover">
                 <thead>
@@ -46,57 +46,57 @@
                 </thead>
                 <tbody>
                 <tr>
-                    <td>我的昵称:</td>
+                    <td>My nickname:</td>
                     <td><input type="text" id="modifyNickname" class="form-control" value="{{ myInfo["myNickname"] }}"/>
                     </td>
                     <td>
-                        <button class="btn btn-primary" onclick="modifyNickname(this,{{ myInfo["myNickname"] }})">保存修改
+                        <button class="btn btn-primary" onclick="modifyNickname(this,{{ myInfo["myNickname"] }})">Save changes
                         </button>
                     </td>
                 </tr>
                 <tr>
-                    <td>我的注册邮箱</td>
+                    <td>My registered email</td>
                     <td>{{ myInfo["myEmail"] }}</td>
                 </tr>
                 <tr>
-                    <td>用户角色</td>
+                    <td>User Roles</td>
                     <td>{{ myInfo["myRole"] }}</td>
                     {% if myInfo["myRole"]=="user" %}
                         {% if myInfo["whetherApplyForEditor"]==0 %}
                             <td>
-                                <button class="btn btn-primary" onclick="applyEditor(this)">申请成为编辑</button>
+                                <button class="btn btn-primary" onclick="applyEditor(this)">Apply to become an editor</button>
                             </td>
                         {% else %}
                             <td>
-                                <button class="btn btn-primary" onclick="applyEditor(this)">已申请</button>
+                                <button class="btn btn-primary" onclick="applyEditor(this)">Applied for</button>
                             </td>
                         {% endif %}
                     {% endif %}
                 </tr>
                 <tr>
-                    <td>总共积分</td>
+                    <td>Total Points</td>
                     <td>{{ myInfo["restOfMyCredit"] }}</td>
                     <td>
-                        <button class="btn btn-primary" onclick="changeUserManageModel('myCredit_1')">点击查看积分明细</button>
+                        <button class="btn btn-primary" onclick="changeUserManageModel('myCredit_1')">Click to view the points breakdown</button>
                     </td>
                 </tr>
                 <tr>
-                    <td>我的qq</td>
+                    <td>My qq</td>
                     {% if myInfo['myQQ'] =="None" %}
-                        <td><input type="text" id="modifyQQ" class="form-control" value="QQ信息待完善"/></td>
+                        <td><input type="text" id="modifyQQ" class="form-control" value="QQ information to be improved"/></td>
                     {% else %}
                         <td><input type="text" id="modifyQQ" class="form-control" value="{{ myInfo["myQQ"] }}"/></td>
                     {% endif %}
                     <td>
-                        <button class="btn btn-primary" onclick="modifyQQ(this,'{{ myInfo["myQQ"] }}')">保存修改</button>
+                        <button class="btn btn-primary" onclick="modifyQQ(this,'{{ myInfo["myQQ"] }}')">Save changes</button>
                     </td>
                 </tr>
                 <tr>
-                    <td>我的头像</td>
+                    <td>My avatar</td>
                     <td><img height="150" width="150" src="/static/img/avatar/{{ myInfo["myAvatar"] }}"
                              style="border-radius: 50%"></td>
                     <td>
-                        <button class="btn btn-primary" onclick="location.href='/uploadUserAvatar'">上传头像</button>
+                        <button class="btn btn-primary" onclick="location.href='/uploadUserAvatar'">Upload avatar</button>
                     </td>
                 </tr>
                 </tbody>
@@ -106,30 +106,30 @@
             </table>
         </div>
     </div>
-    {#    我的文章#}
+    {#    My Articles#}
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="myArticle" style="display: none">
-        <h1 class="page-header">操作</h1>
+        <h1 class="page-header">Operation</h1>
         <ol class="breadcrumb">
-            <li><a href="/prepost">增加文章</a></li>
+            <li><a href="/prepost">Add article</a></li>
         </ol>
-        <h1 class="page-header">管理 <span class="badge" id="allMyArticleNum">{{ myArticleNum }}</span></h1>
+        <h1 class="page-header">Management <span class="badge" id="allMyArticleNum">{{ myArticleNum }}</span></h1>
         <table class="table table-striped table-hover">
             <thead>
             <tr>
-                <th><span class="glyphicon glyphicon-th-large"></span> <span class="visible-lg">选择</span></th>
-                <th class="hidden-sm"><span class="glyphicon glyphicon-file"></span> <span class="visible-lg">编号</span>
+                <th><span class="glyphicon glyphicon-th-large"></span> <span class="visible-lg">Select</span></th>
+                <th class="hidden-sm"><span class="glyphicon glyphicon-file"></span> <span class="visible-lg">Number</span>
                 </th>
-                <th><span class="glyphicon glyphicon-list"></span> <span class="visible-lg">标题</span></th>
-                <th class="hidden-sm"><span class="glyphicon glyphicon-road"></span> <span class="visible-lg">积分</span>
+                <th><span class="glyphicon glyphicon-list"></span> <span class="visible-lg">Title</span></th>
+                <th class="hidden-sm"><span class="glyphicon glyphicon-road"></span> <span class="visible-lg">Points</span>
                 </th>
-                <th class="hidden-sm"><span class="glyphicon glyphicon-tag"></span> <span class="visible-lg">栏目</span>
+                <th class="hidden-sm"><span class="glyphicon glyphicon-tag"></span> <span class="visible-lg">Column</span>
                 </th>
                 <th class="hidden-sm"><span class="glyphicon glyphicon-comment"></span> <span
-                        class="visible-lg">评论数</span></th>
-                <th class="hidden-sm"><span class="glyphicon glyphicon-time"></span> <span class="visible-lg">阅读数</span>
+                        class="visible-lg">Number of comments</span></th>
+                <th class="hidden-sm"><span class="glyphicon glyphicon-time"></span> <span class="visible-lg">Reads</span>
                 </th>
-                <th><span class="glyphicon glyphicon-pencil"></span> <span class="visible-lg">创建时间</span></th>
-                <th><span class="glyphicon glyphicon-envelope"></span> <span class="visible-lg">其他说明</span></th>
+                <th><span class="glyphicon glyphicon-pencil"></span> <span class="visible-lg">Creation time</span></th>
+                <th><span class="glyphicon glyphicon-envelope"></span> <span class="visible-lg">Other notes</span></th>
             </tr>
             </thead>
             <tbody>
@@ -137,48 +137,48 @@
                 {% if article[11] ==0 %}
                     {% if loop.index<=everyPageInHou %}
                         <tr id="article__{{ article[0] }}" class="index_{{ loop.index }}" style="">
-                            {#              选择#}
+                            {#              Select#}
                             <td class="hidden-sm"><input type="checkbox" class="input-control" name="checkbox[]"
                                                          value="{{ article[0] }}"/></td>
-                            {#                  编号#}
+                            {#                  Number#}
                             <td>{{ article[0] }}</td>
-                            {#                  标题#}
+                            {#                  Title#}
                             <td class="article-title">{{ article[1] | my_truncate(20) }}</td>
-                            {#                  积分#}
+                            {#                  Points#}
                             <td>{{ article[6] }}</td>
-                            {#                  类型、栏目#}
+                            {#                  Type, Column#}
                             <td>{{ article_type[article[2] | string] }}</td>
-                            {#                  评论数#}
+                            {#                  Number of comments#}
                             <td class="hidden-sm">{{ article[3] }}</td>
-                            {#                  阅读数#}
+                            {#                  Reads#}
                             <td class="hidden-sm">{{ article[4] }}</td>
-                            {#                  创建时间#}
+                            {#                  Creation time#}
                             <td>{{ article[5] }}</td>
-                            {#信息说明#}
+                            {#Information Description#}
                             {% if article[7] == 1 %}
-                                <td>该文章是草稿</td>
-                                <td><a onclick="modifyArticle({{ article[0] }})">修改</a> <a rel="6"
-                                                                                           onclick="hideArticle('{{ article[0] }}')">删除</a>
+                                <td>This article is a draft</td>
+                                <td><a onclick="modifyArticle({{ article[0] }})">Modification</a> <a rel="6"
+                                                                                           onclick="hideArticle('{{ article[0] }}')">Delete</a>
                                 </td>
                             {% else %}
                                 {% if article[8] ==0 %}
-                                    <td>等待管理员审核</td>
+                                    <td>Waiting for administrator review</td>
                                 {% else %}
                                     {% if article[9]==1 %}
-                                        <td>文章被管理员隐藏</td>
-                                        <td><a onclick="modifyArticle({{ article[0] }})">查看</a> <a rel="6"
-                                                                                                   onclick="hideArticle('{{ article[0] }}')">删除</a>
+                                        <td>Article hidden by admin</td>
+                                        <td><a onclick="modifyArticle({{ article[0] }})">View</a> <a rel="6"
+                                                                                                   onclick="hideArticle('{{ article[0] }}')">Delete</a>
                                         </td>
                                     {% else %}
                                         {% if article[10]==1 %}
-                                            <td>文章被推荐</td>
-                                            <td><a onclick="modifyArticle({{ article[0] }})">修改</a> <a rel="6"
-                                                                                                       onclick="hideArticle('{{ article[0] }}')">删除</a>
+                                            <td>Article is recommended</td>
+                                            <td><a onclick="modifyArticle({{ article[0] }})">Modification</a> <a rel="6"
+                                                                                                       onclick="hideArticle('{{ article[0] }}')">Delete</a>
                                             </td>
                                         {% else %}
-                                            <td>文章已发布</td>
-                                            <td><a onclick="modifyArticle({{ article[0] }})">修改</a> <a rel="6"
-                                                                                                       onclick="hideArticle('{{ article[0] }}')">删除</a>
+                                            <td>Article has been published</td>
+                                            <td><a onclick="modifyArticle({{ article[0] }})">Modification</a> <a rel="6"
+                                                                                                       onclick="hideArticle('{{ article[0] }}')">Delete</a>
                                             </td>
                                         {% endif %}
                                     {% endif %}
@@ -188,48 +188,48 @@
                         </tr>
                     {% else %}
                         <tr id="article__{{ article[0] }}" class="index_{{ loop.index }} " style="display: none">
-                            {#              选择#}
+                            {#              Select#}
                             <td class="hidden-sm"><input type="checkbox" class="input-control" name="checkbox[]"
                                                          value="{{ article[0] }}"/></td>
-                            {#                  编号#}
+                            {#                  Number#}
                             <td>{{ article[0] }}</td>
-                            {#                  标题#}
+                            {#                  Title#}
                             <td class="article-title">{{ article[1] | my_truncate(20) }}</td>
-                            {#                  积分#}
+                            {#                  Points#}
                             <td>{{ article[6] }}</td>
-                            {#                  类型、栏目#}
+                            {#                  Type, Column#}
                             <td>{{ article_type[article[2] | string] }}</td>
-                            {#                  评论数#}
+                            {#                  Number of comments#}
                             <td class="hidden-sm">{{ article[3] }}</td>
-                            {#                  阅读数#}
+                            {#                  Reads#}
                             <td class="hidden-sm">{{ article[4] }}</td>
-                            {#                  创建时间#}
+                            {#                  Creation time#}
                             <td>{{ article[5] }}</td>
-                            {#信息说明#}
+                            {#Information Description#}
                             {% if article[7] == 1 %}
-                                <td>该文章是草稿</td>
-                                <td><a onclick="modifyArticle({{ article[0] }})">修改</a> <a rel="6"
-                                                                                           onclick="hideArticle('{{ article[0] }}')">删除</a>
+                                <td>This article is a draft</td>
+                                <td><a onclick="modifyArticle({{ article[0] }})">Modification</a> <a rel="6"
+                                                                                           onclick="hideArticle('{{ article[0] }}')">Delete</a>
                                 </td>
                             {% else %}
                                 {% if article[8] ==0 %}
-                                    <td>等待管理员审核</td>
+                                    <td>Waiting for administrator review</td>
                                 {% else %}
                                     {% if article[9]==1 %}
-                                        <td>文章被管理员隐藏</td>
-                                        <td><a onclick="modifyArticle({{ article[0] }})">查看</a> <a rel="6"
-                                                                                                   onclick="hideArticle('{{ article[0] }}')">删除</a>
+                                        <td>Article hidden by admin</td>
+                                        <td><a onclick="modifyArticle({{ article[0] }})">View</a> <a rel="6"
+                                                                                                   onclick="hideArticle('{{ article[0] }}')">Delete</a>
                                         </td>
                                     {% else %}
                                         {% if article[10]==1 %}
-                                            <td>文章被推荐</td>
-                                            <td><a onclick="modifyArticle({{ article[0] }})">修改</a> <a rel="6"
-                                                                                                       onclick="hideArticle('{{ article[0] }}')">删除</a>
+                                            <td>Article is recommended</td>
+                                            <td><a onclick="modifyArticle({{ article[0] }})">Modification</a> <a rel="6"
+                                                                                                       onclick="hideArticle('{{ article[0] }}')">Delete</a>
                                             </td>
                                         {% else %}
-                                            <td>文章已发布</td>
-                                            <td><a onclick="modifyArticle({{ article[0] }})">修改</a> <a rel="6"
-                                                                                                       onclick="hideArticle('{{ article[0] }}')">删除</a>
+                                            <td>Article has been published</td>
+                                            <td><a onclick="modifyArticle({{ article[0] }})">Modification</a> <a rel="6"
+                                                                                                       onclick="hideArticle('{{ article[0] }}')">Delete</a>
                                             </td>
                                         {% endif %}
                                     {% endif %}
@@ -246,16 +246,16 @@
         <footer class="message_footer">
             <nav>
                 <div class="btn-toolbar operation" role="toolbar">
-                    <div class="btn-group" role="group"><a class="btn btn-default" onclick="select('checkbox[]')">全选</a> <a
-                            class="btn btn-default" onclick="reverse('checkbox[]')">反选</a> <a class="btn btn-default"
-                                                                                  onclick="noselect('checkbox[]')">不选</a></div>
+                    <div class="btn-group" role="group"><a class="btn btn-default" onclick="select('checkbox[]')">Select All</a> <a
+                            class="btn btn-default" onclick="reverse('checkbox[]')">counter election</a> <a class="btn btn-default"
+                                                                                  onclick="noselect('checkbox[]')">No choice</a></div>
                     <div class="btn-group" role="group">
                         <button onclick="delMany()" type="submit" class="btn btn-default" data-toggle="tooltip"
-                                data-placement="bottom" title="删除全部选中" name="checkbox_delete">删除
+                                data-placement="bottom" title="Delete all selected" name="checkbox_delete">Delete
                         </button>
                     </div>
                 </div>
-                {#              下面的分页标签#}
+                {#              The following pagination tabs#}
                 <ul class="pagination pagenav">
                     <li class="disabled"><a aria-label="Previous"> <span aria-hidden="true">&laquo;</span> </a></li>
                     <li class="active" id="biao_1"
@@ -272,36 +272,36 @@
             </nav>
         </footer>
     </div>
-    {#    我的评论#}
+    {#    My Comments#}
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="myComment" style="display: none">
-        <h1 class="page-header">我的评论 <span class="badge" id="allMyCommentNum">{{ allMyCommentNum }}</span></h1>
+        <h1 class="page-header">My Comments <span class="badge" id="allMyCommentNum">{{ allMyCommentNum }}</span></h1>
         <table class="table table-striped table-hover">
             <thead>
             <tr>
-                <th><span class="glyphicon glyphicon-list"></span> <span class="visible-lg">内容</span></th>
-                <th class="hidden-sm"><span class="glyphicon glyphicon-tag"></span> <span class="visible-lg">评论文章</span>
+                <th><span class="glyphicon glyphicon-list"></span> <span class="visible-lg">Content</span></th>
+                <th class="hidden-sm"><span class="glyphicon glyphicon-tag"></span> <span class="visible-lg">Review Articles</span>
                 </th>
                 <th class="hidden-sm"><span class="glyphicon glyphicon-comment"></span> <span
-                        class="visible-lg">赞同数</span></th>
-                <th class="hidden-sm"><span class="glyphicon glyphicon-time"></span> <span class="visible-lg">反对数</span>
+                        class="visible-lg">Number of Likes</span></th>
+                <th class="hidden-sm"><span class="glyphicon glyphicon-time"></span> <span class="visible-lg">Number of objections</span>
                 </th>
-                <th><span class="glyphicon glyphicon-pencil"></span> <span class="visible-lg">创建时间</span></th>
+                <th><span class="glyphicon glyphicon-pencil"></span> <span class="visible-lg">Creation time</span></th>
             </tr>
             </thead>
             <tbody>
             {% for comment in myComment %}
                 <tr id="comment__{{ comment[5] }}" style="">
-                    {#                  内容#}
+                    {#                  Content#}
                     <td class="article-title" onclick="tiaoArticle({{ comment[3] }},2)">{{ comment[0] }}</td>
-                    {#                  目标文章#}
+                    {#                  Target Articles#}
                     <td onclick="tiaoArticle({{ comment[3] }},2)">{{ comment[5] }}</td>
-                    {#                  赞同数#}
+                    {#                  Number of Likes#}
                     <td class="hidden-sm">{{ comment[1] }}</td>
-                    {#                  反对数#}
+                    {#                  Number of objections#}
                     <td class="hidden-sm">{{ comment[2] }}</td>
-                    {#                  创建时间#}
+                    {#                  Creation time#}
                     <td>{{ comment[4] }}</td>
-                    <td><a rel="6" onclick="hideComment_1({{ comment[5] }})">删除</a></td>
+                    <td><a rel="6" onclick="hideComment_1({{ comment[5] }})">Delete</a></td>
                 </tr>
 
             {% endfor %}
@@ -310,28 +310,28 @@
 
 
     </div>
-    {#    我的喜欢文章#}
+    {#    My Favorite Articles#}
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="myFavo" style="display: none">
-        <h1 class="page-header">我的评论 <span class="badge" id="allMyFavoriteommentNum">{{ lenMyFavo }}</span></h1>
+        <h1 class="page-header">My Comments <span class="badge" id="allMyFavoriteommentNum">{{ lenMyFavo }}</span></h1>
         <table class="table table-striped table-hover">
             <thead>
             <tr>
-                <th><span class="glyphicon glyphicon-list"></span> <span class="visible-lg">文章id</span></th>
-                <th class="hidden-sm"><span class="glyphicon glyphicon-tag"></span> <span class="visible-lg">文章标题</span>
+                <th><span class="glyphicon glyphicon-list"></span> <span class="visible-lg">Article id</span></th>
+                <th class="hidden-sm"><span class="glyphicon glyphicon-tag"></span> <span class="visible-lg">Article Title</span>
                 </th>
-                <th><span class="glyphicon glyphicon-pencil"></span> <span class="visible-lg">收藏时间</span></th>
+                <th><span class="glyphicon glyphicon-pencil"></span> <span class="visible-lg">Collection time</span></th>
             </tr>
             </thead>
             <tbody>
             {% for favo in myFavo %}
                 <tr id="favorite__{{ favo[0] }}" style="">
-                    {#                  文章id#}
+                    {#                  Article id#}
                     <td class="article-title" onclick="tiaoArticle({{ favo[0] }},6)">{{ favo[0] }}</td>
-                    {#                  文章标题#}
+                    {#                  Article Title#}
                     <td onclick="tiaoArticle({{ favo[0] }},6)">{{ favo[2] }}</td>
-                    {#                  创建时间#}
+                    {#                  Creation time#}
                     <td>{{ favo[1] }}</td>
-                    <td><a rel="6" onclick="cancel_favorite({{ favo[0] }},{{ favo[0] }})">删除</a></td>
+                    <td><a rel="6" onclick="cancel_favorite({{ favo[0] }},{{ favo[0] }})">Delete</a></td>
                 </tr>
 
             {% endfor %}
@@ -340,21 +340,21 @@
     </div>
     {#    我的登录记录#}
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="myLog" style="display: none">
-        <h1 class="page-header">我的登录记录</h1>
+        <h1 class="page-header">My Login History</h1>
         <table class="table table-striped table-hover">
             <thead>
             <tr>
-                <th class="hidden-sm"><span class="glyphicon glyphicon-tag"></span> <span class="visible-lg">类型</span>
+                <th class="hidden-sm"><span class="glyphicon glyphicon-tag"></span> <span class="visible-lg">Type</span>
                 </th>
-                <th><span class="glyphicon glyphicon-pencil"></span> <span class="visible-lg">时间</span></th>
+                <th><span class="glyphicon glyphicon-pencil"></span> <span class="visible-lg">Time</span></th>
             </tr>
             </thead>
             <tbody>
             {% for log in myLoginLog %}
                 <tr>
-                    {#                  登录类型#}
+                    {#                  Login Type#}
                     <td>{{ log[0] }}</td>
-                    {#                  操作时间#}
+                    {#                  Operation time#}
                     <td>{{ log[1] }}</td>
                 </tr>
 
@@ -363,31 +363,31 @@
         </table>
     </div>
 
-    {#    我的积分明细#}
+    {#    My points breakdown#}
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="myCredit" style="display: none">
-        <h1 class="page-header">我的积分明细</h1>
+        <h1 class="page-header">My points breakdown</h1>
         <table class="table table-striped table-hover">
             <thead>
             <tr>
-                <th class="hidden-sm"><span class="glyphicon glyphicon-tag"></span> <span class="visible-lg">类型</span>
+                <th class="hidden-sm"><span class="glyphicon glyphicon-tag"></span> <span class="visible-lg">Type</span>
                 </th>
                 <th class="hidden-sm"><span class="glyphicon glyphicon-comment"></span> <span
-                        class="visible-lg">积分变化</span></th>
-                <th><span class="glyphicon glyphicon-pencil"></span> <span class="visible-lg">目标文章</span></th>
+                        class="visible-lg">Point changes</span></th>
+                <th><span class="glyphicon glyphicon-pencil"></span> <span class="visible-lg">Target Articles</span></th>
             </tr>
             </thead>
             <tbody>
             {% for credit in allCreditChangeLog %}
                 <tr>
-                    {#                  积分变化类型#}
+                    {#                  Point Change Type#}
                     <td>{{ credit[0] }}</td>
-                    {#                  积分变化#}
+                    {#                  Point changes#}
                     <td>{{ credit[1] }}</td>
-                    {#              目标文章#}
+                    {#              Target Articles#}
                     {% if credit[4] == "0" %}
                         <td onclick="tiaoArticle({{ credit[2] }},3)">{{ credit[3] }}</td>
                     {% else %}
-                        <td><font color="red">文章已被删除</font></td>
+                        <td><font color="red">The article has been deleted</font></td>
                     {% endif %}
                 </tr>
             {% endfor %}
@@ -396,9 +396,9 @@
 
 
     </div>
-    {#    联系管理员#}
+    {#    Contact Administrator#}
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="myContact" style="display: none">
-        <h1 class="page-header">管理员邮箱: {{ emailAccount }}</h1>
+        <h1 class="page-header">Administrator Email: {{ emailAccount }}</h1>
         <br>
         <h4>@author: Zhang Jiajun</h4>
         <br>
@@ -411,34 +411,34 @@
         <h4>@gituhb: sanxiadaba/pythonBlog</h4>
         <br>
         <br>
-        <h3 onclick="location.href='https://github.com/sanxiadaba/pythonBlog'"><font color="red">点击此处跳转查看github源码</font>
+        <h3 onclick="location.href='https://github.com/sanxiadaba/pythonBlog'"><font color="red">Click here to jump to github source code</font>
         </h3>
     </div>
-    {#    如何获取积分?#}
+    {#    How to get points?#}
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="getCredit" style="display: none">
         <body class='typora-export os-windows'>
-        <div id='write' class=''><h3><a name="如何获取积分" class="md-header-anchor"></a><span>如何获取积分</span></h3>
+        <div id='write' class=''><h3><a name="How to get points" class="md-header-anchor"></a><span>How to get points</span></h3>
             <br>
             <h4><ol>
-                <li><span>&nbsp;&nbsp;&nbsp;回复文章评论</span></li>
+                <li><span>&nbsp;&nbsp;&nbsp;Reply to article comments</span></li>
                 <br>
-                <li><span>&nbsp;&nbsp;&nbsp;每天登录</span></li>
+                <li><span>&nbsp;&nbsp;&nbsp;Daily Login</span></li>
                 <br>
-                <li><span>&nbsp;&nbsp;&nbsp;发布或投递文章</span></li>
+                <li><span>&nbsp;&nbsp;&nbsp;Post or submit an article</span></li>
                 <br>
-                <li><span>&nbsp;&nbsp;&nbsp;其他人阅读文章支付积分</span></li>
+                <li><span>&nbsp;&nbsp;&nbsp;Other people read the article and pay points</span></li>
                 <br>
             </ol></h4>
 
             <p>&nbsp;</p>
-            <h3><a name="作者的话" class="md-header-anchor"></a><span>作者的话</span></h3>
+            <h3><a name="Author's words" class="md-header-anchor"></a><span>Author's words</span></h3>
             <h4><br>
             <p>
-                <span>	</span><span>&nbsp;&nbsp;&nbsp;这个博客项目，在耗费不少精力后，现在终于是做了出来。虽说代码很简陋、页面也不够精致，但总还算是“麻雀虽小、五脏俱全”</span>
+                <span>	</span><span>&nbsp;&nbsp;&nbsp;This blog project, after spending a lot of energy, is now finally made out. Although the code is very simple and the pages are not sophisticated enough, but it is still "small but complete".</span>
             </p>
             <br>
-            <p><span>	</span><span>&nbsp;&nbsp;&nbsp;此外，我接下来还会继续开发相关的功能，使博客系统更加完善、美观，非常感谢你的使用，你可以</span><a
-                    href='https://github.com/sanxiadaba/pythonBlog'><span onclick="location.href='https://github.com/sanxiadaba/pythonBlog'"><font color="red">>>>点击此处<<<</font></span></a><span>来在github上参与开发，感谢支持。</span>
+            <p><span>	</span><span>&nbsp;&nbsp;&nbsp;In addition, I will continue to develop related features next to make the blog system more perfect and beautiful, thank you very much for using it, you can</span><a
+                    href='https://github.com/sanxiadaba/pythonBlog'><span onclick="location.href='https://github.com/sanxiadaba/pythonBlog'"><font color="red">>>>Click here<<<</font></span></a><span>Come and participate in the development on github, thanks for the support.</span>
             </p></h4>
             </div>
         </body>

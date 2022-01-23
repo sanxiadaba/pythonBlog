@@ -16,36 +16,36 @@ class Log(DBase):
         if userid is None:
             userid = session.get("userid")
         if info is not None:
-            info = info + f" ip地址为{request.remote_addr}"
+            info = info + f" The ip address is{request.remote_addr}"
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         logP = Log(userid=userid, category=type, target=target, credit=credit, createtime=now,
                    ipaddr=request.remote_addr, info=info)
         dbsession.add(logP)
         dbsession.commit()
 
-    # 判断是否已赞成或反对该评论
-    # 赞成返回1 反对返回2 不赞同不反对返回0
+    # Determine if the comment has been approved or disapproved
+    # For return 1 Against return 2 Disagree not oppose return 0
     def whetherAgreeOrDisInThisComment(self, commentid):
-        row = dbsession.query(Log.category).filter(Log.target == commentid).filter(Log.category != "添加评论").filter(
+        row = dbsession.query(Log.category).filter(Log.target == commentid).filter(Log.category != "Add a comment").filter(
             Log.userid == session.get("userid")).order_by(Log.createtime.desc()).first()
         if row is None:
             return 0
         else:
             info = row[0]
-            if info == "赞同评论":
+            if info == "Agree with the comments":
                 return 1
-            elif info == "反对评论":
+            elif info == "Opposing Comments":
                 return -1
             else:
                 return 0
         pass
 
-    # 查看某一个用户的所有记录
+    # View all records for a particular user
     def searchAllLogOfUser(self, userid):
         allLogOfUser = dbsession.query(Log).filter_by(userid=userid).all()
         return allLogOfUser
 
-    # 查看用户的登录、登出、注册、找回密码的记录
+    # View user login, logout, registration, and password retrieval records
     def searchLoginLog(self,userid):
         result=dbsession.query(Log.category,Log.createtime).filter(Log.userid==userid,Log.category.in_(["每日登录","登录成功","登出账户","重设密码"])).all()
         return result

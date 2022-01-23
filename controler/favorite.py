@@ -1,8 +1,8 @@
 """
-文件说明：
+File description.
 
-本文件主要完成对收藏与取消收藏文章
-主要操作数据库中的favorite文件
+This file mainly completes the collection and uncollection of articles
+Mainly manipulate the favorite file in the database
 
 
 encoding: utf-8
@@ -44,14 +44,14 @@ def add_favorite():
     authorid = int(instanceArticle.searchUseridByArticleid(articleid)[0])
     authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
     try:
-        info = f"userid为{userid},昵称为{nickname}的用户,将用户id为{authorid}，昵称为{authorNickname}，articleid为{articleid}的文章取消了收藏"
+        info = f"The user with userid {userid} and nickname {nickname} has unfavored the articles with userid {authorid}, nickname {authorNickname} and articleid {articleid}."
         instanceFavorite.insertFavorite(articleid)
-        # 打印日志
+        # Print Log
         listLogger(userid, info, [4])
         listLogger(authorid, info, [6])
-        # 添加日志表
-        instanceLog.insertDetail(userid=userid, type="添加收藏", credit=0, target=articleid)
-        instanceLog.insertDetail(userid=userid, type="文章被收藏", credit=0, target=articleid)
+        # Add log table
+        instanceLog.insertDetail(userid=userid, type="Add Favorite", credit=0, target=articleid)
+        instanceLog.insertDetail(userid=userid, type="Articles Bookmarked", credit=0, target=articleid)
         return "favorite-pass"
     except:
         e = traceback.format_exc()
@@ -59,7 +59,7 @@ def add_favorite():
         return "favorite-fail"
 
 
-# 取消收藏文章的操作 注意这里是delete请求
+# Cancel the operation of favorite articles Note that here is the delete request
 @favorite.route("/favorite/<int:articleid>", methods=["DELETE"])
 @logDanger
 def cancel_favorite(articleid):
@@ -69,14 +69,14 @@ def cancel_favorite(articleid):
     authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
     try:
         instanceFavorite.cancelFavorite(articleid)
-        info = f"userid为{userid},昵称为{nickname}的用户,将用户id为{authorid}，昵称为{authorNickname}，articleid为{articleid}的文章取消了收藏"
+        info = f"The user with userid {userid} and nickname {nickname} has unfavored the articles with userid {authorid}, nickname {authorNickname} and articleid {articleid}."
         instanceFavorite.insertFavorite(articleid)
-        # 打印日志
+        # Print Log
         listLogger(userid, info, [4])
         listLogger(authorid, info, [6])
-        # 添加日志表
-        instanceLog.insertDetail(userid=userid, type="取消收藏", credit=0, target=articleid)
-        instanceLog.insertDetail(userid=userid, type="文章被取消收藏", credit=0, target=articleid)
+        # Add log table
+        instanceLog.insertDetail(userid=userid, type="Cancel Favorites", credit=0, target=articleid)
+        instanceLog.insertDetail(userid=userid, type="Articles are unfavored", credit=0, target=articleid)
         return "cancel-pass"
     except:
         e = traceback.format_exc()

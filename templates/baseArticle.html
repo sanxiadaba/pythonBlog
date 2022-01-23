@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>博客主页</title>
+    <title>Blog Home</title>
 
     <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.css">
     <link rel="stylesheet" type="text/css" href="/static/css/config.css">
@@ -15,7 +15,7 @@
 <script src="/static/js/toastr.min.js"></script>
 
 
-    {# 导入响应式设置#}
+    {# Importing Responsive Settings#}
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
 
     {% block writeConfig %}
@@ -23,7 +23,7 @@
 
 </head>
 <body>
-<!--顶部logo区域-->
+<!--Top logo area-->
 <div class="header">
     <div class="container" style="height: 80px">
         <div class="row">
@@ -40,11 +40,11 @@
         </div>
     </div>
 </div>
-{#导航条#}
+{#Navigation bar#}
 <div class="menu">
     <div class="container" style="padding:0">
         <nav class="navbar navbar-expand-lg navbar-dark menu-bar" style="background-color: #563d7c;">
-            <a class="navbar-brand" href="/">主页</a>
+            <a class="navbar-brand" href="/">Home</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
                     aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -58,23 +58,23 @@
                 </div>
                 <div class="navbar-nav menu-bar ml-auto">
                     {% if session.get("islogin") == "true" %}
-                    <a class="nav-item nav-link" href="#">欢迎你：{{session.get("nickname")}}</a>
+                    <a class="nav-item nav-link" href="#">Welcome：{{session.get("nickname")}}</a>
                     &nbsp;&nbsp;&nbsp;
                     {%if session.get("role")=="admin"%}
-                    <a class="nav-item nav-link" href="/admainManage">系统管理</a>&nbsp;&nbsp;&nbsp;
+                    <a class="nav-item nav-link" href="/admainManage">Management</a>&nbsp;&nbsp;&nbsp;
                     {%elif session.get("role")=="editor"%}
-                    <a class="nav-item nav-link" href="/userManage">用户中心</a>&nbsp;&nbsp;&nbsp;
-                    <a class="nav-item nav-link" href="/prepost">发表文章</a>&nbsp;&nbsp;&nbsp;
+                    <a class="nav-item nav-link" href="/userManage">Management</a>&nbsp;&nbsp;&nbsp;
+                    <a class="nav-item nav-link" href="/prepost">Articles</a>&nbsp;&nbsp;&nbsp;
                     {%elif session.get("role")=="user"%}
-                        <a class="nav-item nav-link" href="/userManage">用户中心</a>&nbsp;&nbsp;&nbsp;
-                     <a class="nav-item nav-link" href="/prepost">我要投稿</a>&nbsp;&nbsp;&nbsp;
+                        <a class="nav-item nav-link" href="/userManage">Management</a>&nbsp;&nbsp;&nbsp;
+                     <a class="nav-item nav-link" href="/prepost">Articles</a>&nbsp;&nbsp;&nbsp;
                     {% endif %}
 
 
-                    <a class="nav-item nav-link" href="/logout">注销</a>
+                    <a class="nav-item nav-link" href="/logout">Logout</a>
                     {% else %}
-                    <a class="nav-item nav-link" href="#loginpanel" onclick="showLogin()">登录</a>
-                    <a class="nav-item nav-link" href="#" onclick="showReg()">注册</a>
+                    <a class="nav-item nav-link" href="#loginpanel" onclick="showLogin()">Login</a>
+                    <a class="nav-item nav-link" href="#" onclick="showReg()">Registration</a>
                     {% endif %}
                 </div>
             </div>
@@ -84,78 +84,78 @@
 
 <div class="container" style="margin-top: 20px;">
     <div class="row">
-        {# 中部区域#}
+        {# Central Region#}
         {% block content %}
         {% endblock %}
         {% block artical %}
         {% endblock %}
         {% block write %}
         {% endblock %}
-        {# 右边区域#}
+        {# Right side area#}
 
     </div>
 </div>
-<!-- 底部设计 -->
+<!-- Bottom design -->
 <div class="container-fluid footer">
     <div class="container">
         <div class="row">
             <div class="col-4 center">
-                <p><a href="https://github.com/sanxiadaba" target="_blank">作者信息</a>&nbsp;&nbsp;&nbsp;
-                    <a href="https://github.com/sanxiadaba/pythonBlog" target="_blank">源码查看</a>&nbsp;&nbsp;&nbsp;
+                <p><a href="https://github.com/sanxiadaba" target="_blank">Author Information</a>&nbsp;&nbsp;&nbsp;
+                    <a href="https://github.com/sanxiadaba/pythonBlog" target="_blank">Source Code View</a>&nbsp;&nbsp;&nbsp;
                 </p>
             </div>
             <div class="col-8 right">
                 <p>Email:jz272381@gmail.com&nbsp;&nbsp;</p>
-                <p>微信:18037896897&nbsp;&nbsp;</p>
+                <p>WeChat:18037896897&nbsp;&nbsp;</p>
             </div>
         </div>
     </div>
 </div>
-<!-- 登录和注册模态框 -->
-<!-- data-backdrop="static" 表示用户必须要手工关闭模态框才能操作其他页面 -->
+<!-- Login and registration modal box -->
+<!-- data-backdrop="static" Indicates that the user must manually close the modal box in order to operate other pages -->
 <div class="modal fade" id="mymodal" data-backdrop="static" tabindex="-1"
      role="dialog" aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-            <!-- 在模态框内部配置Tab选项卡，用于切换登录和注册窗口 -->
+            <!-- Configure Tab tabs inside the modal box to switch between login and registration windows -->
             <div class="tabbable" id="tabs" style="background-color: #337AB7; height: 50px;padding: 5px 20px;">
                 <button type="button" class="close" data-dismiss="modal">
                     <span aria-hidden="true" >&times;</span><span class="sr-only">Close</span>
                 </button>
-                <!-- 与登录和注册窗口的ID进行关联 -->
+                <!-- Associate with login and registration window IDs -->
                 <ul class="nav nav-tabs" role="tablist">
                     <li id="login" class="nav-item active">
-                        <a href="#loginpanel" data-toggle="tab" class="nav-link" style="color: midnightblue" >登录</a>
+                        <a href="#loginpanel" data-toggle="tab" class="nav-link" style="color: midnightblue" >Login</a>
 {#                        onclick="showLogin()"#}
                     </li>
 
                     <li id="reg" class="nav-item">
-                        <a href="#regpanel" data-toggle="tab" class="nav-link" style="color: midnightblue">注册</a>
+                        <a href="#regpanel" data-toggle="tab" class="nav-link" style="color: midnightblue">Registration</a>
                     </li>
 
                     <li id="find" class="nav-item">
-                        <a href="#findpanel" data-toggle="tab" class="nav-link" style="color: midnightblue">找回密码</a>
+                        <a href="#findpanel" data-toggle="tab" class="nav-link" style="color: midnightblue">Retrieve password</a>
                     </li>
                 </ul>
             </div>
 
-            <!-- 绘制登录窗口 -->
+            <!-- Drawing the login window -->
             <div class="tab-content">
                 <div class="tab-pane container active" id="loginpanel">
                     <div class="modal-content" style="margin: 20px 0px;">
                         <div class="modal-body">
                             <div class="form-group row" style="margin-top: 20px;">
-                                <label for="loginname" class="col-4">&nbsp;&nbsp;登录邮箱：</label>
-                                <input type="text" id="loginname" class="form-control col-7 " placeholder="请输入你的邮箱地址"/>
+                                <label for="loginname" class="col-4">&nbsp;&nbsp;Login Email：</label>
+                                <input type="text" id="loginname" class="form-control col-7 " placeholder="Please enter your email address"/>
                             </div>
 
                             <div class="form-group row">
-                                <label for="loginpass" class="col-4">&nbsp;&nbsp;登录密码：</label>
-                                <input type="password" id="loginpass" class="form-control col-7" placeholder="请输入你的登录密码"/>
+                                <label for="loginpass" class="col-4">&nbsp;&nbsp;Login Password：</label>
+                                <input type="password" id="loginpass" class="form-control col-7" placeholder="Please enter your login password"/>
                             </div>
                             <div class="form-group row">
-                                <label for="logincode" class="col-4"> &nbsp;&nbsp;图片验证码：</label>
-                                <input type="text" id="logincode" class="form-control col-5" placeholder="请输入右侧的验证码"
+                                <label for="logincode" class="col-4"> &nbsp;&nbsp;Image Verification Code：</label>
+                                <input type="text" id="logincode" class="form-control col-5" placeholder="Please enter the verification code on the right"
                                        onkeyup="doLogin(event)"/>
                                 <img src="/vcode" id="loginvcode" class="col-3" style="cursor:pointer;"
                                      onclick="this.src='/vcode?'+Math.random()"/>
@@ -163,62 +163,62 @@
 
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-dark" data-dismiss="modal">关闭</button>
-                            <button type="button" class="btn btn-primary" onclick="doLogin(null)">登录</button>
+                            <button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="doLogin(null)">Login</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- 绘制注册窗口 -->
+                <!-- Drawing the registration window -->
                 <div class="tab-pane container" id="regpanel">
                     <div class="modal-content" style="margin: 20px 0px;">
                         <div class="modal-body">
                             <div class="form-group row" style="margin-top: 20px;">
-                                <label for="regname" class="col-4">&nbsp;&nbsp;注册邮箱：</label>
-                                <input type="text" id="regname" class="form-control col-7" placeholder="请输入你的邮箱地址"/>
+                                <label for="regname" class="col-4">&nbsp;&nbsp;Register Email：</label>
+                                <input type="text" id="regname" class="form-control col-7" placeholder="Please enter your email address"/>
                             </div>
                             <div class="form-group row">
-                                <label for="regpass" class="col-4">&nbsp;&nbsp;注册密码：</label>
-                                <input type="password" id="regpass" class="form-control col-7" placeholder="请输入你的注册密码"/>
+                                <label for="regpass" class="col-4">&nbsp;&nbsp;Registration Password：</label>
+                                <input type="password" id="regpass" class="form-control col-7" placeholder="Please enter your registration password"/>
                             </div>
                             <div class="form-group row">
-                                <label for="regcode" class="col-4">&nbsp;&nbsp;邮箱验证码：</label>
-                                <input type="text" id="regcode" class="form-control col-4" placeholder="请输入邮箱验证码"
+                                <label for="regcode" class="col-4">&nbsp;&nbsp;E-mail verification code：</label>
+                                <input type="text" id="regcode" class="form-control col-4" placeholder="Please enter your email verification code"
                                        onkeyup="doRegister(event)"/>
-                                <button type="button" class="btn btn-primary col-3" onclick="doSendMail(this,1)">发送邮件
+                                <button type="button" class="btn btn-primary col-3" onclick="doSendMail(this,1)">Send Email
                                 </button>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <span>注册时请使用邮箱地址，便于找回密码。&nbsp;&nbsp;</span>
-                            <button type="button" class="btn btn-dark" data-dismiss="modal">关闭</button>
-                            <button type="button" class="btn btn-primary" onclick="doRegister(null)">注册</button>
+                            <span>Please use your email address when registering to facilitate password retrieval。&nbsp;&nbsp;</span>
+                            <button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="doRegister(null)">Registration</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- 找回密码 -->
+                <!-- Retrieve password -->
                 <div class="tab-pane container" id="findpanel">
                     <div class="modal-content" style="margin: 20px 0px;">
                         <div class="modal-body">
                             <div class="form-group row" style="margin-top: 20px;">
-                                <label for="finame" class="col-4">&nbsp;&nbsp;注册邮箱：</label>
-                                <input type="text" id="finame" class="form-control col-7" placeholder="请输入你的邮箱地址"/>
+                                <label for="finame" class="col-4">&nbsp;&nbsp;Register Email：</label>
+                                <input type="text" id="finame" class="form-control col-7" placeholder="Please enter your email address"/>
                             </div>
                             <div class="form-group row">
-                                <label for="fipass" class="col-4">&nbsp;&nbsp;新的密码：</label>
-                                <input type="password" id="fipass" class="form-control col-7" placeholder="请输入你的注册密码"/>
+                                <label for="fipass" class="col-4">&nbsp;&nbsp;New password：</label>
+                                <input type="password" id="fipass" class="form-control col-7" placeholder="Please enter your registration password"/>
                             </div>
                             <div class="form-group row">
-                                <label for="ficode" class="col-4">&nbsp;&nbsp;邮箱验证码：</label>
-                                <input type="text" id="ficode" class="form-control col-4" placeholder="请输入邮箱验证码"/>
-                                <button type="button" class="btn btn-primary col-3" onclick="doSendMail(this,2)">发送邮件</button>
+                                <label for="ficode" class="col-4">&nbsp;&nbsp;E-mail verification code：</label>
+                                <input type="text" id="ficode" class="form-control col-4" placeholder="Please enter your email verification code"/>
+                                <button type="button" class="btn btn-primary col-3" onclick="doSendMail(this,2)">Send Email</button>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <span>请输入注册邮箱地址并重置密码。&nbsp;&nbsp;</span>
-                            <button type="button" class="btn btn-dark" data-dismiss="modal">关闭</button>
-                            <button type="button" class="btn btn-primary" onclick="findPassword(null)">找回密码</button>
+                            <span>Please enter your registered email address and reset your password。&nbsp;&nbsp;</span>
+                            <button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="findPassword(null)">Retrieve password</button>
                         </div>
                     </div>
                 </div>
@@ -228,8 +228,8 @@
     </div>
 </div>
 <script type="text/javascript">
-{#    默认执行这两个请求#}
-{#一个是判断是否登录，另一个是判断是否是修稿文章的按钮#}
+{#    Execute these two requests by default#}
+{#One is a button to determine if you are logged in, and the other is a button to determine if it is a revision article#}
 window.onload = function (){
     load_1();
     load_2();

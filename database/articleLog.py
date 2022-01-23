@@ -30,7 +30,7 @@ class ArticleLog(DBase):
         dbsession.add(ArticleLogP)
         dbsession.commit()
 
-    # 判断用户上传次数是否超过当日限制
+    # Determine if the number of user uploads exceeds the daily limit
     def checkLimitUpload(self):
         start = time.strftime("%Y-%m-%d 00:00:00")
         end = time.strftime("%Y-%m-%d 23:59:59")
@@ -44,7 +44,7 @@ class ArticleLog(DBase):
         else:
             return False
 
-    # 判断用户修改次数是否超过当日限制
+    # Determine if the number of user modifications exceeds the daily limit
     def checkLimitModify(self):
         start = time.strftime("%Y-%m-%d 00:00:00")
         end = time.strftime("%Y-%m-%d 23:59:59")

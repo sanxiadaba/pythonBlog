@@ -1,8 +1,8 @@
 """
-文件说明：
+File description.
 
-本文件主要是对ueditor上传的实现
-比如发送图片、获取内容等
+This file is mainly an implementation of ueditor upload
+such as sending images, getting content, etc.
 
 encoding: utf-8
 @author: Zhang Jiajun
@@ -22,17 +22,17 @@ from common.ueditorConf import returnUeConf
 from common.utility import compress_image
 from database.upload import Upload
 from database.logs import Log
-
+from constant import ueiditorLanguage
 instanceUpload=Upload()
 instanceLog=Log()
 
 ueditor = Blueprint("ueditor", __name__)
 
-# 上传文件的路径
+# Path to the uploaded file
 imgSavePath = rootDir + "\\static\\img\\upload"
 
 
-# 具体访问的接口
+# Interface for specific access
 @ueditor.route("/uedit", methods=["GET", "POST"])
 @logDanger
 def uedit():
@@ -42,36 +42,39 @@ def uedit():
         return returnUeConf(session.get("userid"))
     else:
         userid = session.get("userid")
-        # 每个用户都有一个属于自己的文件夹，图片上传到这里
+        # Each user has a folder of their own and pictures are uploaded here
         myPictureName = "myPic_" + str(userid)
         myPicturePath = imgSavePath + "\\" + myPictureName
-        # 检测前端ueditor发送的请求 不同的请求响应不同的状态
+        # Detection of requests sent by front-end ueditor Different requests respond to different states
         if request.method == "POST" and request.args.get("action") == "uploadimage":
             if instanceUpload.checkLimitUpload() is True:
                 result = {}
-                # 每天有上传限制、上传次数用完的话前端会提示
-                result["state"] = "每天上传次数已用完"
-                info = f"userid为{userid}的用户因今天的上传次数用完故上传失败"
-                instanceLog.insertDetail(credit=0, target=0, type="上传图片失败", info=info)
+                # There is a daily upload limit, and the front-end will prompt if the number of uploads is used up.
+                if ueiditorLanguage =="Chinese":
+                    result["state"]="今日上传次数已用完"
+                else:
+                    result["state"] = "Exceeding the number of times limit"
+                info = f"The user with userid {userid} failed to upload because he ran out of uploads today."
+                instanceLog.insertDetail(credit=0, target=0, type="Failed to upload image", info=info)
                 listLogger(userid, info, 8)
                 return jsonify(result)
             else:
-                f = request.files["upfile"]  # 获取前端图片文件的数据
+                f = request.files["upfile"]  # Get data from front-end image files
                 filename = f.filename
-                suffix = filename.split(".")[-1]  # 获取文章的后缀名（不包括.）
+                suffix = filename.split(".")[-1]  # Get the article's suffix name (not including .)
                 newname = time.strftime("%Y%m%d_%H%M%S." + suffix)
                 dirInDir(myPictureName, imgSavePath)
-                f.save(myPicturePath + "\\" + newname)  # 保存图片
-                # 对图片进行压缩 并覆盖原始文件
+                f.save(myPicturePath + "\\" + newname)  # Save image
+                # Compress the image and overwrite the original file
                 source = dest = myPicturePath + "\\" + newname
-                #  压缩图片
+                #  Compressed images
                 compress_image(source, dest, 1200)
                 instanceUpload.insertDetail(imgname=source)
-                info = f"userid为{userid}的用户，上传了路径为" + source + "的图片"
-                instanceLog.insertDetail(credit=0, target=0, type="上传图片", info=info)
+                info = f"The user with userid {userid} has uploaded the image with path " + source + ""
+                instanceLog.insertDetail(credit=0, target=0, type="Upload images", info=info)
                 listLogger(userid, info, [8])
                 result = {}
-                # 返回成功的状态码
+                # Returns a success status code
                 result["state"] = "SUCCESS"
                 result["url"] = f"static/img/upload/{myPictureName}/{newname}"
                 result['title'] = filename

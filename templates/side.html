@@ -10,28 +10,28 @@
 
     <div class="col-12 search-bar form-group row">
         <div class="col-8">
-            <input type="text" class="form-control" id="keyword" placeholder="请输入关键字" onkeyup="dosearch(event)"/>
+            <input type="text" class="form-control" id="keyword" placeholder="Please enter the keyword" onkeyup="dosearch(event)"/>
         </div>
         <div class="col-4" style="text-align:right;">
-            <button type="button" class="btn btn-primary" onclick="dosearch(null)">搜索</button>
+            <button type="button" class="btn btn-primary" onclick="dosearch(null)">Search</button>
         </div>
     </div>
 
     {# 推荐#}
     <div class="col-12 side">
-        <div class="tip">最新文章</div>
+        <div class="tip">Latest Articles</div>
         <ul id="last"></ul>
     </div>
 
     <div class="col-12 side">
-        <div class="tip">最多阅读</div>
+        <div class="tip">Most Read</div>
         <ul id="most"></ul>
     </div>
 
     <div class="col-12 side guding">
-        <div class="tip">特别推荐</div>
+        <div class="tip">Special Recommendation</div>
         <ul id="recommmended">
-            {#            python的过滤器也可以这样做#}
+            {#            python's filters can also do this#}
             {#            {{ article_type["1"] | my_truncate(1) }}#}
         </ul>
     </div>
@@ -40,11 +40,11 @@
 
 <script type="text/javascript">
 
-    // 文档加载后开始执行 不需要触发
+    // Execution starts when the document is loaded No trigger required
     $(document).ready(function () {
         //    第一步 发送Ajax请求/recommended 获取json
         $.get("/recommended", function (data) {
-            //    获取响应，并动态填充到相应的推荐位置
+            //    Get the response and dynamically populate it to the appropriate recommendation position
             var lastData = data[0];
             var mostData = data[1];
             var recommendedData = data[2];

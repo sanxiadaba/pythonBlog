@@ -15,23 +15,23 @@ dbsession, md, DBase = connect_db()
 class Users(DBase):
     __table__ = Table("users", md, autoload=True)
 
-    # 登录校验，查看账户对应的密码是否正确
+    # Login verification to see if the password corresponding to the account is correct
     def searchUserByUsername(self, username):
         result = dbsession.query(Users).filter_by(username=username).all()
         return result
 
-    # 根userid返回作者的相关信息
+    # Return information about the author by userid
     def searchUserByUserid(self, userid):
         row = dbsession.query(Users).filter_by(userid=userid).first()
         return row
 
-    # 实现注册，首次注册只需要用户名和密码
-    # 通常用户不会填写太多资料，后续可以在用户中心完善
+    # Implement registration, the first registration only need user name and password
+    # Usually users do not fill in too much information, and can subsequently improve in the user center
     def doRegister(self, username, password):
         avatarPath = rootDir + "\\static\\img\\avatar"
         now = time.strftime("%Y-%m-%d %H:%M:%S")
-        nickname = username.split("@")[0]  # 默认账号前缀作为昵称
-        avatar = "default/" + str(random.randint(1, thumbNailNum))  # 从十张随机图片中选一张作为初始默认头像
+        nickname = username.split("@")[0]  # Default account prefix as nickname
+        avatar = "default/" + str(random.randint(1, thumbNailNum))  # Choose one of the ten random images as the initial default avatar
         user = Users(username=username, password=password, role="user", credit=0, nickname=nickname,
                      avatar=avatar + ".png", createtime=now)
         dirInDir(f"myPic_{user.userid}", avatarPath)
@@ -39,13 +39,13 @@ class Users(DBase):
         dbsession.commit()
         return user
 
-    # 修改用户积分
+    # Modify user points
     def updateCredit(self, credit, userid):
         user = dbsession.query(Users).filter_by(userid=userid).one()
         user.credit = int(user.credit) + int(credit)
         dbsession.commit()
 
-    # 查看用户剩余的积分
+    # Check the remaining points of the user
     def findRestCredit(self):
         userid = session.get("userid")
         restOfCredit = dbsession.query(Users.credit).filter_by(userid=userid).first()
@@ -54,7 +54,7 @@ class Users(DBase):
         else:
             return restOfCredit[0]
 
-    # 根据user全名查询对应的id
+    # Query the corresponding id according to the full name of the user
     def findUseridByUsername(self, username):
         userid = dbsession.query(Users.userid).filter_by(username=username).first()
         if userid is not None:
@@ -62,15 +62,15 @@ class Users(DBase):
         else:
             return None
 
-    # 根据用户的id查询其昵称
+    # Query a user's nickname based on his or her id
     def searchNicknameByUserid(self, userid):
         return dbsession.query(Users.nickname).filter_by(userid=userid).first()
 
-    # 根据userid查询注册邮箱
+    # Search registered mailbox according to userid
     def searchMyEmail(self, userid):
         return dbsession.query(Users.username).filter_by(userid=userid).first()[0]
 
-    # 根据userid查询我QQ
+    # I'm not sure if I'm a good person.
     def searchMyQQ(self, userid):
         row = dbsession.query(Users.qq).filter_by(userid=userid).first()[0]
         if row is None:
@@ -78,53 +78,52 @@ class Users(DBase):
         else:
             return row
 
-    # 根据userid查询我的头像
+    # Search my avatar by userid
     def searchMyAvatar(self, userid):
         return dbsession.query(Users.avatar).filter_by(userid=userid).first()[0]
 
-    # 修改密码
+    # Change password
     def modifyUserPassword(self, userid, newPassword):
         newPassword = genearteMD5(newPassword)
         user = dbsession.query(Users).filter_by(userid=userid).first()
         user.password = newPassword
         dbsession.commit()
 
-    # 修改昵称
+    # Change nickname
     def modifyUserNickname(self, nickname):
         userid = session.get("userid")
         user = dbsession.query(Users).filter_by(userid=userid).first()
         user.nickname = nickname
         dbsession.commit()
 
-    # 修改头像
+    # Modify avatar
     def modifyUserThumbnail(self, thumbnail):
         userid = session.get("userid")
         user = dbsession.query(Users).filter_by(userid=userid).first()
         user.avatar = thumbnail
-        print(thumbnail, userid)
         dbsession.commit()
 
-    # 修改qq号
+    # Modify qq number
     def modifyUserQQnum(self, newQQ):
         userid = session.get("userid")
         user = dbsession.query(Users).filter_by(userid=userid).first()
         user.qq = newQQ
         dbsession.commit()
 
-    # 申请成为编辑
+    # Apply to become an editor
     def applyForBecomeEditor(self):
         userid = session.get("userid")
         user = dbsession.query(Users).filter_by(userid=userid).first()
         user.apply = 1
         dbsession.commit()
 
-    # 查看所有成员信息（用户数量、身份、qq等）
+    # View all member information (number of users, identity, qq, etc.)
     def searchAllUserInfo(self):
         result = dbsession.query(Users).all()
         return result
 
-    # 更改身份（可以将用户改为编辑，也可以将编辑改为用户）
-    # changeType 0表示将编辑改为用户，1表示将用户改为编辑
+    # change identity (you can change user to editor or editor to user)
+    # changeType 0 means change editor to user, 1 means change user to editor
     def changeIdentity(self, userid, changeType):
         row = dbsession.query(Users).filter_by(userid=userid).first()
         now = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -136,24 +135,24 @@ class Users(DBase):
         row.updatetime = now
         dbsession.commit()
 
-    # 查看成为编辑的申请
+    # View the application to become an editor
     def searchApllyForEditor(self):
         allApplyForEditor = dbsession.query(Users).filter_by(apply=0).all()
         return allApplyForEditor
 
-    # 修改积分
+    # Modify Points
     def modifyCredit(self, userid, newCredit):
         row = dbsession.query(Users).filter_by(userid=userid)
         row.credit = int(newCredit)
         dbsession.commit()
 
-    # 移除用户（将用户不可登录）
+    # Remove the user (make the user non-loginable)
     def forbidUserLogin(self, userid):
         row = dbsession.query(Users).filter_by(userid=userid)
         row.forbidLogin = 1
         dbsession.commit()
 
-    # 查看是否申请成为编辑
+    # Check whether to apply to become an editor
     def whetherApplyForEditor(self, userid):
         whetherApplyForEditor = dbsession.query(Users.apply).filter_by(userid=userid).first()[0]
         return whetherApplyForEditor

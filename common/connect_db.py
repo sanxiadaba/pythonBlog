@@ -1,7 +1,7 @@
 """
-文件说明：
+File description.
 
-这里是连接sqlalchemy数据库的一些设置（都是一些固定的写法）
+Here are some settings for connecting to the sqlalchemy database (all are fixed in some way to write)
 
 encoding: utf-8
 @author: Zhang Jiajun

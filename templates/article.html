@@ -1,19 +1,19 @@
 
 <script>
-{#     先事先定义好一些需要用到的变量#}
+{#     Define the variables to be used first#}
 {# 定位回复评论的id#}
     var COMMENTID = 0;
-    {#定位这是第几页（再评论中）#}
+    {#Locate which page this is (in the comments)#}
     var PAGE = 1;
-    {#判断总共有多少的文章#}
+    {#Articles to determine the total number of#}
     var TOTAL = parseInt("{{total}}");
-    // 阅读全部文章
+    // Read all articles
  function readAll() {
         var xiaohao = parseInt("{{article.credit}}")
         var btn = document.getElementById('get_ct_more_1');
         var obj = document.getElementById('content_t');
-        var total_height = obj.scrollHeight;//文章总高度
-        var show_height = 300;//定义原始显示高度
+        var total_height = obj.scrollHeight;//Total height of article
+        var show_height = 300;//Define the original display height
         var restOfCredit = parseInt("{{ restOfCredit }}")
         if (xiaohao === 0 || "{{article.paid}}" === "true") {
             if (total_height > show_height) {
@@ -24,11 +24,11 @@
             return false
         } else {
             if ("{{article.paid}}" === "false") {
-                a = confirm("确定消耗" + xiaohao + "积分来阅读文章吗？"); //在页面上弹出对话框
+                a = confirm("Determine consumption" + xiaohao + "Points to read articles?？"); //Pop-up dialog box on the page
                 if (a === true) {
                     if (xiaohao > restOfCredit) {
-                        bootbox.alert({title: "错误提示", message: "积分不足，无法阅读文章"})
-                        qingti("积分不足")
+                        bootbox.alert({title: "Error Alert", message: "Not enough points to read articles"})
+                        qingti("Insufficient points")
                         return false
                     }
                     var parm = "articleid={{article.articleid}}"
@@ -39,7 +39,7 @@
                                 obj.style.height = total_height + 'px';
                                 btn.style.display = 'none';
                             }
-                            qingti("您当前还有" + (restOdCredit - xiaohao) + "积分")
+                            qingti("You also currently have" + (restOdCredit - xiaohao) + "Points")
                             return false
                         }
                     })
@@ -64,8 +64,8 @@
         font-size: 18px;
         color: #2b2b2b;
         line-height: 1.7em;
-        height: 700px; /*初始要显示的高度*/
-        overflow: hidden; /*关键样式：内容会被修剪，并且其余内容是不可见的。*/
+        height: 700px; /*Initial height to be displayed*/
+        overflow: hidden; /*Key style: the content is trimmed and the rest of the content is invisible。*/
         position: relative;
 
     }
@@ -137,23 +137,23 @@
                     <label class="favorite-btn" onclick="cancel_favorite('{{ article.articleid }}')"><span
                             class="oi oi-heart"
                             aria-hidden="true" style="color: red"></span>
-                        取消收藏</label>
+                        Cancel Favorites</label>
                 {% else %}
                     <label class="favorite-btn" onclick="add_favorite('{{ article.articleid }}')"><span
                             class="oi oi-heart "
                             aria-hidden="true"></span>
-                        收藏文章</label>
+                        Collected Articles</label>
                 {% endif %}
             </div>
             <div class="col-12 info">
-                作者：{{ article.nickname }} 类别：{{ article_type[article.type | string] }}
-                日期：{{ article.createtime }}
-                阅读：{{ article.readcount }} 次 消耗积分：<font color="red">{{ article.credit }} 分</font>
+                Author：{{ article.nickname }} Category：{{ article_type[article.type | string] }}
+                Date：{{ article.createtime }}
+                Reads：{{ article.readcount }} Points consumption：<font color="red">{{ article.credit }}</font>
             </div>
             <div class="col-12 content_t" id="content_t">
                 {{ article.content | safe }}
             {% if session.get("userid")==articleOfUserid %}
-            <button class="form-control btn-primary col-2" onclick="modifyArticle({{ articleid }})">修改文章</button>
+            <button class="form-control btn-primary col-2" onclick="modifyArticle({{ articleid }})">Modify article</button>
             {% endif %}
             </div>
 
@@ -162,10 +162,10 @@
                     <div onclick="readAll()">
                         <button class="col-sm-10 col-12 get_ct_more_1" id="get_ct_more_1" style="display:block;">
                             {% if article.credit==0 or article.paid=="true" %}
-                                <span class="oi oi-data-transfer-download" aria-hidden="true"></span> 点击阅读全文
+                                <span class="oi oi-data-transfer-download" aria-hidden="true"></span> Click to read the full article
                             {% else %}
-                                <span class="oi oi-data-transfer-download" aria-hidden="true"></span> 阅读全文 消耗积分：
-                                {{ article.credit }}分
+                                <span class="oi oi-data-transfer-download" aria-hidden="true"></span> Read the full article Consume points：
+                                {{ article.credit }} Score
                             {% endif %}
                         </button>
                     </div>
@@ -173,7 +173,7 @@
                 {% else %}}
                     <div href="#" onclick="showLogin()">
                         <button class="col-sm-10 col-12 get_ct_more_2" id="get_ct_more_2" style="display:block;">
-                            <span class="oi oi-data-transfer-download" aria-hidden="true"></span> 登录后才能查看全文
+                            <span class="oi oi-data-transfer-download" aria-hidden="true"></span> Login to view full text
                         </button>
                     </div>
 
@@ -184,14 +184,14 @@
 
 
         <div class="col-12 article-nav">
-            <div><a href="/article/{{ prev_next.prev_id }}">上一篇:{{ prev_next.prev_headline }}</a></div>
-            <div><a href="/article/{{ prev_next.next_id }}">下一篇:{{ prev_next.next_headline }}</a></div>
+            <div><a href="/article/{{ prev_next.prev_id }}">Previous:{{ prev_next.prev_headline }}</a></div>
+            <div><a href="/article/{{ prev_next.next_id }}">Next:{{ prev_next.next_headline }}</a></div>
         </div>
-        <!-- 文章评论 -->
+        <!-- Article Comments -->
         <div class="col-12 article-comment">
             <div class="col-12 row">
                 <div class="col-2">
-                    <label for="nickname">你的昵称：</label>
+                    <label for="nickname">Your nickname：</label>
                 </div>
 
                 <div class="col-10">
@@ -199,7 +199,7 @@
                         <input type="text" id="nickname_1" class="form-control" value="{{ session.get('nickname') }}"
                                readonly/>
                     {% else %}
-                        <input type="text" id="nickname_2" class="form-control" value="你还未登录，双击此处可登录" readonly
+                        <input type="text" id="nickname_2" class="form-control" value="You are not logged in, double click here to log in" readonly
                                ondblclick="showLogin()"/>
                     {% endif %}
                 </div>
@@ -208,7 +208,7 @@
 
             <div class="col-12 row" style="padding-top: 10px">
                 <div class="col-2">
-                    <label for="comment">你的评论：</label>
+                    <label for="comment">Your comments：</label>
                 </div>
                 <div class="col-10">
                     <textarea class="form-control " style="height: 100px" id="comment"></textarea>
@@ -220,13 +220,13 @@
                     {% if session.get("islogin")=="true" %}
                         <button class="btn btn-primary" onclick="addCommnet('{{ article.articleid }}')"
                                 style="margin-bottom:8px;"
-                                id="submitBtn">提交评论
+                                id="submitBtn">Submit a comment
                         </button>
                         <button type="button" class="btn btn-primary" onclick="replyComment('{{ article.articleid }}')"
-                                style="display: none;margin-bottom:8px;" id="replyBtn">回复评论
+                                style="display: none;margin-bottom:8px;" id="replyBtn">Reply to a comment
                         </button>
                     {% else %}
-                        <button class="btn btn-primary" onclick="showLogin()" style="margin-bottom:8px;">点击登录</button>
+                        <button class="btn btn-primary" onclick="showLogin()" style="margin-bottom:8px;">Click to login</button>
                     {% endif %}
                 </div>
             </div>
@@ -245,44 +245,44 @@
                             <div class="col-12 row" style="padding: 0px">
                                 <div class="col-7 commenter">{{ comment.nickname }}&nbsp;&nbsp;&nbsp;{{ comment.createment }}</div>
                                 <div class="col-5 reply">
-                                    <!--                        文章作者、管理员和评论员只能回复和删除评论，不能点赞-->
+                                    <!--                        Article authors, administrators and commenters can only reply and delete comments, not likes-->
                                     {% if article.userid==session.get("userid") or session.get("role")=="admin" or
                             comment.userid==session.get("userid") %}
                                         <label onclick="gotoReply('{{ comment.commentid }}')">
                                             <span class="oi oi-arrow-circle-right" aria-hidden="true"
-                                                  style="color:#337ab7;"></span>回复
+                                                  style="color:#337ab7;"></span>Reply
                                         </label>&nbsp;&nbsp;&nbsp;
                                         <label onclick="hideComment(this,'{{ comment.commentid }}',1,{{ thisIndex }},-1)">
-                                            <span class="oi oi-delete" aria-hidden="true"></span>删除评论
+                                            <span class="oi oi-delete" aria-hidden="true"></span>Delete Comments
                                         </label>
                                     {% else %}
 
                                         <label onclick="gotoReply('{{ comment.commentid }}')">
-                                            <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>回复
+                                            <span class="oi oi-arrow-circle-right" aria-hidden="true"></span>Reply
                                         </label>&nbsp;&nbsp;
                                         {% if comment["agreeOrdisAgreeType"]==1 %}
                                             <label onclick="cancle_agreeComment(this,'{{ comment.commentid }}','{{ comment["agreecount"] }}')"
                                                    style="visibility: visible;" id="agreeComment1">
                                             <span class="oi oi-chevron-bottom"
                                                   aria-hidden="true"></span><font
-                                                    color="red">取消赞成(<span>{{ comment["agreecount"] }}</span>)</font>
+                                                    color="red">Cancel Favor(<span>{{ comment["agreecount"] }}</span>)</font>
                                             </label>&nbsp;&nbsp;
                                             <label onclick="opposeComment(this,'{{ comment.commentid }}','{{ comment["opposecount"] }}')"
                                                    style="visibility: hidden;" id="opposeComment1">
                                                 <font color=""><span class="oi oi-x"
-                                                                     aria-hidden="true"></span>反对(<span>{{ comment["opposecount"] }}</span>)</font>
+                                                                     aria-hidden="true"></span>Against(<span>{{ comment["opposecount"] }}</span>)</font>
                                             </label>
                                         {% elif comment["agreeOrdisAgreeType"]==-1 %}
                                             <label onclick="agreeComment(this,'{{ comment.commentid }}','{{ comment["agreecount"] }}')"
                                                    style="visibility: hidden;" id="agreeComment1">
                                             <span class="oi oi-chevron-bottom"
-                                                  aria-hidden="true"></span><font>赞成(<span>{{ comment["agreecount"] }}</span>)</font>
+                                                  aria-hidden="true"></span><font>Agree(<span>{{ comment["agreecount"] }}</span>)</font>
                                             </label>&nbsp;&nbsp;
 
                                             <label onclick="cancle_opposeComment(this,'{{ comment.commentid }}','{{ comment["opposecount"] }}')"
                                                    style="visibility: visible;" id="opposeComment1">
                                                 <font color="red"><span class="oi oi-x"
-                                                                        aria-hidden="true"></span>取消反对(<span>{{ comment["opposecount"] }}</span>)</font>
+                                                                        aria-hidden="true"></span>Cancel Objections(<span>{{ comment["opposecount"] }}</span>)</font>
                                             </label>
                                         {% else %}
                                             <label onclick="agreeComment(this,'{{ comment.commentid }}','{{ comment["agreecount"] }}')"
@@ -294,7 +294,7 @@
                                             <label onclick="opposeComment(this,'{{ comment.commentid }}','{{ comment["opposecount"] }}')"
                                                    style="visibility: visible;" id="opposeComment1">
                                                 <font color=""><span class="oi oi-x"
-                                                                     aria-hidden="true"></span>反对(<span>{{ comment["opposecount"] }}</span>)</font>
+                                                                     aria-hidden="true"></span>Against(<span>{{ comment["opposecount"] }}</span>)</font>
                                             </label>
                                         {% endif %}
                                     {% endif %}
@@ -305,7 +305,7 @@
                             </div>
                         </div>
                     </div>
-                    <!--        回复评论-->
+                    <!--        Reply to a comment-->
                     {% if comment["reply_list"] %}
                         {% for reply in comment["reply_list"] %}
                             {% set thatIndex=loop.index0 %}
@@ -318,15 +318,15 @@
 
                                 <div class="col-10 comment" style="border: solid 1px #ccc">
                                     <div class="col-12 row" style="padding-left: 15px">
-                                        <div class="col-7 commenter" style="color: #337ab7">{{ reply.nickname }}&nbsp;&nbsp;回复&nbsp;&nbsp;{{ comment.nickname }}
+                                        <div class="col-7 commenter" style="color: #337ab7">{{ reply.nickname }}&nbsp;&nbsp;Reply&nbsp;&nbsp;{{ comment.nickname }}
                                             &nbsp;&nbsp;&nbsp;{{ reply.createment }}
                                         </div>
                                         <div class="col-5 reply">
-                                            {#                                        管理员或者作者的话可以选择删除评论该评论#}
+                                            {#                                        The administrator or the author can choose to delete the comment if the comment#}
                                             {% if article.userid==session.get("userid") or session.get("role")=="admin" or
                             comment.userid==session.get("userid") %}
                                                 <label onclick="hideComment(this,'{{ comment.commentid }}',2,{{ thisIndex }},{{ thatIndex }})">
-                                                    <span class="oi oi-delete" aria-hidden="true"></span>删除评论
+                                                    <span class="oi oi-delete" aria-hidden="true"></span>Delete Comments
                                                 </label>
                                             {% else %}
                                                 {% if comment["agreeOrdisAgreeType"]==1 %}
@@ -335,37 +335,37 @@
                                                            style="visibility: visible;" id="agreeComment1">
                                             <span class="oi oi-chevron-bottom"
                                                   aria-hidden="true"></span><font
-                                                            color="red">取消赞成(<span>{{ comment["agreecount"] }}</span>)</font>
+                                                            color="red">Cancel Favor(<span>{{ comment["agreecount"] }}</span>)</font>
                                                     </label>&nbsp;&nbsp;
 
                                                     <label onclick="opposeComment(this,'{{ comment.commentid }}','{{ comment["opposecount"] }}')"
                                                            style="visibility: hidden;" id="opposeComment1">
                                                         <font color=""><span class="oi oi-x"
-                                                                             aria-hidden="true"></span>反对(<span>{{ comment["opposecount"] }}</span>)</font>
+                                                                             aria-hidden="true"></span>Against(<span>{{ comment["opposecount"] }}</span>)</font>
                                                     </label>
                                                 {% elif comment["agreeOrdisAgreeType"]==-1 %}
                                                     <label onclick="agreeComment(this,'{{ comment.commentid }}','{{ comment["agreecount"] }}')"
                                                            style="visibility: hidden;" id="agreeComment1">
                                             <span class="oi oi-chevron-bottom"
-                                                  aria-hidden="true"></span><font>赞成(<span>{{ comment["agreecount"] }}</span>)</font>
+                                                  aria-hidden="true"></span><font>Agree(<span>{{ comment["agreecount"] }}</span>)</font>
                                                     </label>&nbsp;&nbsp;
 
                                                     <label onclick="cancle_opposeComment(this,'{{ comment.commentid }}','{{ comment["opposecount"] }}')"
                                                            style="visibility: visible;" id="opposeComment1">
                                                         <font color="red"><span class="oi oi-x"
-                                                                                aria-hidden="true"></span>取消反对(<span>{{ comment["opposecount"] }}</span>)</font>
+                                                                                aria-hidden="true"></span>Cancel Objections(<span>{{ comment["opposecount"] }}</span>)</font>
                                                     </label>
                                                 {% else %}
                                                     <label onclick="agreeComment(this,'{{ comment.commentid }}','{{ comment["agreecount"] }}')"
                                                            style="visibility: visible;" id="agreeComment1">
                                             <span class="oi oi-chevron-bottom"
-                                                  aria-hidden="true"></span><font>赞成(<span>{{ comment["agreecount"] }}</span>)</font>
+                                                  aria-hidden="true"></span><font>Agree(<span>{{ comment["agreecount"] }}</span>)</font>
                                                     </label>&nbsp;&nbsp;
 
                                                     <label onclick="opposeComment(this,'{{ comment.commentid }}','{{ comment["opposecount"] }}')"
                                                            style="visibility: visible;" id="opposeComment1">
                                                         <font color=""><span class="oi oi-x"
-                                                                             aria-hidden="true"></span>反对(<span>{{ comment["opposecount"] }}</span>)</font>
+                                                                             aria-hidden="true"></span>Against(<span>{{ comment["opposecount"] }}</span>)</font>
                                                     </label>
                                                 {% endif %}
                                             {% endif %}
@@ -386,13 +386,13 @@
             </div>
             {% if total>1 %}
                 <div class="col-12 paginate">
-                    <label onclick="gotoPage('{{ article.articleid }}','prev')">上一页</label>&nbsp;&nbsp;
+                    <label onclick="gotoPage('{{ article.articleid }}','prev')">Previous page</label>&nbsp;&nbsp;
                     {% for i in range(1,total) %}
                         <label onclick="gotoPage('{{ article.articleid }}','{{ loop.index }}')">{{ loop.index }}</label>
                         &nbsp;&nbsp;
                         {#                        {{ i+1}}#}
                     {% endfor %}
-                    <label onclick="gotoPage('{{ article.articleid }}','next')">下一页</label>&nbsp;&nbsp;
+                    <label onclick="gotoPage('{{ article.articleid }}','next')">Next page</label>&nbsp;&nbsp;
                 </div>
             {% endif %}
         </div>

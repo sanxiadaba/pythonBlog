@@ -23,7 +23,7 @@ from flask import Blueprint, make_response, session, request, url_for
 from common.myLog import ininUserDir, logDanger, listLogger, allLogger, dirInDir, avatarPath
 from common.utility import ImageCode, gen_email_code, send_email
 from common.utility import genearteMD5
-from constant import whetherDistinguishCapital, regGiveCredit, loginEvereDayCredit, timeoutOfEcode
+from constant import whetherDistinguishCapital, regGiveCredit, loginEvereDayCredit, timeoutOfEcode,ueiditorLanguage
 from database.credit import Credit
 from database.logs import Log
 from database.users import Users
@@ -32,11 +32,11 @@ instanceLog=Log()
 instanceUser=Users()
 
 user = Blueprint("user", __name__)
-# 用来判断验证码是否超过时间限制
+# Used to determine if the verification code exceeds the time limit
 timeStart = 0
 
 
-# 这里生成图片验证码 验证码的内容会储存在session里
+# Here the image captcha is generated and the content of the captcha is stored in the session
 @user.route("/vcode", methods=["GET"])
 @logDanger
 def vcode():
@@ -44,7 +44,7 @@ def vcode():
     code, bstring = image.get_code()
     response = make_response(bstring)
     response.headers['Content-Type'] = 'image/jpeg'
-    # 这里对验证码进行不区分大小写处理
+    # Here is the case-insensitive handling of the CAPTCHA
     if whetherDistinguishCapital is False:
         session['vcode'] = code.lower()
     else:
@@ -52,7 +52,7 @@ def vcode():
     return response
 
 
-# 这里生成邮件验证码
+# Generate email verification code here
 @user.route("/ecode", methods=["POST"])
 @logDanger
 def ecode():
@@ -66,14 +66,14 @@ def ecode():
     code = gen_email_code()
     try:
         send_email(email, code, n)
-        session["ecode"] = code  # 将邮箱验证码保存在session中
+        session["ecode"] = code  # Save email verification code in session
         session.permanent = True
         return "send-pass"
     except:
         return "send fail"
 
 
-# 用户注册访问的接口
+# Interface for user registration access
 @user.route("/user", methods=["POST"])
 @logDanger
 def register():
@@ -82,23 +82,23 @@ def register():
     password = request.form.get("password").strip()
     ecode = request.form.get("ecode").strip()
     nickname = username.split("@")[0]
-    # 验证邮箱地址的正确性和密码的有效性
+    # Verify the correctness of the email address and the validity of the password
     if not re.match(".+@.+\..+", username) or len(password) < 5:
         return "up-invalid"
 
     if len(instanceUser.searchUserByUsername(username)) > 0:
         return "user-repeated"
 
-    # 校验邮箱验证码是否正确   #或者也可以设置一个万能的验证码
+    # Check if the email verification code is correct #or you can also set a universal verification code
     if ecode != session.get("ecode"):
         return "ecode-error"
 
     else:
-        # 验证码时间超过的话就过期了
+        # Captcha will expire if the time exceeds
         if time.time() - timeStart > timeoutOfEcode:
             session["ecode"] = None
             return "ecode-timeout"
-        # 实现注册功能 将密码转换为md5加密下
+        # Implement the registration function to convert the password to md5 encryption under
         password = genearteMD5(password)
         try:
             result = instanceUser.doRegister(username, password)
@@ -109,55 +109,55 @@ def register():
         session["nickname"] = nickname
         session["role"] = result.role
         userid = session.get("userid")
-        # 更新积分表 每个新用户注册的话是送积分的
-        info = f"userid为{userid},昵称为{nickname}的用户注册成功"
-        instanceCredit.insertDetail(type="用户注册", target=0, credit=regGiveCredit, info=info, userid=userid)
+        # Update the points table Every new user is given points if they register
+        info = f"userid is {userid}, nickname is {nickname} user registration success"
+        instanceCredit.insertDetail(type="User Registration", target=0, credit=regGiveCredit, info=info, userid=userid)
         listLogger(userid, info, [0])
         dirInDir(f"myPic_{userid}", avatarPath)
         ininUserDir()
         return "reg-pass"
 
 
-# 找回密码的模块
+# Module for password retrieval
 @user.route("/resetUserPassword", methods=["POST"])
 @logDanger
 def resetUserPassword():
     username = request.form.get("username").strip()
     password = request.form.get("password").strip()
     ecode = request.form.get("ecode").strip()
-    # 先检测邮箱账户、密码是否符合格式
+    # First check whether the email account and password match the format
     if not re.match(".+@.+\..+", username) or len(password) < 5:
         return "up-invalid"
 
-    # 检查是否有这个用户
+    # Check if this user is available
     if instanceUser.searchUserByUsername(username) is None:
         return "no-user"
 
-    # 根据玩完整名查询userid
+    # Query userid according to play complete name
     userid = instanceUser.findUseridByUsername(username)
     userNickname = instanceUser.searchNicknameByUserid(userid)[0]
 
-    # 校验邮箱验证码是否正确
+    # Verify that the email verification code is correct
     if ecode != session.get("ecode"):
-        info = f"userid为{userid},昵称为{userNickname}的用户尝试找回密码，但邮箱验证码输入错误"
-        instanceLog.insertDetail(userid=userid, type="邮箱验证码错误", credit=0, target=0)
+        info = f"The user with userid {userid} and nickname {userNickname} tried to retrieve the password, but the email verification code was incorrectly entered."
+        instanceLog.insertDetail(userid=userid, type="Mailbox verification code error", credit=0, target=0)
         listLogger(userid, info, [0])
         return "ecode-error"
 
     else:
-        # 设置验证码的失效时间
+        # Set the expiration time of the verification code
         if time.time() - timeStart > timeoutOfEcode:
             session["ecode"] = None
-            info = f"userid为{userid},昵称为{userNickname}的用户尝试找回密码，但邮箱验证码过期"
-            instanceLog.insertDetail(userid=userid, type="验证码过期", credit=0, target=0)
+            info = f"The user with userid {userid} and nickname {userNickname} tried to retrieve the password, but the email verification code expired."
+            instanceLog.insertDetail(userid=userid, type="Captcha Expired", credit=0, target=0)
             listLogger(userid, info, [0])
             return "ecode-timeout"
         userid = instanceUser.findUseridByUsername(username)
-        # 将密码转换为md5加密下
+        # Convert password to md5 encryption under
         try:
             instanceUser.modifyUserPassword(userid, password)
-            info = f"userid为{userid},昵称为{userNickname}通过邮箱验证码成功重设密码"
-            instanceLog.insertDetail(userid=userid, type="重设密码", credit=0, target=0)
+            info = f"userid is {userid},nickname is {userNickname} reset password successfully by email verification code"
+            instanceLog.insertDetail(userid=userid, type="Reset password", credit=0, target=0)
             listLogger(userid, info, [0])
         except:
             e = traceback.format_exc()
@@ -166,31 +166,31 @@ def resetUserPassword():
         return "fi-pass"
 
 
-# 实现登录的模块
+# Module to implement login
 @user.route("/login", methods=["POST"])
 @logDanger
 def login():
     username = request.form.get("username").strip()
     password = request.form.get("password").strip()
     vcode = request.form.get("logincode").lower().strip()
-    # 先判断账户是否存在
+    # First determine if the account exists
     userid = instanceUser.findUseridByUsername(username)
 
     if userid is None:
-        allLogger(0, "用户不存在")
+        allLogger(0, "User does not exist")
         return "login-fail"
     nickname = instanceUser.searchNicknameByUserid(userid)[0]
-    # 这个时候就要判断目录了以防万一
+    # This is the time to judge the directory just in case
     ininUserDir(userid=userid)
-    # 再验证验证码对不对
-    #  图片验证码
+    # Re-verify that the verification code is correct
+    #  Image Verification Code
     if vcode != session.get("vcode"):
-        info = f"userid为{userid},昵称为{nickname}登录过程中验图片验证码输入错误"
-        instanceLog.insertDetail(userid=userid, type="登录图片验证码错误", credit=0, target=0, info=info)
+        info = f"userid is {userid}, nickname is {nickname}, during the login process to check the image verification code input error"
+        instanceLog.insertDetail(userid=userid, type="Login image verification code error", credit=0, target=0, info=info)
         listLogger(userid, info, [0])
         return "vcode-error"
     else:
-        # 实现登录功能
+        # Implementing the login function
         password = hashlib.md5(password.encode()).hexdigest()
         result = instanceUser.searchUserByUsername(username)
         if len(result) == 1 and result[0].password == password:
@@ -198,51 +198,51 @@ def login():
             session["userid"] = result[0].userid
             session["nickname"] = nickname
             session["role"] = result[0].role
-            # 向log表中添加记录
-            # 已经领过登录积分的情况下
-            # 判断今天是否已经登陆过了（每天的首次登录才会送积分）
+            # Add a record to the log table
+            # If you have already received login credits
+            # Determine if you have already logged in today (only the first login of each day will send points)
             whetherGetLoginCredit = instanceCredit.whetherFirstLoginThisDay(userid=userid)
             if whetherGetLoginCredit is False:
                 response = make_response("login-pass")
             else:
                 response = make_response("add-credit")
-            #   加入记录 顺便设置cookies
+            #   Adding a record Setting cookies by the way
             response.set_cookie("username", username, max_age=30 * 24 * 3600)
             response.set_cookie("password", password, max_age=30 * 24 * 3600)
             if whetherGetLoginCredit is False:
-                # 不能领取登陆奖励
-                info = f"userid为{userid},昵称为{nickname}登录成功，但已领取过每天的登录奖励"
-                instanceLog.insertDetail(userid=userid, type="成功登录", credit=0, target=0,
+                # Cannot receive login bonus
+                info = f"userid is {userid}, nickname is {nickname}, but you have already received the daily login bonus"
+                instanceLog.insertDetail(userid=userid, type="Successful login", credit=0, target=0,
                                          info=info)
                 listLogger(userid, info, [0])
             else:
-                # 领取每天的登陆奖励
-                info = f"userid为{userid},昵称为{nickname}每日登录加分成功"
-                instanceCredit.insertDetail(userid=userid, type="每日登录加分", credit=loginEvereDayCredit, target=0,
+                # Receive daily login bonus
+                info = f"userid is {userid}, nickname is {nickname} daily login plus points successfully"
+                instanceCredit.insertDetail(userid=userid, type="Daily login bonus points", credit=loginEvereDayCredit, target=0,
                                             info=info)
                 listLogger(userid, info, [0])
             return response
         else:
-            # 记录下登录失败的话也进行记录
-            info = f"userid为{userid},昵称为{nickname}登录失败,失败原因:登录密码错误"
-            instanceLog.insertDetail(userid=userid, type="登录成功", credit=0, target=0, info=info)
+            # Record the login failure as well.
+            info = f"userid is {userid}, nickname is {nickname} login failed, failure reason: login password error"
+            instanceLog.insertDetail(userid=userid, type="Password error", credit=0, target=0, info=info)
             listLogger(userid, info, [0])
             return "login-fail"
 
 
-# 登出的设置
+# Logout settings
 @user.route("/logout")
 @logDanger
 def logout():
-    # 清空session 页面跳转
+    # Empty session page jump
     userid = session.get('userid')
-    info = f"userid为{userid} 昵称为{session.get('nickname')}的用户登出账户"
-    instanceLog.insertDetail(userid=userid, type="登出页面", credit=0, target=0, info=info)
+    info = f"The user whose userid is {userid} and whose nickname is {session.get('nickname')} is logged out of the account"
+    instanceLog.insertDetail(userid=userid, type="Logout page", credit=0, target=0, info=info)
     listLogger(userid, info, [0])
     session.clear()
-    response = make_response("注销并重定向", 302)
+    response = make_response("Logout and redirect", 302)
     response.headers["Location"] = url_for("index.home")
     response.delete_cookie("username")
-    # 将cookies失效
-    response.set_cookie("password", max_age=0)  # 这是另一种写法
+    # Disable cookies
+    response.set_cookie("password", max_age=0)  # This is another way of writing
     return response

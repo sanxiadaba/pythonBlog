@@ -1,7 +1,7 @@
 """
-文件说明：
+File description.
 
-模块正在开发，用户查看自己信息的后台接口
+Background management page for regular users and editors to view their articles, comments, favorites and other functions
 
 encoding: utf-8
 @author: Zhang Jiajun
@@ -45,43 +45,43 @@ userManage = Blueprint("userManage", __name__)
 def baseUserManage():
     userid = session.get("userid")
 
-    #  我的收藏
+    #  My Collection
     myFavo, lenMyFavo = instanceFavorite.myFavoriteArticle(userid)
-    # 我的已发布文章的个数
+    # Number of my published articles
     numOfAllMyArticle = len(instanceArticle.searchAllMyArticle())
-    # 已发布文章的访问量
+    # Number of visits to published articles
     allNumOfAllArticleRead = instanceArticle.allNumOfAllArticleRead()
-    # 我收藏文章的数量
+    # Number of my favorite articles
     numOfMyFavoriteArticle = lenMyFavo
-    # 我评论的个数
+    # Number of my comments
     numOfALLMyComment = instanceComment.numOfALLMyComment()
-    # 我的昵称
+    # My nickname
     myNickname = instanceUser.searchNicknameByUserid(userid)[0]
-    # 我的注册邮箱
+    # My registered email
     myEmail = instanceUser.searchMyEmail(userid)
-    # 用户角色
+    # User Roles
     myRole = session.get("role")
-    # 我的qq
+    # My qq
     myQQ = instanceUser.searchMyQQ(userid)
-    # 总共剩余积分
+    # Total remaining points
     restOfMyCredit = instanceUser.findRestCredit()
-    # 我的头像
+    # My avatar
     myAvatar = instanceUser.searchMyAvatar(userid)
-    # 是否申请成为编辑
+    # Whether to apply to become an editor
     whetherApplyForEditor = instanceUser.whetherApplyForEditor(userid)
 
-    # 用户后台管理文章的信息
+    # Information for managing articles in the user background
     articleInfo = instanceArticle.articleInfo(userid)
 
-    #  查询我的所有文章的数量（除了已删除）
+    #  Check the number of all my posts (except deleted)
     myArticleNum = instanceArticle.exceptDeleteNum()
 
-    #  管理页面的文章页面分几页
+    #  The article page of the administration page is divided into several pages
     howManyPage = ceil(myArticleNum / everyPageInHou)
     howManyPage_1 = howManyPage
     howManyPage = list(range(2, howManyPage + 1))
 
-    # 判断跳转到哪个页面
+    # Determine which page to jump to
     controlBiaoNum = session.get("controlBiaoNum")
     controlBiaoNum = 0 if controlBiaoNum is None else int(controlBiaoNum)
 
@@ -98,7 +98,7 @@ def baseUserManage():
     MyInfo["myAvatar"] = myAvatar
     MyInfo["whetherApplyForEditor"] = whetherApplyForEditor
 
-    # 我的评论，评论点赞数、评论赞同数、目标文章        隐藏评论
+    # My comments, number of comment likes, number of comment approvals, target posts, hidden comments
     myComment, allMyCommentNum = instanceComment.searchMyComment(userid)
     # with snoop:
     guo = []
@@ -110,15 +110,15 @@ def baseUserManage():
         guo.append(lin)
     myComment = guo
     myLoginLog=instanceLog.searchLoginLog(userid)
-    #  积分变化的数据
+    #  Data of point changes
     allCreditChangeLog=instanceCredit.creditChangeLog(userid)
     return render_template("userManage.html", myInfo=MyInfo, articleInfo=articleInfo, everyPageInHou=everyPageInHou,
                            myArticleNum=myArticleNum, howManyPage=howManyPage, howManyPage_1=howManyPage_1,
                            controlBiaoNum=controlBiaoNum, myComment=myComment, allMyCommentNum=allMyCommentNum,myFavo=myFavo,lenMyFavo=lenMyFavo,myLoginLog=myLoginLog,allCreditChangeLog=allCreditChangeLog,emailAccount=emailAccount)
 
 
-#  返回我的资料
-# 文章数、评论数、浏览总数、总积分、我的昵称、我的头像、我的qq号、我的角色
+#  Back to my profile
+# Number of articles, number of comments, total number of views, total points, my nickname, my avatar, my qq number, my role
 @userManage.route("/userInfo", methods=["GET"])
 @logDanger
 def userInfo():
@@ -134,9 +134,9 @@ def modifyNickname():
     newNickname = request.form.get("newNickname")
     try:
         instanceUser.modifyUserNickname(newNickname)
-        info = f"userid为{userid}的用户修改昵称为{newNickname}"
+        info = f"The user with userid {userid} modifies the nickname to {newNickname}"
         listLogger(userid, info, [0])
-        instanceLog.insertDetail(type="修改昵称", target=userid, credit=0, info=info)
+        instanceLog.insertDetail(type="Change nickname", target=userid, credit=0, info=info)
         return "1"
     except:
         e = traceback.format_exc()
@@ -144,7 +144,7 @@ def modifyNickname():
         return "0"
 
 
-# 修改qq号
+# Modify qq number
 @userManage.route("/modifyQQ", methods=["POST"])
 @logDanger
 def modifyQQ():
@@ -152,9 +152,9 @@ def modifyQQ():
     userid = session.get("userid")
     try:
         instanceUser.modifyUserQQnum(newQQ)
-        info = f"userid为{userid}的用户修改qq号为{newQQ}"
+        info = f"The userid of {userid} modifies the qq number to {newQQ}"
         listLogger(userid, info, [0])
-        instanceLog.insertDetail(type="修改QQ", target=userid, credit=0, info=info)
+        instanceLog.insertDetail(type="Modify QQ", target=userid, credit=0, info=info)
         return "1"
     except:
         e = traceback.format_exc()
@@ -162,16 +162,16 @@ def modifyQQ():
         return "0"
 
 
-# 申请角色
+# Apply for a role
 @userManage.route("/applyEditor", methods=["POST"])
 @logDanger
 def applyEditor():
     userid = session.get('userid')
     try:
         instanceUser.applyForBecomeEditor()
-        info = f"userid为{userid}的用户申请成为编辑"
+        info = f"Users with userid {userid} apply to become editors"
         listLogger(userid, info, [0])
-        instanceLog.insertDetail(type="申请成为编辑", target=userid, credit=0, info=info)
+        instanceLog.insertDetail(type="Apply to become an editor", target=userid, credit=0, info=info)
         return "1"
     except:
         e = traceback.format_exc()
@@ -179,8 +179,8 @@ def applyEditor():
         return "0"
 
 
-# 删除评论（注意到时候设置文章评论数要减去1）
-# 注意还要将该文章下的所有评论设置为隐藏
+# Delete comments (note that the number of comments on the article will be set to subtract 1 when the time comes)
+# Note that all comments under the article will also be set to hidden
 @userManage.route("/hideArticle", methods=["POST"])
 @logDanger
 def hideArticle():
@@ -188,12 +188,12 @@ def hideArticle():
     articleid = request.form.get('articleid')
     try:
         instanceArticle.deleteArticle(articleid)
-        info = f"userid为{userid}的用户删除了articleid为{articleid}的文章"
+        info = f"The user with userid {userid} has deleted the article with articleid {articleid}"
         listLogger(userid, info, [0])
-        instanceLog.insertDetail(type="删除文章", target=userid, credit=0, info=info)
-        #  删除文章时把对应文章下的评论设置成隐藏
+        instanceLog.insertDetail(type="Delete article", target=userid, credit=0, info=info)
+        #  Set the comments under the corresponding article to be hidden when deleting the article
         instanceComment.hideCommnetWhenHideArticle(articleid)
-        # 把收藏的文章也设置为取消收藏
+        # Set the favorite articles to un-favorite as well
         instanceFavorite.hideFavoByArticleid(articleid)
         return "1"
     except:
@@ -202,7 +202,7 @@ def hideArticle():
         return "0"
 
 
-# 修改头像
+# Modify avatar
 @userManage.route("/uploadUserAvatar", methods=["POST", "GET"])
 @logDanger
 def uploadUserAvatar():
@@ -237,19 +237,12 @@ def upload():
             biJiao = i.split(".")
             if biJiao < now:
                 os.remove(myAvatarPath + "\\" + i)
-        info = f"userid为{userid}的用户，更改自己的头像为{newPicPath}"
+        info = f"Users whose userid is {userid} change their avatar to {newPicPath}"
         listLogger(userid, info, [0])
-        instanceLog.insertDetail(type="更换头像", target=userid, credit=0, info=info)
+        instanceLog.insertDetail(type="Change avatar", target=userid, credit=0, info=info)
         return "1"
 
-
-# 登录记录
-
-# 积分明细
-
-# 如何获取积分
-
-# 控制再次刷新页面时，出现在哪个标签
+# Control which tab appears when the page is refreshed again
 @userManage.route("/controlBiaoNum", methods=["POST", "GET"])
 @logDanger
 def controlBiaoNum():

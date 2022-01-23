@@ -1,8 +1,8 @@
 """
 
-文件说明
+File Description
 
-本文件主要关于管理员后台控制的页面
+This file is mainly about the administrator backend control page
 
 encoding: utf-8
 @author: Zhang Jiajun

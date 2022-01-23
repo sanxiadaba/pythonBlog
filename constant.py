@@ -1,8 +1,8 @@
 """
-文件说明：
+Document Description.
 
-关于整个博客项目的许多配配置参数
-每个参数都有注释说明
+Many configuration parameters for the entire blog project
+Each parameter is annotated with a description
 
 encoding: utf-8
 @author: Zhang Jiajun
@@ -14,132 +14,135 @@ encoding: utf-8
 
 from datetime import timedelta
 
-"""这里填写mysql配置
-若是远程 配置格式例如“root(远程主机用户名):root(mysql用户名)@***.**.**.***(ip地址):3306(端口号)” 
+"""Fill in the mysql configuration here
+若是远程 配置格式例如“root(Remote host username):root(mysql username)@***.**.**.***(ip address):3306(Port number)” 
 比如
-config_mysql=mysql://root:root@120.28.243.198:3306(这个地址不存在，只是做一下事例)
+config_mysql=mysql://root:root@120.28.243.198:3306(This address does not exist, just do an example)
 """
 config_mysql = "root@localhost:3306"
 
-# 设置所在数据库的名称(下面是我测试用的数据库的名称，具体项目需要更改)
+# Set the name of the database (the following is the name of my test database, specific items need to be changed)
 databaseName = "myBlog"
 
-# 设置端口号
+# Set the port number
 portNum = 1234
 
-# 是否已debug模式进行启动 (开启的话，在后端修改对应的代码后
-# 服务器会自动重启，建议在正式项目中设置为false)
+# Whether to start in debug mode or not (if enabled, the server will restart automatically after the code is modified in the backend)
+# The server will restart automatically, it is recommended to set to false in the official project)
 whetherDebug = True
 
-# 设置session的过期时间  这里还可以设置weeks,months等
+# Set the session expiration time Here you can also set weeks, months, etc.
 sessionExpirationTime = timedelta(days=30)
 
-# 设置每次服务器重启后session是否失效,默认为false，即重启服务器后session仍然生效
+# Set whether session is invalid after each server restart, default is false, i.e. session is still valid after server restart
 sessionRestart = False
 
-# 设置主页的分类名字，这里写五个，也可以添加
-classification = ["Python技巧", "LeetCode刷题", "项目开发", "综合学习", "其它"]
+# Set the category name of the homepage, here write five, you can also add
+classification = ["Python", "LeetCode", "Project", "Learning", "Others"]
 
-# 发送注册邮箱的账户
+# Send account with registered email
 emailAccount = "*******"
 
-""" 注册邮箱的授权码(不是邮箱的登录密码)  #参考这个网站（https://www.ujcms.com/documentation/351.html）
-现只支持qq邮箱的发送服务，而且注册时也最好使用qq邮箱注册（不便之处，敬请原谅）"""
+""" Authorization code for registering mailbox (not mailbox login password) #Refer to this website (https://www.ujcms.com/documentation/351.html)
+Now only qq mailbox sending service is supported, and it is also better to use qq mailbox registration when registering (please excuse any inconvenience) """
 
 emailAdmit = "*******"
 
-# 是否使用github的第三方登录功能 (需要进行相关配置，详情见readme文档)
+# Whether to use github's third-party login feature (requires configuration, see the readme documentation for details)
 whetherUseGithubLogin = True
 
-# 设置github第三方登录所需要的Client ID 与 Client secrets # 待开发
+# Set the Client ID and Client secrets required for github third-party login # To be developed
 # GITHUB_CLIENT_ID = '*********'
 # GITHUB_CLIENT_SECRET = '***********'
 
-# 设置没人每天的最多评论次数
+# Set the maximum number of comments per day for no one
 commentNum = 10
 
-# 图片验证码是否支持大小写不区分（这里指的是登录用的图片验证码，不是注册账号时的文字验证码）
+# Whether the image verification code supports case-insensitive (this refers to the image verification code for login, not the text verification code for account registration)
 whetherDistinguishCapital = False
 
-# 注册送的积分数量
+# of points sent for registration
 regGiveCredit = 50
 
-# 每天登录送的积分（已做过处理，每天只能领取一次登录积分奖励）
+# Daily login bonus points (already processed, you can only receive one login bonus per day)
 loginEvereDayCredit = 1
 
-# 发表文章送的积分(这里没有对每天发送文章数量做出限制，所以请谨慎给editor身份)
+# Points sent for publishing articles (there is no limit to the number of articles sent per day here, so please be careful to give editor status)
 postArticleCredit = 10
 
-# 添加评论和回复评论每次积分的增加积分
+# Adding comments and replying to comments increases points per point
 replyAndAddCommentCredit = 2
 
-# 作者设置文章收取积分，其他读者支付积分后作者的分成比例
+# The author sets the article to receive points, and the author's share after other readers pay points
 rateCreditForArticle = 0.5
 
-# 发布带积分文章可供选择的收取积分
+# Posting with points for optional collection of points for articles
 creditListForReleaseArticle = [1, 2, 5, 10, 20, 50]
 
-# 每页有几篇文章
+# There are several articles per page
 howArticleInWeb = 10
 
-# 每篇文章有几条评论(不算上回复评论的回复)
+# of comments per post (not counting replies to replies to comments)
 howCommentInArticle = 5
 
-# 是否要首页的轮播图
+# Whether to have a rotating image of the home page
 whetherSaveShufflingFigure = True
 
-# 轮播图对应的图片位置 注意要与下面图片链接个数保持一致
-# 注意，这里要要是在/static/img/banner 底下的图片（下面只填写文件名）
+# The position of the image corresponding to the rotating image Note that the number of links should be consistent with the following images
+# Note that this should be the image at the bottom of /static/img/banner (only the file name is filled in below)
 shufflingFigurePicture = ["banner-1.jpg", "banner-2.jpg", "banner-3.jpg"]
 
-# 点击轮播图对应图片的链接
+# Click on the link of the corresponding image of the rotating image
 shufflingFigureLink = ["https://github.com/sanxiadaba/pythonBlog", "https://github.com/sanxiadaba/pythonBlog",
                        "https://github.com/sanxiadaba/pythonBlog"]
 
-# 首页左上角的logo地址(这里图片的位置放在/static/img/logo下面)
+# The address of the logo on the top left corner of the home page (the location of the image here is placed under /static/img/logo)
 indexLogoPicture = "logo.png"
 
-# logo对应的长和宽(数组形式)
+# The length and width of the logo (in the form of an array)
 indexLogoPictureSize = (60, 60)
 
-# 首页最上面的两个词 和移动端左上角的字
-indexAboveStr = ["欢迎来到我的博客", "好好学习", "天天向上"]
+# The two words at the top of the home page and the words in the upper left corner of the mobile
+indexAboveStr = ["Welcome to my blog", "Study well", "Day Up"]
 
-# 随机生成头像缩略图的数量（用户注册时随机生成一个缩略图，后期读者可以更改）
-# 要确保/static/img/avatar 底下有相应数量的头像图片
+# of randomly generated avatar thumbnails (a random thumbnail is generated when the user registers, which can be changed by the reader later)
+# Be sure to have the appropriate number of avatar images at the bottom of /static/img/avatar
 thumbNailNum = 10
 
-# 侧边栏三个栏位里的推荐条数
-# 最新文章 最多阅读 特别推荐
+# of recommendations in the three columns of the sidebar
+# Latest posts Most reads Special recommendations
 recommendedNumOfSide = [9, 9, 9]
 
 """
-下面是日志文件的相关设置
+Here are the settings related to the log file
 """
 # 压缩文件的格式
 compressedFormat = "zip"
 
-# 定期清理的时间  (可选的比如 "1 day" "1 week" "3 months"等 ) 注意时间的复数
+# The time for regular cleaning (optional such as "1 day" "1 week" "3 months" etc.) Note the plural of time
 clearLogTime = "1 month"
 
-# 分割日志的大小（日志到一定体积后自动压缩，然后开始新的日志） 可选的参数有KB GM MB
+# Size of split logs (logs are automatically compressed after a certain volume and then a new log is started) Optional parameters are KB GM MB
 logSize = "0.1 MB"
 
-# 打印的loguru是否在控制台输出
+# Whether the printed loguru is output on the console
 whetherLogPrintInConsole = True
 
-# 超过指定时间后验证码便会失效  # 单位秒
+# Captcha will expire after a specified time # in seconds
 timeoutOfEcode = 120
 
-# 设置每个用户、编辑每天最多投稿、发布文章的数量
+# Set the maximum number of contributions and posts per user and editor per day
 maxUserPostArticleNum = 10
 maxUserPostArticleNumOfEditor = 20
 
-# 设置每天最多的修改文章次数
+# Set the maximum number of post modifications per day
 maxModifyArticleNum = 10
 
-# 每个人每天最多上传图片的数量
+# Maximum number of images uploaded per person per day
 maxUploadPicNum = 20
 
-# 设置在管理文章的后台页面，没几个文章分页
+# Set in the backend page of managing articles, not many article pagination
 everyPageInHou = 2
+
+# Set the language of the ueditor (optionally "English" or "Chinese")
+ueiditorLanguage="English"

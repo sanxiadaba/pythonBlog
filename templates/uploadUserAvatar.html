@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>头像裁切预览代码</title>
+    <title>Avatar crop preview code</title>
     <link rel="stylesheet" href="/static/css/uploadImageStyle.css" type="text/css" />
 </head>
 <body>
@@ -10,7 +10,7 @@
     <script type="text/javascript" src="/static/js/cropbox.js"></script>
     <script type="text/javascript" src="/static/js/bootbox.min.js"></script>
 
-    <h1 class="page-header">点击裁剪后预览，再点击上传即可</h1>
+    <h1 class="page-header">Click to crop and preview, then click to upload</h1>
     <div class="container">
         <div class="imageBox">
             <div class="thumbBox">
@@ -23,12 +23,12 @@
             <div class="new-contentarea tc">
                 <a href="javascript:void(0)" class="upload-img">
                     <label for="upload-file">
-                        选择图像</label>
+                        Select image</label>
                 </a>
                 <input type="file" class="" name="upload-file" id="upload-file" />
             </div>
-            <input type="button" id="btnSubmit" class="Btnsty_peyton" value="上传" />
-            <input type="button" id="btnCrop" class="Btnsty_peyton" value="裁剪" />
+            <input type="button" id="btnSubmit" class="Btnsty_peyton" value="Upload" />
+            <input type="button" id="btnCrop" class="Btnsty_peyton" value="Crop" />
             <input type="button" id="btnZoomIn" class="Btnsty_peyton" value="+" />
             <input type="button" id="btnZoomOut" class="Btnsty_peyton" value="-" />
         </div>
@@ -71,7 +71,7 @@
             })
             $('#btnSubmit').on('click', function () {
                 if(bian===0){
-                    alert("请先选择图像并裁切后再上传头像")
+                    alert("Please select the image and crop it first before uploading the avatar")
                     return false
                 }
                 $('#circularG').show();
@@ -90,13 +90,13 @@
                             setTimeout(function () {
                        window.location.href = "/userManage";
                     }, 1000)
-                        alert("修改头像成功")
+                        alert("Modify the avatar successfully")
                         }
                         else {
                             setTimeout(function () {
                        window.location.reload();
                     }, 1000)
-                        alert("更改头像失败，请联系管理员")
+                        alert("Change avatar failed, please contact the administrator")
                         }
                     },
                     error: function (XMLHttpRequest, textStatus, errorThrown) {

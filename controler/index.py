@@ -1,8 +1,8 @@
 """
-文件说明：
+File description.
 
-此文件主要是加载首页的一些响应
-比如文章的标题、作者、填充几个等
+This file is mainly to load some response of the home page
+such as the title of the article, the author, fill a few, etc.
 
 encoding: utf-8
 @author: Zhang Jiajun
@@ -26,20 +26,20 @@ instanceArticle=Article()
 index = Blueprint("index", __name__)
 
 
-# 加载首页，填充侧边栏、以及文章等相关信息
+# Loading the home page, filling the sidebar, and articles and other related information
 @index.route("/")
 @logDanger
 def home():
-    # 这里主要是反对侧边栏对应填充的东西
+    # The main objection here is to the sidebar corresponding to what is filled
     last, most, recommended = instanceArticle.searchLastMostRecommended()
     result = instanceArticle.searchArticleWithUserByPage(0, howArticleInWeb)
-    # 一页显示几篇文章
+    # Display several articles on one page
     total = math.ceil((instanceArticle.getAllCountOfArticle() / howArticleInWeb))
     return render_template("index.html", result=result, total=total, page=1, last=last, most=most,
                            recommended=recommended)
 
 
-# 跳转到第几页 换个参数即可
+# Jump to the first page Just change the parameter
 @index.route("/page/<int:page>")
 @logDanger
 def paginate(page):
@@ -50,7 +50,7 @@ def paginate(page):
     return render_template("index.html", result=result, total=total, page=page)
 
 
-# 跳转到不同分类的模块
+# Jump to the modules of different categories
 @index.route("/type/<int:type>-<int:page>")
 @logDanger
 def classify(type, page):
@@ -60,7 +60,7 @@ def classify(type, page):
     return render_template("type.html", result=result, page=page, total=total, type=type)
 
 
-# 这里实现对文章的搜索功能
+# The search function for articles is implemented here
 @index.route("/search/<int:page>-<string:keyword>")
 @logDanger
 def search(page, keyword):
@@ -73,7 +73,7 @@ def search(page, keyword):
     return render_template("search.html", page=page, total=total, result=result, keyword=keyword)
 
 
-# 填充侧边栏推荐
+# Filled sidebar recommendations
 @index.route("/recommended")
 @logDanger
 def recommended():
