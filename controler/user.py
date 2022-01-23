@@ -23,13 +23,14 @@ from flask import Blueprint, make_response, session, request, url_for
 from common.myLog import ininUserDir, logDanger, listLogger, allLogger, dirInDir, avatarPath
 from common.utility import ImageCode, gen_email_code, send_email
 from common.utility import genearteMD5
-from constant import whetherDistinguishCapital, regGiveCredit, loginEvereDayCredit, timeoutOfEcode,ueiditorLanguage
+from constant import whetherDistinguishCapital, regGiveCredit, loginEvereDayCredit, timeoutOfEcode
 from database.credit import Credit
 from database.logs import Log
 from database.users import Users
-instanceCredit=Credit()
-instanceLog=Log()
-instanceUser=Users()
+
+instanceCredit = Credit()
+instanceLog = Log()
+instanceUser = Users()
 
 user = Blueprint("user", __name__)
 # Used to determine if the verification code exceeds the time limit
@@ -186,7 +187,8 @@ def login():
     #  Image Verification Code
     if vcode != session.get("vcode"):
         info = f"userid is {userid}, nickname is {nickname}, during the login process to check the image verification code input error"
-        instanceLog.insertDetail(userid=userid, type="Login image verification code error", credit=0, target=0, info=info)
+        instanceLog.insertDetail(userid=userid, type="Login image verification code error", credit=0, target=0,
+                                 info=info)
         listLogger(userid, info, [0])
         return "vcode-error"
     else:
@@ -218,7 +220,8 @@ def login():
             else:
                 # Receive daily login bonus
                 info = f"userid is {userid}, nickname is {nickname} daily login plus points successfully"
-                instanceCredit.insertDetail(userid=userid, type="Daily login bonus points", credit=loginEvereDayCredit, target=0,
+                instanceCredit.insertDetail(userid=userid, type="Daily login bonus points", credit=loginEvereDayCredit,
+                                            target=0,
                                             info=info)
                 listLogger(userid, info, [0])
             return response
@@ -231,7 +234,7 @@ def login():
 
 
 # Logout settings
-@user.route("/logout")
+@user.route("/logout", methods=["POST", "GET"])
 @logDanger
 def logout():
     # Empty session page jump

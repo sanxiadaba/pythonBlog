@@ -130,7 +130,7 @@ class Comment(DBase):
 
     def numOfALLMyComment(self, userid=None):
         userid = session.get("userid") if userid is None else userid
-        numOfALLMyComment = dbsession.query(Comment).filter_by(userid=userid,hide=0,replyid = 0).count()
+        numOfALLMyComment = dbsession.query(Comment).filter_by(userid=userid, hide=0, replyid=0).count()
         return numOfALLMyComment
 
     # The module of my comments of the back office management
@@ -154,5 +154,3 @@ class Comment(DBase):
             lin = dbsession.query(Comment).filter_by(commentid=i).first()
             lin.hide = 1
         dbsession.commit()
-
-

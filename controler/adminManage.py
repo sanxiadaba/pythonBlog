@@ -12,7 +12,7 @@ encoding: utf-8
 @gituhb: sanxiadaba/pythonBlog
 """
 
-from flask import Blueprint, session, render_template
+from flask import Blueprint, render_template
 
 adminManage = Blueprint("adminManage", __name__)
 
@@ -20,4 +20,3 @@ adminManage = Blueprint("adminManage", __name__)
 @adminManage.route("/adminManage", methods=["GET"])
 def baseAdminManage():
     return render_template("adminManage.html")
-

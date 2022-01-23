@@ -23,12 +23,17 @@ There are two default accounts in the database
 
 #### Project screenshot
 
-! [Home Page Screenshot](. /.img/homePageScreenshots.png)
-! [Content Screenshots](. /.img/contentPageScreenshots.png)
+| Index Page                       | Article Page                       | Post Article                       |
+| -------------------------------- | ---------------------------------- | ---------------------------------- |
+| <img src="./.img/indexPage.png"> | <img src="./.img/articlePage.png"> | <img src="./.img/postArticle.png"> |
+
+| Manage Page                       | Login Panel                     |
+| -------------------------------- | ----------------------------------|
+| <img src="./.img/manage.png"> | <img src="./.img/loginPanel.png">|
 
 #### Required packages
 
-````
+````python
 Install the required packages by executing the following command in the directory
 pip install -r requirements.txt
 ````

@@ -145,4 +145,4 @@ maxUploadPicNum = 20
 everyPageInHou = 2
 
 # Set the language of the ueditor (optionally "English" or "Chinese")
-ueiditorLanguage="English"
+ueiditorLanguage = "English"

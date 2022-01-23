@@ -31,7 +31,8 @@ class Users(DBase):
         avatarPath = rootDir + "\\static\\img\\avatar"
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         nickname = username.split("@")[0]  # Default account prefix as nickname
-        avatar = "default/" + str(random.randint(1, thumbNailNum))  # Choose one of the ten random images as the initial default avatar
+        avatar = "default/" + str(
+            random.randint(1, thumbNailNum))  # Choose one of the ten random images as the initial default avatar
         user = Users(username=username, password=password, role="user", credit=0, nickname=nickname,
                      avatar=avatar + ".png", createtime=now)
         dirInDir(f"myPic_{user.userid}", avatarPath)

@@ -282,4 +282,3 @@ class Article(DBase):
             return True if result == 1 else False
         except:
             return True
-

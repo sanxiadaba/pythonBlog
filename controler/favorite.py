@@ -18,18 +18,15 @@ import traceback
 from flask import Blueprint, request, session
 
 from common.myLog import listLogger, logDanger, allLogger
-
-
 from database.article import Article
 from database.favorite import Favorite
 from database.logs import Log
 from database.users import Users
 
-instanceArticle=Article()
-instanceFavorite=Favorite()
-instanceLog=Log()
-instanceUser=Users()
-
+instanceArticle = Article()
+instanceFavorite = Favorite()
+instanceLog = Log()
+instanceUser = Users()
 
 favorite = Blueprint("favorite", __name__)
 

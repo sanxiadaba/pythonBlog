@@ -20,8 +20,7 @@ from flask import Blueprint, session, jsonify, render_template, request
 
 from common.myLog import logDanger, dirInDir, avatarPath, listLogger, allLogger
 from common.utility import compress_image
-from constant import everyPageInHou,emailAccount
-
+from constant import everyPageInHou, emailAccount
 from database.article import Article
 from database.comment import Comment
 from database.credit import Credit
@@ -29,13 +28,12 @@ from database.favorite import Favorite
 from database.logs import Log
 from database.users import Users
 
-instanceArticle=Article()
-instanceComment=Comment()
-instanceCredit=Credit()
-instanceFavorite=Favorite()
-instanceLog=Log()
-instanceUser=Users()
-
+instanceArticle = Article()
+instanceComment = Comment()
+instanceCredit = Credit()
+instanceFavorite = Favorite()
+instanceLog = Log()
+instanceUser = Users()
 
 userManage = Blueprint("userManage", __name__)
 
@@ -109,12 +107,14 @@ def baseUserManage():
         lin.append(instanceArticle.searchHeadlineByArticleid(i[3]))
         guo.append(lin)
     myComment = guo
-    myLoginLog=instanceLog.searchLoginLog(userid)
+    myLoginLog = instanceLog.searchLoginLog(userid)
     #  Data of point changes
-    allCreditChangeLog=instanceCredit.creditChangeLog(userid)
+    allCreditChangeLog = instanceCredit.creditChangeLog(userid)
     return render_template("userManage.html", myInfo=MyInfo, articleInfo=articleInfo, everyPageInHou=everyPageInHou,
                            myArticleNum=myArticleNum, howManyPage=howManyPage, howManyPage_1=howManyPage_1,
-                           controlBiaoNum=controlBiaoNum, myComment=myComment, allMyCommentNum=allMyCommentNum,myFavo=myFavo,lenMyFavo=lenMyFavo,myLoginLog=myLoginLog,allCreditChangeLog=allCreditChangeLog,emailAccount=emailAccount)
+                           controlBiaoNum=controlBiaoNum, myComment=myComment, allMyCommentNum=allMyCommentNum,
+                           myFavo=myFavo, lenMyFavo=lenMyFavo, myLoginLog=myLoginLog,
+                           allCreditChangeLog=allCreditChangeLog, emailAccount=emailAccount)
 
 
 #  Back to my profile
@@ -241,6 +241,7 @@ def upload():
         listLogger(userid, info, [0])
         instanceLog.insertDetail(type="Change avatar", target=userid, credit=0, info=info)
         return "1"
+
 
 # Control which tab appears when the page is refreshed again
 @userManage.route("/controlBiaoNum", methods=["POST", "GET"])

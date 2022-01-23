@@ -225,8 +225,9 @@ if __name__ == '__main__':
     # Importing instantiated database operation classes
     from database.credit import Credit
     from database.users import Users
-    instanceCredit=Credit()
-    instanceUser=Users()
+
+    instanceCredit = Credit()
+    instanceUser = Users()
     from common.myLog import listLogger
     # Register flask blueprint
     from controler.index import index

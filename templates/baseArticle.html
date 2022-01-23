@@ -150,12 +150,12 @@
                             </div>
 
                             <div class="form-group row">
-                                <label for="loginpass" class="col-4">&nbsp;&nbsp;Login Password：</label>
-                                <input type="password" id="loginpass" class="form-control col-7" placeholder="Please enter your login password"/>
+                                <label for="loginpass" class="col-4">&nbsp;&nbsp;Password：</label>
+                                <input type="password" id="loginpass" class="form-control col-7" placeholder="enter your password"/>
                             </div>
                             <div class="form-group row">
-                                <label for="logincode" class="col-4"> &nbsp;&nbsp;Image Verification Code：</label>
-                                <input type="text" id="logincode" class="form-control col-5" placeholder="Please enter the verification code on the right"
+                                <label for="logincode" class="col-4"> &nbsp;&nbsp;Image Code：</label>
+                                <input type="text" id="logincode" class="form-control col-5" placeholder="enter the code on the right"
                                        onkeyup="doLogin(event)"/>
                                 <img src="/vcode" id="loginvcode" class="col-3" style="cursor:pointer;"
                                      onclick="this.src='/vcode?'+Math.random()"/>
@@ -179,11 +179,11 @@
                             </div>
                             <div class="form-group row">
                                 <label for="regpass" class="col-4">&nbsp;&nbsp;Registration Password：</label>
-                                <input type="password" id="regpass" class="form-control col-7" placeholder="Please enter your registration password"/>
+                                <input type="password" id="regpass" class="form-control col-7" placeholder="enter your registration password"/>
                             </div>
                             <div class="form-group row">
                                 <label for="regcode" class="col-4">&nbsp;&nbsp;E-mail verification code：</label>
-                                <input type="text" id="regcode" class="form-control col-4" placeholder="Please enter your email verification code"
+                                <input type="text" id="regcode" class="form-control col-4" placeholder="Please enter your email code"
                                        onkeyup="doRegister(event)"/>
                                 <button type="button" class="btn btn-primary col-3" onclick="doSendMail(this,1)">Send Email
                                 </button>
@@ -207,11 +207,11 @@
                             </div>
                             <div class="form-group row">
                                 <label for="fipass" class="col-4">&nbsp;&nbsp;New password：</label>
-                                <input type="password" id="fipass" class="form-control col-7" placeholder="Please enter your registration password"/>
+                                <input type="password" id="fipass" class="form-control col-7" placeholder="enter your registration password"/>
                             </div>
                             <div class="form-group row">
                                 <label for="ficode" class="col-4">&nbsp;&nbsp;E-mail verification code：</label>
-                                <input type="text" id="ficode" class="form-control col-4" placeholder="Please enter your email verification code"/>
+                                <input type="text" id="ficode" class="form-control col-4" placeholder="enter your email verification code"/>
                                 <button type="button" class="btn btn-primary col-3" onclick="doSendMail(this,2)">Send Email</button>
                             </div>
                         </div>

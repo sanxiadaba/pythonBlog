@@ -60,7 +60,7 @@ class ImageCode:
         # Create an image object and set the background to white
         im = Image.new("RGB", (width, height), "white")
         # What font to use and the font size
-        font = ImageFont.truetype(font=rootDir+"\\static\\font\\arial.ttf", size=40)
+        font = ImageFont.truetype(font=rootDir + "\\static\\font\\arial.ttf", size=40)
         draw = ImageDraw.Draw(im)  # New generated object
         # Draw string
         for i in range(4):
@@ -200,8 +200,9 @@ def generate_thumb(url_list, userid):
     userid = session.get('userid')
     info = f"userid is {userid}, download the {url} picture, and thumbnail it and save it as thumb/{myPictureName}/{thumbname}"
     from database.logs import Log
-    instanceLog=Log()
-    instanceLog.insertDetail(userid=userid, target=0, credit=0, info=info, type="Download and save thumbnails successfully")
+    instanceLog = Log()
+    instanceLog.insertDetail(userid=userid, target=0, credit=0, info=info,
+                             type="Download and save thumbnails successfully")
     listLogger(userid, info, [8])
     return myPictureName + "/" + thumbname
 

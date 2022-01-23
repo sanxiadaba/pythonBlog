@@ -2,8 +2,10 @@ import time
 
 from flask import session
 from sqlalchemy import Table
+
 from database.article import Article
-instanceArticle=Article()
+
+instanceArticle = Article()
 from common.connect_db import connect_db
 
 dbsession, md, DBase = connect_db()
@@ -58,20 +60,21 @@ class Favorite(DBase):
     # Collected Articles
     def myFavoriteArticle(self, userid=None):
         userid = session.get("userid") if userid is None else userid
-        myFavoriteArticle = dbsession.query(Favorite.articleid,Favorite.createtime).filter_by(userid=userid,canceled=0).all()
-        result=[]
+        myFavoriteArticle = dbsession.query(Favorite.articleid, Favorite.createtime).filter_by(userid=userid,
+                                                                                               canceled=0).all()
+        result = []
         for i in myFavoriteArticle:
-            lin=[]
+            lin = []
             for j in i:
                 lin.append(j)
             lin.append(instanceArticle.searchHeadlineByArticleid(i[0]))
             result.append(lin)
-        myFavoriteArticle=result
-        return myFavoriteArticle,len(myFavoriteArticle)
+        myFavoriteArticle = result
+        return myFavoriteArticle, len(myFavoriteArticle)
 
     # Search by articleid for which collections are
-    def hideFavoByArticleid(self,articleid):
-        result=dbsession.query(Favorite).filter_by(articleid=articleid).all()
+    def hideFavoByArticleid(self, articleid):
+        result = dbsession.query(Favorite).filter_by(articleid=articleid).all()
         for i in result:
-            i.canceled=1
+            i.canceled = 1
         dbsession.commit()

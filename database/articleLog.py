@@ -55,5 +55,3 @@ class ArticleLog(DBase):
             return True
         else:
             return False
-
-

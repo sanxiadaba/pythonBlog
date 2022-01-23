@@ -11,9 +11,10 @@ from constant import rateCreditForArticle
 from database.article import Article
 from database.logs import Log
 from database.users import Users
-instanceArticle=Article()
-instanceLog=Log()
-instanceUser=Users()
+
+instanceArticle = Article()
+instanceLog = Log()
+instanceUser = Users()
 
 dbsession, md, DBase = connect_db()
 
@@ -47,7 +48,7 @@ class Credit(DBase):
                 authorid = int(instanceArticle.searchUseridByArticleid(target)[0])
                 authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
                 #  Note that here the credit should be multiplied by -1 to change back
-                authorGetCredit = math.ceil(rateCreditForArticle * credit*-1)
+                authorGetCredit = math.ceil(rateCreditForArticle * credit * -1)
 
                 # The purchaser has subtracted the corresponding points above
                 # The author of the article gets the corresponding points
@@ -61,11 +62,13 @@ class Credit(DBase):
                 listLogger(authorid, authorInfo, [5, 6])
 
                 # The author also needs access to the credit form
-                creditP2 = Credit(userid=authorid, category="Article was purchased", target=target, credit=authorGetCredit,
+                creditP2 = Credit(userid=authorid, category="Article was purchased", target=target,
+                                  credit=authorGetCredit,
                                   createtime=now,
                                   ipaddr=ipaddr, info=authorInfo)
 
-                instanceLog.insertDetail(type="Article was purchased", target=target, credit=authorGetCredit, info=authorInfo)
+                instanceLog.insertDetail(type="Article was purchased", target=target, credit=authorGetCredit,
+                                         info=authorInfo)
                 dbsession.add(creditP2)
             elif type == "Read the article":
                 # The userid and nickname of the author of the article and the number of points that should be earned
@@ -116,13 +119,14 @@ class Credit(DBase):
     # Back to point-related changes
     def creditChangeLog(self, userid=None):
         userid = session.get("userid") if userid is None else userid
-        allCreditChangeLog = dbsession.query(Credit.category,Credit.credit,Credit.target).filter_by(userid=userid).all()
-        result=[]
+        allCreditChangeLog = dbsession.query(Credit.category, Credit.credit, Credit.target).filter_by(
+            userid=userid).all()
+        result = []
         for i in allCreditChangeLog:
-            lin=[]
+            lin = []
             for j in i:
                 lin.append(j)
-            if i[2] !=0:
+            if i[2] != 0:
                 # If the article is not hidden
                 lin.append(instanceArticle.searchHeadlineByArticleid(i[2]))
             else:
@@ -133,6 +137,5 @@ class Credit(DBase):
             else:
                 lin.append("1")
             result.append(lin)
-        allCreditChangeLog=result
+        allCreditChangeLog = result
         return allCreditChangeLog
-

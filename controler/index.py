@@ -19,9 +19,9 @@ from flask.json import jsonify
 
 from common.myLog import logDanger
 from constant import howArticleInWeb
-
 from database.article import Article
-instanceArticle=Article()
+
+instanceArticle = Article()
 
 index = Blueprint("index", __name__)
 

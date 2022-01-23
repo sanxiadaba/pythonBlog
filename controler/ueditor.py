@@ -20,11 +20,12 @@ from flask import Blueprint, request, jsonify, session
 from common.myLog import rootDir, dirInDir, logDanger, listLogger
 from common.ueditorConf import returnUeConf
 from common.utility import compress_image
-from database.upload import Upload
-from database.logs import Log
 from constant import ueiditorLanguage
-instanceUpload=Upload()
-instanceLog=Log()
+from database.logs import Log
+from database.upload import Upload
+
+instanceUpload = Upload()
+instanceLog = Log()
 
 ueditor = Blueprint("ueditor", __name__)
 
@@ -50,8 +51,8 @@ def uedit():
             if instanceUpload.checkLimitUpload() is True:
                 result = {}
                 # There is a daily upload limit, and the front-end will prompt if the number of uploads is used up.
-                if ueiditorLanguage =="Chinese":
-                    result["state"]="今日上传次数已用完"
+                if ueiditorLanguage == "Chinese":
+                    result["state"] = "今日上传次数已用完"
                 else:
                     result["state"] = "Exceeding the number of times limit"
                 info = f"The user with userid {userid} failed to upload because he ran out of uploads today."

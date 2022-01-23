@@ -20,19 +20,17 @@ from flask import Blueprint, request, session, jsonify
 from common.myLog import allLogger, ininUserDir, listLogger, logDanger
 from constant import howCommentInArticle
 from constant import replyAndAddCommentCredit
-
-
-
 from database.article import Article
 from database.comment import Comment
 from database.credit import Credit
 from database.logs import Log
 from database.users import Users
-instanceArticle=Article()
-instanceComment=Comment()
-instanceCredit=Credit()
-instanceLog=Log()
-instanceUser=Users()
+
+instanceArticle = Article()
+instanceComment = Comment()
+instanceCredit = Credit()
+instanceLog = Log()
+instanceUser = Users()
 
 comment = Blueprint("comment", __name__)
 
@@ -56,7 +54,8 @@ def addOriginComment():
                 # After a successful comment, update the details of points and remaining points, and the number of replies to the article
                 info = f"User with userid {userid} replied to author id {authorid} article id {articleid}, and got {replyAndAddCommentCredit} points."
                 instanceComment.insertComment(articleid, content, info=info)
-                instanceCredit.insertDetail(type="Add a comment", target=articleid, credit=replyAndAddCommentCredit, info=info)
+                instanceCredit.insertDetail(type="Add a comment", target=articleid, credit=replyAndAddCommentCredit,
+                                            info=info)
                 instanceLog.insertDetail(type="Article was commented", target=articleid, credit=0, info=info)
                 instanceArticle.updateReplyCount(articleid)
                 listLogger(userid, info, [7, 5])
@@ -96,9 +95,11 @@ def reply():
     if not instanceComment.whetherLimitEveryDayCommentNum():
         try:
             info = f"A user with userid {userid} replied to a comment with userid {authorid}, nickname {authorNickname} and commentid {commentid} in an article with articleid {articleid}."
-            instanceComment.insertArticleComment(articleid=articleid, commentid=commentid, ipaddr=ipaddr, content=content,
+            instanceComment.insertArticleComment(articleid=articleid, commentid=commentid, ipaddr=ipaddr,
+                                                 content=content,
                                                  info=info)
-            instanceCredit.insertDetail(type="Reply to original comment", target=articleid, credit=replyAndAddCommentCredit, info=info)
+            instanceCredit.insertDetail(type="Reply to original comment", target=articleid,
+                                        credit=replyAndAddCommentCredit, info=info)
             instanceLog.insertDetail(type="Comments are replied to", target=articleid, credit=0, info=info)
             # Replying to the original comment also counts as a comment on the article
             instanceArticle.updateReplyCount(articleid)

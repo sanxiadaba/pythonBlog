@@ -26,7 +26,8 @@ class Log(DBase):
     # Determine if the comment has been approved or disapproved
     # For return 1 Against return 2 Disagree not oppose return 0
     def whetherAgreeOrDisInThisComment(self, commentid):
-        row = dbsession.query(Log.category).filter(Log.target == commentid).filter(Log.category != "Add a comment").filter(
+        row = dbsession.query(Log.category).filter(Log.target == commentid).filter(
+            Log.category != "Add a comment").filter(
             Log.userid == session.get("userid")).order_by(Log.createtime.desc()).first()
         if row is None:
             return 0
@@ -46,7 +47,7 @@ class Log(DBase):
         return allLogOfUser
 
     # View user login, logout, registration, and password retrieval records
-    def searchLoginLog(self,userid):
-        result=dbsession.query(Log.category,Log.createtime).filter(Log.userid==userid,Log.category.in_(["每日登录","登录成功","登出账户","重设密码"])).all()
+    def searchLoginLog(self, userid):
+        result = dbsession.query(Log.category, Log.createtime).filter(Log.userid == userid, Log.category.in_(
+            ["每日登录", "登录成功", "登出账户", "重设密码"])).all()
         return result
-

@@ -21,9 +21,7 @@ from flask import Blueprint, session, request, abort, render_template
 from common.myLog import logDanger, listLogger, allLogger
 from common.utility import parser_image_url, generate_thumb
 from constant import postArticleCredit, howCommentInArticle, maxUserPostArticleNum, \
-    maxUserPostArticleNumOfEditor, maxModifyArticleNum,ueiditorLanguage
-
-from database.users import Users
+    maxUserPostArticleNumOfEditor, maxModifyArticleNum, ueiditorLanguage
 from database.article import Article
 from database.articleLog import ArticleLog
 from database.comment import Comment
@@ -31,15 +29,16 @@ from database.credit import Credit
 from database.favorite import Favorite
 from database.logs import Log
 from database.upload import Upload
+from database.users import Users
 
-instanceArticle=Article()
-instanceArticleLog=ArticleLog()
-instanceComment=Comment()
-instanceCredit=Credit()
-instanceFavorite=Favorite()
-instanceLog=Log()
-instanceUpload=Upload()
-instanceUser=Users()
+instanceArticle = Article()
+instanceArticleLog = ArticleLog()
+instanceComment = Comment()
+instanceCredit = Credit()
+instanceFavorite = Favorite()
+instanceLog = Log()
+instanceUpload = Upload()
+instanceUser = Users()
 
 article = Blueprint("article", __name__)
 
@@ -133,12 +132,12 @@ def pre_post():
     judge = True if ((s1.split("/")[-1].isdigit() is True and s1.split("/")[-2] == "article") or s1.split("/")[
         -1] == "userManage") else False
     # Fill the value of the modified page Of course, whether to fill the empty or the corresponding article needs to be determined with the articleJudge parameter
-    if ueiditorLanguage=="Chinese":
-        language="zh-cn/zh-cn.js"
-    elif ueiditorLanguage=="English":
-        language="en/en.js"
+    if ueiditorLanguage == "Chinese":
+        language = "zh-cn/zh-cn.js"
+    elif ueiditorLanguage == "English":
+        language = "en/en.js"
     else:
-        allLogger(0,"ueditor language configuration error")
+        allLogger(0, "ueditor language configuration error")
         language = "en/en.js"
     articleidModify = session.get("articleidModify")
     if articleidModify == "0" or articleidModify is None or judge is False:
@@ -149,7 +148,7 @@ def pre_post():
         articleContent = instanceArticle.searchHeadlineAndContentByArticleid(articleidModify)["content"]
     return render_template("write.html", maxUserPostArticleNum=maxUserPostArticleNum, articleContent=articleContent,
                            maxUserPostArticleNumOfEditor=maxUserPostArticleNumOfEditor,
-                           maxModifyArticleNum=maxModifyArticleNum, whetherHide=whetherHide,language=language)
+                           maxModifyArticleNum=maxModifyArticleNum, whetherHide=whetherHide, language=language)
 
 
 # Button for posting articles
@@ -283,7 +282,8 @@ def modifyArticle(articleid):
 
 # Used to receive the id of the current article (used when modifying the article)
 # Here it is still mainly for the purpose of modifying the article
-@article.route('/centerVar', methods=['GET', 'POST'])  # Set the route to allow both GET and POST methods to be accessible
+@article.route('/centerVar',
+               methods=['GET', 'POST'])  # Set the route to allow both GET and POST methods to be accessible
 @logDanger
 def centerVar():
     if request.method == 'GET':
