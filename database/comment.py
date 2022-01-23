@@ -15,7 +15,7 @@ class Comment(DBase):
     __table__ = Table("comment", md, autoload=True)
 
     # 新增一条原始评论
-    def insert_comment(self, articleid, content, info=None):
+    def insertComment(self, articleid, content, info=None):
         if info is not None:
             info = info
         ipaddr = request.remote_addr
@@ -26,13 +26,13 @@ class Comment(DBase):
         dbsession.commit()
 
     # 根据文章编号查询其所有评论
-    def find_by_articleid(self, articleid):
+    def searchCommentByArticleid(self, articleid):
         result = dbsession.query(Comment).filter_by(articleid=articleid, hide=0, replyid=0).all()
         return result
 
     # 根据用户编号和日期进行查询是否已经超过一定条数的限制
     # （每天的评论次数也是有限的）
-    def check_limit_per_day(self):
+    def whetherLimitEveryDayCommentNum(self):
         start = time.strftime("%Y-%m-%d 00:00:00")
         end = time.strftime("%Y-%m-%d 23:59:59")
         result = dbsession.query(Comment).filter(Comment.userid == session.get("userid"),
@@ -43,14 +43,14 @@ class Comment(DBase):
             return False
 
     # 查询评论与用户信息  注意评论也需要分页
-    def find_limit_with_user(self, articleid, start, count):
+    def searchCommentLimitWithUser(self, articleid, start, count):
         result = dbsession.query(Comment, Users).join(Users, Users.userid == Comment.userid) \
             .filter(Comment.articleid == articleid, Comment.hide == 0) \
             .order_by(Comment.commentid.desc()).limit(count).offset(start).all()
         return result
 
     # 新增一条原始评论的回复
-    def insert_reply(self, articleid, commentid, content, ipaddr, info=None):
+    def insertArticleComment(self, articleid, commentid, content, ipaddr, info=None):
         if info is not None:
             info = info
         now = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -60,53 +60,53 @@ class Comment(DBase):
         dbsession.commit()
 
     # 查询原始评论对应的用户信息，带分页参数
-    def find_comment_with_user(self, articleid, start, count):
+    def searchUserInfoAndCommentByArticleid(self, articleid, start, count):
         result = dbsession.query(Comment, Users).join(Users, Users.userid == Comment.userid).filter(
             Comment.articleid == articleid, Comment.hide == 0, Comment.replyid == 0) \
             .order_by(Comment.commentid.desc()).limit(count).offset(start).all()
         return result
 
     # 查询回复评论，回复评论不需要分页
-    def find_reply_with_user(self, replyid):
+    def searchReplyWithUserByReplyid(self, replyid):
         result = dbsession.query(Comment, Users).join(Users, Users.userid == \
                                                       Comment.userid) \
             .filter(Comment.replyid == replyid, Comment.hide == 0).all()
         return result
 
     # 根据原始评论和回复评论生成一个关联列表
-    def get_comment_user_list(self, articleid, start, count):
-        result = self.find_comment_with_user(articleid, start, count)
+    def searchCommentWithUser(self, articleid, start, count):
+        result = self.searchUserInfoAndCommentByArticleid(articleid, start, count)
         comment_list = model_join_list(result)
         for comment in comment_list:
-            result = self.find_reply_with_user(comment["commentid"])
+            result = self.searchReplyWithUserByReplyid(comment["commentid"])
             comment["reply_list"] = model_join_list(result)
         return comment_list
 
     # 计算原始评论数量进行分页
-    def get_count_by_article(self, articleid):
+    def searchCountOfCommentByArticleid(self, articleid):
         count = dbsession.query(Comment).filter_by(articleid=articleid, hide=0, replyid=0).count()
         return count
 
     # 评论的赞同数量加一
-    def update_agreecount(self, commentid):
+    def updataCommentAgree(self, commentid):
         row = dbsession.query(Comment).filter_by(commentid=int(commentid)).first()
         row.agreecount += 1
         dbsession.commit()
 
     # 评论的反对数量加一
-    def update_disagreecount(self, commentid):
+    def updateCommentDisagree(self, commentid):
         row = dbsession.query(Comment).filter_by(commentid=int(commentid)).first()
         row.opposecount += 1
         dbsession.commit()
 
     # 取消赞同
-    def cancle_update_agreecount(self, commentid):
+    def cancleUpdateCommentAgree(self, commentid):
         row = dbsession.query(Comment).filter_by(commentid=int(commentid)).first()
         row.agreecount -= 1
         dbsession.commit()
 
     # 取消反对
-    def cancle_update_disagreecount(self, commentid):
+    def cancleUpdateCommentDisagree(self, commentid):
         row = dbsession.query(Comment).filter_by(commentid=int(commentid)).first()
         row.opposecount -= 1
         dbsession.commit()
@@ -154,3 +154,5 @@ class Comment(DBase):
             lin = dbsession.query(Comment).filter_by(commentid=i).first()
             lin.hide = 1
         dbsession.commit()
+
+

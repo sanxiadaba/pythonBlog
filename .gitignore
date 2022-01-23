@@ -4,10 +4,10 @@ __pycache__/
 *$py.class
 test
 .idea
-Test
+Test/test_test
 # C extensions
 *.so
-
+EX
 # Distribution / packaging
 .Python
 build/

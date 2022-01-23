@@ -20,7 +20,19 @@ from flask import Blueprint, request, session, jsonify
 from common.myLog import allLogger, ininUserDir, listLogger, logDanger
 from constant import howCommentInArticle
 from constant import replyAndAddCommentCredit
-from database.instanceDatabase import instanceArticle, instanceLog, instanceComment, instanceCredit, instanceUser
+
+
+
+from database.article import Article
+from database.comment import Comment
+from database.credit import Credit
+from database.logs import Log
+from database.users import Users
+instanceArticle=Article()
+instanceComment=Comment()
+instanceCredit=Credit()
+instanceLog=Log()
+instanceUser=Users()
 
 comment = Blueprint("comment", __name__)
 
@@ -39,14 +51,14 @@ def addOriginComment():
         if len(content) < 5 or len(content) > 1000:
             return "content-invalid"
         # 没人每天只能评论一定次数
-        if not instanceComment.check_limit_per_day():
+        if not instanceComment.whetherLimitEveryDayCommentNum():
             try:
                 # 评论成功后，更新积分明细和剩余积分，及文章的回复数量
                 info = f"userid为{userid}的用户 对作者id为{authorid}文章id为{articleid}进行了回复,并且获取{replyAndAddCommentCredit}积分"
-                instanceComment.insert_comment(articleid, content, info=info)
-                instanceCredit.insert_detail(type="添加评论", target=articleid, credit=replyAndAddCommentCredit, info=info)
-                instanceLog.insert_detail(type="文章被评论", target=articleid, credit=0, info=info)
-                instanceArticle.update_replycount(articleid)
+                instanceComment.insertComment(articleid, content, info=info)
+                instanceCredit.insertDetail(type="添加评论", target=articleid, credit=replyAndAddCommentCredit, info=info)
+                instanceLog.insertDetail(type="文章被评论", target=articleid, credit=0, info=info)
+                instanceArticle.updateReplyCount(articleid)
                 listLogger(userid, info, [7, 5])
                 # 接下来是被评论人对应的log日志
                 listLogger(authorid, info, [6, 7])
@@ -58,7 +70,7 @@ def addOriginComment():
         else:
             # 未评论成功的日志
             info = f"userid为{userid}的用户 对作者id为{authorid}文章id为{articleid}进行了回复,但是今日的评论次数已超过限制"
-            instanceLog.insert_detail(type="添加评论失败", target=articleid, credit=0, info=info)
+            instanceLog.insertDetail(type="添加评论失败", target=articleid, credit=0, info=info)
             listLogger(userid, info, [7])
             return "add-limit"
     else:
@@ -81,15 +93,15 @@ def reply():
     if len(content) < 5 or len(content) > 1000:
         return "content-invaild"
     # 判断每天的评论限制 （每天的评论次数也有限制，这些都可以在constant文件修改）
-    if not instanceComment.check_limit_per_day():
+    if not instanceComment.whetherLimitEveryDayCommentNum():
         try:
             info = f"userid为{userid}的用户，在articleid为{articleid}的文章中回复了userid为{authorid},昵称为{authorNickname}的commentid为{commentid}的评论"
-            instanceComment.insert_reply(articleid=articleid, commentid=commentid, ipaddr=ipaddr, content=content,
-                                         info=info)
-            instanceCredit.insert_detail(type="回复原始评论", target=articleid, credit=replyAndAddCommentCredit, info=info)
-            instanceLog.insert_detail(type="评论被回复", target=articleid, credit=0, info=info)
+            instanceComment.insertArticleComment(articleid=articleid, commentid=commentid, ipaddr=ipaddr, content=content,
+                                                 info=info)
+            instanceCredit.insertDetail(type="回复原始评论", target=articleid, credit=replyAndAddCommentCredit, info=info)
+            instanceLog.insertDetail(type="评论被回复", target=articleid, credit=0, info=info)
             # 回复原始评论也算文章的评论
-            instanceArticle.update_replycount(articleid)
+            instanceArticle.updateReplyCount(articleid)
             listLogger(userid, info, [7, 5])
             # 接下来是被评论人对应的log日志
             listLogger(authorid, info, [6, 10])
@@ -100,7 +112,7 @@ def reply():
             return "reply-fail"
     else:
         info = f"userid为{userid}的用户，在articleid为{articleid}的文章中回复了userid为{authorid},昵称为{authorNickname}的commentid为{commentid}的评论，但因为次数限制失败了"
-        instanceLog.insert_detail(type="回复原始评论失败", target=articleid, credit=0, info=info)
+        instanceLog.insertDetail(type="回复原始评论失败", target=articleid, credit=0, info=info)
         listLogger(userid, info, [7])
         return "reply-limit"
 
@@ -110,7 +122,7 @@ def reply():
 @logDanger
 def comment_page(articleid, page):
     start = (page - 1) * howCommentInArticle
-    list = instanceComment.get_comment_user_list(articleid, start, howCommentInArticle)
+    list = instanceComment.searchCommentWithUser(articleid, start, howCommentInArticle)
     # 再添加一条作者对这些评论的赞同反对的情况
     # 赞成返回1 反对返回2 不赞同不反对返回0
     for i in range(len(list)):
@@ -135,12 +147,12 @@ def agreeComment():
     authorNickname = instanceUser.searchNicknameByUserid(authorId)[0]
     ininUserDir(userid=authorId)
     try:
-        instanceComment.update_agreecount(commentid)
+        instanceComment.updataCommentAgree(commentid)
         info = f"用户id为{userid} 昵称为{nickname} 赞同了用户id为{authorId} 昵称为{authorNickname} 的评论id号为{commentid}的评论 "
-        instanceLog.insert_detail(type="赞同评论", target=commentid, credit=0,
-                                  info=info)
-        instanceLog.insert_detail(type="评论被赞同", target=commentid, credit=0,
-                                  info=info)
+        instanceLog.insertDetail(type="赞同评论", target=commentid, credit=0,
+                                 info=info)
+        instanceLog.insertDetail(type="评论被赞同", target=commentid, credit=0,
+                                 info=info)
         listLogger(userid, info, [9])
         listLogger(authorId, info, [10])
         return "1"
@@ -161,12 +173,12 @@ def disagreeComment():
     authorNickname = instanceUser.searchNicknameByUserid(authorId)[0]
     ininUserDir(userid=authorId)
     try:
-        instanceComment.update_agreecount(commentid)
+        instanceComment.updataCommentAgree(commentid)
         info = f"用户id为{userid} 昵称为{nickname} 反对了用户id为{authorId} 昵称为{authorNickname} 的评论id号为{commentid}的评论 "
-        instanceLog.insert_detail(type="反对评论", target=commentid, credit=0,
-                                  info=info)
-        instanceLog.insert_detail(type="评论被反对", target=commentid, credit=0,
-                                  info=info)
+        instanceLog.insertDetail(type="反对评论", target=commentid, credit=0,
+                                 info=info)
+        instanceLog.insertDetail(type="评论被反对", target=commentid, credit=0,
+                                 info=info)
         listLogger(userid, info, [9])
         listLogger(authorId, info, [10])
         return "1"
@@ -187,12 +199,12 @@ def cancle_agreeComment():
     authorNickname = instanceUser.searchNicknameByUserid(authorId)[0]
     ininUserDir(userid=authorId)
     try:
-        instanceComment.update_agreecount(commentid)
+        instanceComment.updataCommentAgree(commentid)
         info = f"用户id为{userid} 昵称为{nickname} 取消赞成了用户id为{authorId} 昵称为{authorNickname} 的评论id号为{commentid}的评论 "
-        instanceLog.insert_detail(type="取消赞成评论", target=commentid, credit=0,
-                                  info=info)
-        instanceLog.insert_detail(type="评论取消被赞同", target=commentid, credit=0,
-                                  info=info)
+        instanceLog.insertDetail(type="取消赞成评论", target=commentid, credit=0,
+                                 info=info)
+        instanceLog.insertDetail(type="评论取消被赞同", target=commentid, credit=0,
+                                 info=info)
         listLogger(userid, info, [9])
         listLogger(authorId, info, [10])
         return "1"
@@ -212,12 +224,12 @@ def cancle_disagreeComment():
     authorNickname = instanceUser.searchNicknameByUserid(authorId)[0]
     ininUserDir(userid=authorId)
     try:
-        instanceComment.update_agreecount(commentid)
+        instanceComment.updataCommentAgree(commentid)
         info = f"用户id为{userid} 昵称为{nickname} 取消反对了用户id为{authorId} 昵称为{authorNickname} 的评论id号为{commentid}的评论 "
-        instanceLog.insert_detail(type="取消反对评论", target=commentid, credit=0,
-                                  info=info)
-        instanceLog.insert_detail(type="评论被取消反对", target=commentid, credit=0,
-                                  info=info)
+        instanceLog.insertDetail(type="取消反对评论", target=commentid, credit=0,
+                                 info=info)
+        instanceLog.insertDetail(type="评论被取消反对", target=commentid, credit=0,
+                                 info=info)
         listLogger(userid, info, [9])
         listLogger(authorId, info, [10])
         return "1"
@@ -238,10 +250,10 @@ def hideComment():
     try:
         instanceComment.hideCommentByCommentid(commentid)
         # 隐藏评论后，这个文章的回复数减去一
-        instanceArticle.subtract_replycount(articleid=authorId)
+        instanceArticle.subtractReplycount(articleid=authorId)
         info = f"用户id为{userid} 昵称为{nickname} 删除了用户id为{authorId} 昵称为{authorNickname} 的评论id号为{commentid}的评论 "
-        instanceLog.insert_detail(type="删除评论", target=commentid, credit=0,
-                                  info=info)
+        instanceLog.insertDetail(type="删除评论", target=commentid, credit=0,
+                                 info=info)
         listLogger(userid, info, [9])
         if userid != authorId:
             listLogger(authorId, info, [10])

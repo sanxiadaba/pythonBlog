@@ -12,7 +12,7 @@ class Log(DBase):
     __table__ = Table("log", md, autoload=True)
 
     # 插入log表
-    def insert_detail(self, type, target, credit, userid=None, info=None):
+    def insertDetail(self, type, target, credit, userid=None, info=None):
         if userid is None:
             userid = session.get("userid")
         if info is not None:
@@ -49,3 +49,4 @@ class Log(DBase):
     def searchLoginLog(self,userid):
         result=dbsession.query(Log.category,Log.createtime).filter(Log.userid==userid,Log.category.in_(["每日登录","登录成功","登出账户","重设密码"])).all()
         return result
+

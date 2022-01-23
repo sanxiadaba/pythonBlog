@@ -158,7 +158,7 @@ def before():
         username = request.cookies.get("username")
         password = request.cookies.get("password")
         if username != None and password != None:
-            result = instanceUser.find_by_username(username)
+            result = instanceUser.searchUserByUsername(username)
             if len(result) == 1 and result[0].password == password:
                 session["islogin"] = "true"
                 session["username"] = username
@@ -169,9 +169,9 @@ def before():
                 session["nickname"] = nickname
                 session["role"] = result[0].role
                 if islogin == "true":
-                    if instanceCredit.check_limit_login_per_day(userid) is True:
+                    if instanceCredit.whetherFirstLoginThisDay(userid) is True:
                         info = f"userid为{userid} 昵称为{nickname}的用户每天登录成功,并且领取{loginEvereDayCredit}积分，这是自动登录"
-                        instanceCredit.insert_detail(type="每日登录", target=0, credit=loginEvereDayCredit, info=info)
+                        instanceCredit.insertDetail(type="每日登录", target=0, credit=loginEvereDayCredit, info=info)
                         listLogger(userid, info, [0])
                         # 用来判定是否每天自动登录，然后自己领积分
                         session["judgeLin"] = "1"
@@ -223,7 +223,10 @@ def changeBlogParams():
 #  主运行程序
 if __name__ == '__main__':
     # 导入实例化的数据库操作类
-    from database.instanceDatabase import instanceUser, instanceCredit
+    from database.credit import Credit
+    from database.users import Users
+    instanceCredit=Credit()
+    instanceUser=Users()
     from common.myLog import listLogger
     # 注册flask蓝图
     from controler.index import index
@@ -234,8 +237,6 @@ if __name__ == '__main__':
     from controler.ueditor import ueditor
     from controler.userManage import userManage
     from controler.adminManage import adminManage
-    # 导入测试用的蓝图（仅供测试时使用）
-    from controler.test import test
 
     app.register_blueprint(index)
     app.register_blueprint(user)
@@ -245,8 +246,6 @@ if __name__ == '__main__':
     app.register_blueprint(ueditor)
     app.register_blueprint(userManage)
     app.register_blueprint(adminManage)
-    # 注册测试用的蓝图（仅供测试时使用）
-    app.register_blueprint(test)
 
     # 初始化logs（检查log能工作的一些必要目录）
     ininLogDir()

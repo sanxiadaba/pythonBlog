@@ -2,20 +2,31 @@
 {% block content %}
     <aside class="col-sm-3 col-md-2 col-lg-2 sidebar">
         <ul class="nav nav-sidebar">
-            <li class="active"><a>网站报告</a></li>
+            <li class="active" id="webInfo_1"><a>网站报告</a></li>
         </ul>
         <ul class="nav nav-sidebar">
-            <li><a>成员管理</a></li>
-            <li><a>评论管理</a></li>
-            <li><a>草稿审核</a></li>
-            <li><a>文章管理</a></li>
-            <li><a>栏目管理</a></li>
-            <li><a>积分管理</a></li>
-            <li><a>用户登录记录</a></li>
+            <li id="webUser_1"><a>成员管理</a></li>
+            <li id="webComment_1"><a>评论管理</a></li>
+            <li id="webDrafted_1"><a>草稿审核</a></li>
+            <li id="webArticle_1"><a>文章管理</a></li>
+            <li id="webType_1"><a>栏目管理</a></li>
+            <li id="webCredit_1"><a>积分管理</a></li>
+            <li id="webLog_1"><a>用户登录记录</a></li>
+        </ul>
+<ul class="nav nav-sidebar">
+            <li id="webContact_1"><a>联系管理员</a></li>
+            <li id="webGetCredit_1"><a>如何获取积分?</a></li>
         </ul>
     </aside>
-    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="main">
-
-    </div>
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="webInfo"></div>
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="webUser"></div>
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="webComment"></div>
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="webDrafted"></div>
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="webArticle"></div>
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="webType"></div>
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="webCredit"></div>
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="webLog"></div>
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="webContact"></div>
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="webLog"></div>
 
 {% endblock %}

@@ -21,15 +21,28 @@ from flask import Blueprint, session, jsonify, render_template, request
 from common.myLog import logDanger, dirInDir, avatarPath, listLogger, allLogger
 from common.utility import compress_image
 from constant import everyPageInHou,emailAccount
-from database.instanceDatabase import instanceArticle, instanceFavorite, instanceComment, instanceUser, instanceLog, \
-    instanceCredit
+
+from database.article import Article
+from database.comment import Comment
+from database.credit import Credit
+from database.favorite import Favorite
+from database.logs import Log
+from database.users import Users
+
+instanceArticle=Article()
+instanceComment=Comment()
+instanceCredit=Credit()
+instanceFavorite=Favorite()
+instanceLog=Log()
+instanceUser=Users()
+
 
 userManage = Blueprint("userManage", __name__)
 
 
 @userManage.route("/userManage", methods=["GET"])
 @logDanger
-def baseManage():
+def baseUserManage():
     userid = session.get("userid")
 
     #  我的收藏
@@ -109,7 +122,7 @@ def baseManage():
 @userManage.route("/userInfo", methods=["GET"])
 @logDanger
 def userInfo():
-    last, most, recommended = instanceArticle.find_last_most_recommended()
+    last, most, recommended = instanceArticle.searchLastMostRecommended()
     return jsonify(last, most, recommended)
 
 
@@ -123,7 +136,7 @@ def modifyNickname():
         instanceUser.modifyUserNickname(newNickname)
         info = f"userid为{userid}的用户修改昵称为{newNickname}"
         listLogger(userid, info, [0])
-        instanceLog.insert_detail(type="修改昵称", target=userid, credit=0, info=info)
+        instanceLog.insertDetail(type="修改昵称", target=userid, credit=0, info=info)
         return "1"
     except:
         e = traceback.format_exc()
@@ -141,7 +154,7 @@ def modifyQQ():
         instanceUser.modifyUserQQnum(newQQ)
         info = f"userid为{userid}的用户修改qq号为{newQQ}"
         listLogger(userid, info, [0])
-        instanceLog.insert_detail(type="修改QQ", target=userid, credit=0, info=info)
+        instanceLog.insertDetail(type="修改QQ", target=userid, credit=0, info=info)
         return "1"
     except:
         e = traceback.format_exc()
@@ -158,7 +171,7 @@ def applyEditor():
         instanceUser.applyForBecomeEditor()
         info = f"userid为{userid}的用户申请成为编辑"
         listLogger(userid, info, [0])
-        instanceLog.insert_detail(type="申请成为编辑", target=userid, credit=0, info=info)
+        instanceLog.insertDetail(type="申请成为编辑", target=userid, credit=0, info=info)
         return "1"
     except:
         e = traceback.format_exc()
@@ -177,7 +190,7 @@ def hideArticle():
         instanceArticle.deleteArticle(articleid)
         info = f"userid为{userid}的用户删除了articleid为{articleid}的文章"
         listLogger(userid, info, [0])
-        instanceLog.insert_detail(type="删除文章", target=userid, credit=0, info=info)
+        instanceLog.insertDetail(type="删除文章", target=userid, credit=0, info=info)
         #  删除文章时把对应文章下的评论设置成隐藏
         instanceComment.hideCommnetWhenHideArticle(articleid)
         # 把收藏的文章也设置为取消收藏
@@ -226,7 +239,7 @@ def upload():
                 os.remove(myAvatarPath + "\\" + i)
         info = f"userid为{userid}的用户，更改自己的头像为{newPicPath}"
         listLogger(userid, info, [0])
-        instanceLog.insert_detail(type="更换头像", target=userid, credit=0, info=info)
+        instanceLog.insertDetail(type="更换头像", target=userid, credit=0, info=info)
         return "1"
 
 

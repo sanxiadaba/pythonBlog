@@ -11,6 +11,9 @@ from constant import rateCreditForArticle
 from database.article import Article
 from database.logs import Log
 from database.users import Users
+instanceArticle=Article()
+instanceLog=Log()
+instanceUser=Users()
 
 dbsession, md, DBase = connect_db()
 
@@ -19,26 +22,23 @@ class Credit(DBase):
     __table__ = Table("credit", md, autoload=True)
 
     # 插入credit表数据  # 随后向log表插入相同数据
-    def insert_detail(self, type, target, credit, userid=None, info=None):
+    def insertDetail(self, type, target, credit, userid=None, info=None):
         # userid确定要写入的用户目录 不输入的userid的话就默认为当前用户
         userid = session.get("userid") if userid is None else userid
         # 设置时间
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         # 查看当前的访问人的ip接口
         ipaddr = request.remote_addr
-        # 实例化数据库,方便后续操作 （这里没有从instanceDatabase引入是为了避免循环引用）
-        instanceArticle = Article()
-        instanceUser = Users()
-        instanceLog = Log()
+
         # 插入credit表
         creditP1 = Credit(userid=userid, category=type, target=target, credit=credit, createtime=now,
                           ipaddr=ipaddr, info=info)
         # 插入log表
-        instanceLog.insert_detail(userid=userid, type=type, target=target, credit=credit, info=info)
+        instanceLog.insertDetail(userid=userid, type=type, target=target, credit=credit, info=info)
 
         # 如果积分不为0 更新用户的积分表
         if credit != 0:
-            instanceUser.update_credit(credit, userid)
+            instanceUser.updateCredit(credit, userid)
 
         # 开始插入插入log日志（不同的type对应插入不同的表，不同的信息）
         try:
@@ -51,7 +51,7 @@ class Credit(DBase):
 
                 # 购买者在上面已经减去对应积分
                 # 文章作者获取对应的积分
-                instanceUser.update_credit(authorGetCredit, authorid)
+                instanceUser.updateCredit(authorGetCredit, authorid)
 
                 # 购买人的日志
                 userPaidInfo = f"用户userid为{userid}的读者 花费{credit}积分，阅读了作者id为{authorid}昵称为`{authorNickname}`的articleid号为‘{target}’文章"
@@ -65,7 +65,7 @@ class Credit(DBase):
                                   createtime=now,
                                   ipaddr=ipaddr, info=authorInfo)
 
-                instanceLog.insert_detail(type="文章被购买", target=target, credit=authorGetCredit, info=authorInfo)
+                instanceLog.insertDetail(type="文章被购买", target=target, credit=authorGetCredit, info=authorInfo)
                 dbsession.add(creditP2)
             elif type == "阅读文章":
                 # 文章作者的userid 和nickname 以及应该获取的积分
@@ -78,7 +78,7 @@ class Credit(DBase):
                 # 作者获取积分的日志
                 authorInfo = f"用户userid为{userid}的读者 ，阅读了作者id为{authorid}昵称为`{authorNickname}`的articleid号为‘{target}’文章 "
                 listLogger(authorid, authorInfo, [6])
-                instanceLog.insert_detail(type="文章被阅读", target=target, credit=0, info=authorInfo)
+                instanceLog.insertDetail(type="文章被阅读", target=target, credit=0, info=authorInfo)
                 # 作者也需要进入credit表
                 creditP2 = Credit(userid=authorid, category="文章被阅读", target=target, credit=0,
                                   createtime=now,
@@ -94,7 +94,7 @@ class Credit(DBase):
             dbsession.commit()
 
     # 判断用户是否已经购买了该文章，已经购买的话，不会显示再让其购买
-    def check_paid_article(self, articleid):
+    def whetherPaidForArticle(self, articleid):
         result = dbsession.query(Credit).filter_by(userid=session.get("userid"), target=articleid).all()
         if len(result) > 0:
             return True
@@ -102,7 +102,7 @@ class Credit(DBase):
             return False
 
     # 每天登录加一分
-    def check_limit_login_per_day(self, userid):
+    def whetherFirstLoginThisDay(self, userid):
         start = time.strftime("%Y-%m-%d 00:00:00")
         end = time.strftime("%Y-%m-%d 23:59:59")
         result = dbsession.query(Credit).filter(Credit.userid == userid,
@@ -115,7 +115,6 @@ class Credit(DBase):
     # 积分明细
     # 返回积分相关变化
     def creditChangeLog(self, userid=None):
-        a=Article()
         userid = session.get("userid") if userid is None else userid
         allCreditChangeLog = dbsession.query(Credit.category,Credit.credit,Credit.target).filter_by(userid=userid).all()
         result=[]
@@ -125,14 +124,15 @@ class Credit(DBase):
                 lin.append(j)
             if i[2] !=0:
                 # 如果文章没被隐藏的话
-                lin.append(a.searchHeadlineByArticleid(i[2]))
+                lin.append(instanceArticle.searchHeadlineByArticleid(i[2]))
             else:
                 lin.append(" ")
             # 再判断文章是否已经被隐藏
-            if a.searchWhetherHide(i[2]) is False:
+            if instanceArticle.searchWhetherHide(i[2]) is False:
                 lin.append("0")
             else:
                 lin.append("1")
             result.append(lin)
         allCreditChangeLog=result
         return allCreditChangeLog
+

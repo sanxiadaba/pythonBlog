@@ -20,7 +20,11 @@ from flask import Blueprint, request, jsonify, session
 from common.myLog import rootDir, dirInDir, logDanger, listLogger
 from common.ueditorConf import returnUeConf
 from common.utility import compress_image
-from database.instanceDatabase import instanceUpload, instanceLog
+from database.upload import Upload
+from database.logs import Log
+
+instanceUpload=Upload()
+instanceLog=Log()
 
 ueditor = Blueprint("ueditor", __name__)
 
@@ -48,7 +52,7 @@ def uedit():
                 # 每天有上传限制、上传次数用完的话前端会提示
                 result["state"] = "每天上传次数已用完"
                 info = f"userid为{userid}的用户因今天的上传次数用完故上传失败"
-                instanceLog.insert_detail(credit=0, target=0, type="上传图片失败", info=info)
+                instanceLog.insertDetail(credit=0, target=0, type="上传图片失败", info=info)
                 listLogger(userid, info, 8)
                 return jsonify(result)
             else:
@@ -62,9 +66,9 @@ def uedit():
                 source = dest = myPicturePath + "\\" + newname
                 #  压缩图片
                 compress_image(source, dest, 1200)
-                instanceUpload.insert_detail(imgname=source)
+                instanceUpload.insertDetail(imgname=source)
                 info = f"userid为{userid}的用户，上传了路径为" + source + "的图片"
-                instanceLog.insert_detail(credit=0, target=0, type="上传图片", info=info)
+                instanceLog.insertDetail(credit=0, target=0, type="上传图片", info=info)
                 listLogger(userid, info, [8])
                 result = {}
                 # 返回成功的状态码

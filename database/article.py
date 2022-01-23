@@ -23,32 +23,32 @@ class Article(DBase):
         return row
 
     # 指定分页的limit与offset 并与user做连接查询
-    def find_limit_with_users(self, start, count):
+    def searchArticleWithUserByPage(self, start, count):
         result = dbsession.query(Users.nickname, Article).join(Users, Users.userid == Article.userid) \
             .filter(Article.hide == 0, Article.drafted == 0, Article.checked == 1) \
             .order_by(Article.articleid.desc()).limit(count).offset(start).all()
         return result
 
     # 查询所有能显示的文章的数量
-    def get_total_count(self):
+    def getAllCountOfArticle(self):
         count = dbsession.query(Article).filter(Article.hide == 0, Article.drafted == 0, Article.checked == 1).count()
         return count
 
-    # 查询不同的分页
-    def find_by_type(self, type, start, count):
+    # 查询不同的类型
+    def searchArticleByType(self, type, start, count):
         result = dbsession.query(Users.nickname, Article).join(Users, Users.userid == Article.userid) \
             .filter(Article.hide == 0, Article.drafted == 0, Article.checked == 1, Article.type == type) \
             .order_by(Article.articleid.desc()).limit(count).offset(start).all()
         return result
 
     # 查看不同分类类型的文章的数量
-    def get_count_by_type(self, type):
+    def searchCountByType(self, type):
         count = dbsession.query(Article).filter(Article.hide == 0, Article.drafted == 0, Article.checked == 1,
                                                 Article.type == type).count()
         return count
 
     # 根据文章标题进行标题模糊搜索（主要用于search时调用）
-    def find_by_headline(self, headline, start, count):
+    def searchHeadlineBySearchWord(self, headline, start, count):
         result = dbsession.query(Users.nickname, Article).join(Users, Users.userid == Article.userid) \
             .filter(Article.hide == 0, Article.drafted == 0, Article.checked == 1,
                     Article.headline.like("%" + headline + "%")) \
@@ -56,27 +56,27 @@ class Article(DBase):
         return result
 
     # 统计headline匹配的总数量（也是服务与搜索）
-    def get_count_by_headline(self, headline):
+    def searchCountOfArticleBySearchWord(self, headline):
         count = dbsession.query(Article).filter(Article.hide == 0, Article.drafted == 0, Article.checked == 1,
                                                 Article.headline.like("%" + headline + "%")).count()
         return count
 
     # 最新文章推荐
-    def find_last(self):
+    def searchRecommendedOfLastTime(self):
         result = dbsession.query(Article.articleid, Article.headline).filter(Article.hide == 0, Article.drafted == 0,
                                                                              Article.checked == 1) \
             .order_by(Article.articleid.desc()).limit(recommendedNumOfSide[0]).all()
         return result
 
     # 最多阅读推荐
-    def find_most(self):
+    def searchRecommendedByReadMost(self):
         result = dbsession.query(Article.articleid, Article.headline).filter(Article.hide == 0, Article.drafted == 0,
                                                                              Article.checked == 1) \
             .order_by(Article.readcount.desc()).limit(recommendedNumOfSide[1]).all()
         return result
 
     # 特别推荐  如果搜索结果超过栏目容量可以用rand的方式随机显示
-    def find_recommended(self):
+    def searchRecommendedByAdmin(self):
         result = dbsession.query(Article.articleid, Article.headline).filter(Article.hide == 0, Article.drafted == 0,
                                                                              Article.checked == 1,
                                                                              Article.recommended == 1) \
@@ -84,26 +84,26 @@ class Article(DBase):
         return result
 
     # 一次性返回三个推荐  (封装）
-    def find_last_most_recommended(self):
-        last = self.find_last()
-        most = self.find_most()
-        recommended = self.find_recommended()
+    def searchLastMostRecommended(self):
+        last = self.searchRecommendedOfLastTime()
+        most = self.searchRecommendedByReadMost()
+        recommended = self.searchRecommendedByAdmin()
         return last, most, recommended
 
     # 每阅读一次，阅读次数加一
-    def update_read_count(self, articleid):
+    def updateReadCount(self, articleid):
         article = dbsession.query(Article).filter_by(articleid=articleid).first()
         newcount = article.readcount + 1
         dbsession.query(Article).filter_by(articleid=articleid).update({'readcount': newcount})
         dbsession.commit()
 
     # 根据文章id查标题
-    def find_headline_by_id(self, articleid):
+    def searchHeadlineByArticleId(self, articleid):
         row = dbsession.query(Article.headline).filter_by(articleid=articleid).first()
         return row.headline
 
     # 获取文章上一篇和下一篇的编号
-    def find_prev_next_by_id(self, articleid):
+    def searchPrevNextArticleByArticleid(self, articleid):
         dict = {}
 
         # 查询比当前id 小的最大的一个
@@ -115,7 +115,7 @@ class Article(DBase):
         else:
             prev_id = row.articleid
         dict["prev_id"] = prev_id
-        dict["prev_headline"] = self.find_headline_by_id(prev_id)
+        dict["prev_headline"] = self.searchHeadlineByArticleId(prev_id)
 
         # 查询比当前id 大的最小的一个
         row = dbsession.query(Article).filter(Article.hide == 0, Article.drafted == 0, Article.checked == 1,
@@ -126,24 +126,24 @@ class Article(DBase):
         else:
             next_id = row.articleid
         dict["next_id"] = prev_id
-        dict["next_headline"] = self.find_headline_by_id(next_id)
+        dict["next_headline"] = self.searchHeadlineByArticleId(next_id)
 
         return dict
 
     # 为文章的的replycount+1
-    def update_replycount(self, articleid):
+    def updateReplyCount(self, articleid):
         row = dbsession.query(Article).filter_by(articleid=articleid).first()
         row.replycount += 1
         dbsession.commit()
 
     # 注意隐藏评论是评论的回复数要减去一
-    def subtract_replycount(self, articleid):
+    def subtractReplycount(self, articleid):
         row = dbsession.query(Article).filter_by(articleid=articleid).first()
         row.replycount -= 1
         dbsession.commit()
 
     # 插入一篇新文章
-    def insert_article(self, type, headline, content, thumbnail, credit, drafted=0, checked=1):
+    def insertArticle(self, type, headline, content, thumbnail, credit, drafted=0, checked=1):
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         userid = int(session.get("userid"))
         # 其他字段在数据库中已经设置好，无需自动插入
@@ -155,7 +155,7 @@ class Article(DBase):
         return articleP.articleid
 
     # 根据文章编号更新内容，用于文章编辑或草稿修改 以及草稿的发布
-    def update_article(self, articleid, type, headline, content, thumbnail, credit, drafted=0, checked=1):
+    def updateArticle(self, articleid, type, headline, content, thumbnail, credit, drafted=0, checked=1):
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         row = dbsession.query(Article).filter_by(articleid=articleid).first()
         row.type = type
@@ -282,3 +282,4 @@ class Article(DBase):
             return True if result is 1 else False
         except:
             return True
+

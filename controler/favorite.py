@@ -18,7 +18,18 @@ import traceback
 from flask import Blueprint, request, session
 
 from common.myLog import listLogger, logDanger, allLogger
-from database.instanceDatabase import instanceFavorite, instanceArticle, instanceUser, instanceLog
+
+
+from database.article import Article
+from database.favorite import Favorite
+from database.logs import Log
+from database.users import Users
+
+instanceArticle=Article()
+instanceFavorite=Favorite()
+instanceLog=Log()
+instanceUser=Users()
+
 
 favorite = Blueprint("favorite", __name__)
 
@@ -34,13 +45,13 @@ def add_favorite():
     authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
     try:
         info = f"userid为{userid},昵称为{nickname}的用户,将用户id为{authorid}，昵称为{authorNickname}，articleid为{articleid}的文章取消了收藏"
-        instanceFavorite.insert_favorite(articleid)
+        instanceFavorite.insertFavorite(articleid)
         # 打印日志
         listLogger(userid, info, [4])
         listLogger(authorid, info, [6])
         # 添加日志表
-        instanceLog.insert_detail(userid=userid, type="添加收藏", credit=0, target=articleid)
-        instanceLog.insert_detail(userid=userid, type="文章被收藏", credit=0, target=articleid)
+        instanceLog.insertDetail(userid=userid, type="添加收藏", credit=0, target=articleid)
+        instanceLog.insertDetail(userid=userid, type="文章被收藏", credit=0, target=articleid)
         return "favorite-pass"
     except:
         e = traceback.format_exc()
@@ -57,15 +68,15 @@ def cancel_favorite(articleid):
     authorid = int(instanceArticle.searchUseridByArticleid(articleid)[0])
     authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
     try:
-        instanceFavorite.cancel_favorite(articleid)
+        instanceFavorite.cancelFavorite(articleid)
         info = f"userid为{userid},昵称为{nickname}的用户,将用户id为{authorid}，昵称为{authorNickname}，articleid为{articleid}的文章取消了收藏"
-        instanceFavorite.insert_favorite(articleid)
+        instanceFavorite.insertFavorite(articleid)
         # 打印日志
         listLogger(userid, info, [4])
         listLogger(authorid, info, [6])
         # 添加日志表
-        instanceLog.insert_detail(userid=userid, type="取消收藏", credit=0, target=articleid)
-        instanceLog.insert_detail(userid=userid, type="文章被取消收藏", credit=0, target=articleid)
+        instanceLog.insertDetail(userid=userid, type="取消收藏", credit=0, target=articleid)
+        instanceLog.insertDetail(userid=userid, type="文章被取消收藏", credit=0, target=articleid)
         return "cancel-pass"
     except:
         e = traceback.format_exc()

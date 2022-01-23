@@ -23,8 +23,8 @@
 
 #### 项目截图
 
-![主页截图](./.img/主页截图.png)
-![内容截图](./.img/内容截图.png)
+![主页截图](./.img/homePageScreenshots.png)
+![内容截图](./.img/contentPageScreenshots.png)
 
 #### 所需要的包
 

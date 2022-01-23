@@ -13,7 +13,7 @@ class Upload(DBase):
     __table__ = Table("upload", md, autoload=True)
 
     # 插入上传图片的相关信息
-    def insert_detail(self, imgname, info=None):
+    def insertDetail(self, imgname, info=None):
         userid = session.get("userid")
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         uploadP = Upload(userid=userid, imgname=imgname, createtime=now,
@@ -32,3 +32,6 @@ class Upload(DBase):
             return True
         else:
             return False
+
+
+

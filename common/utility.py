@@ -199,8 +199,9 @@ def generate_thumb(url_list, userid):
                    rootDir + "\\" + "static\\img\\thumb\\" + myPictureName + "\\" + thumbname, 400)
     userid = session.get('userid')
     info = f"userid为{userid}的用户，下载{url}图片，并将其缩率图并将其保存为thumb/{myPictureName}/{thumbname}"
-    from database.instanceDatabase import instanceLog
-    instanceLog.insert_detail(userid=userid, target=0, credit=0, info=info, type="下载保存缩略图成功")
+    from database.logs import Log
+    instanceLog=Log()
+    instanceLog.insertDetail(userid=userid, target=0, credit=0, info=info, type="下载保存缩略图成功")
     listLogger(userid, info, [8])
     return myPictureName + "/" + thumbname
 

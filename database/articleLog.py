@@ -20,7 +20,7 @@ dbsession, md, DBase = connect_db()
 class ArticleLog(DBase):
     __table__ = Table("articleLog", md, autoload=True)
 
-    def insert_detail(self, articleid, type, info=None):
+    def insertDetail(self, articleid, type, info=None):
         info = None if info is None else info
         userid = session.get("userid")
         now = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -55,3 +55,5 @@ class ArticleLog(DBase):
             return True
         else:
             return False
+
+

@@ -22,8 +22,25 @@ from common.myLog import logDanger, listLogger, allLogger
 from common.utility import parser_image_url, generate_thumb
 from constant import postArticleCredit, howCommentInArticle, maxUserPostArticleNum, \
     maxUserPostArticleNumOfEditor, maxModifyArticleNum
-from database.instanceDatabase import instanceUser, instanceArticle, instanceComment, instanceLog, instanceFavorite, \
-    instanceCredit, instanceUpload, instanceArticleLog
+
+
+from database.users import Users
+from database.article import Article
+from database.articleLog import ArticleLog
+from database.comment import Comment
+from database.credit import Credit
+from database.favorite import Favorite
+from database.logs import Log
+from database.upload import Upload
+
+instanceArticle=Article()
+instanceArticleLog=ArticleLog()
+instanceComment=Comment()
+instanceCredit=Credit()
+instanceFavorite=Favorite()
+instanceLog=Log()
+instanceUpload=Upload()
+instanceUser=Users()
 
 article = Blueprint("article", __name__)
 
@@ -50,21 +67,21 @@ def read(articleid):
             dict[k] = v
     dict["nickname"] = result.nickname
     #  检查是否已经买了这个文章，这样的话，再次点击就用再买  #作者的话默认买过了
-    if instanceCredit.check_paid_article(articleid) or int(session.get("userid")) == int(
+    if instanceCredit.whetherPaidForArticle(articleid) or int(session.get("userid")) == int(
             instanceArticle.searchUseridByArticleid(articleid)[0]):
         dict["paid"] = "true"
     else:
         dict["paid"] = "false"
     # 判断该文章是否是自己收藏的
-    is_favorite = instanceFavorite.check_favorite(articleid)
+    is_favorite = instanceFavorite.checkFavorite(articleid)
 
     # 获取当前文章的上一篇、下一篇
-    prev_next = instanceArticle.find_prev_next_by_id(articleid)
+    prev_next = instanceArticle.searchPrevNextArticleByArticleid(articleid)
 
     # 获取评论
     # 一页获取十条
-    comment_list = instanceComment.get_comment_user_list(articleid, 0, howCommentInArticle)
-    count = instanceComment.get_count_by_article(articleid)
+    comment_list = instanceComment.searchCommentWithUser(articleid, 0, howCommentInArticle)
+    count = instanceComment.searchCountOfCommentByArticleid(articleid)
     # 该文章有几页评论
     total = math.ceil(count / howCommentInArticle)
     # 判断每个作者对每个评论的状态，方便前端加载对应的页面
@@ -93,13 +110,13 @@ def readAll():
     """
     if readerPaidedCredit != 0:
         # 减去自己的积分 #
-        instanceCredit.insert_detail(type="购买文章", target=articleid, credit=-1 * readerPaidedCredit,
-                                     info=f"userid为{userid}的用户，消耗{readerPaidedCredit}积分，向userid为{articleid} 昵称为{authorNickname}的作者购买了的articleid为{articleid}的文章")
+        instanceCredit.insertDetail(type="购买文章", target=articleid, credit=-1 * readerPaidedCredit,
+                                    info=f"userid为{userid}的用户，消耗{readerPaidedCredit}积分，向userid为{articleid} 昵称为{authorNickname}的作者购买了的articleid为{articleid}的文章")
     else:
-        instanceCredit.insert_detail(type="阅读文章", target=articleid, credit=0,
-                                     info=f"userid为{userid}的用户阅读了userid为{articleid} 昵称为{authorNickname}的articleid为{articleid}的文章")
+        instanceCredit.insertDetail(type="阅读文章", target=articleid, credit=0,
+                                    info=f"userid为{userid}的用户阅读了userid为{articleid} 昵称为{authorNickname}的articleid为{articleid}的文章")
     # 增加文章阅读量
-    instanceArticle.update_read_count(articleid)
+    instanceArticle.updateReadCount(articleid)
     return "1"
 
 
@@ -163,38 +180,38 @@ def addArticle():
         elif judgeType == 3:
             type = "投递文章失败"
             info = f"userid为{userid}的用户 超出了投递文章次数的限制"
-        instanceLog.insert_detail(type=type, target=0, credit=0, info=info)
+        instanceLog.insertDetail(type=type, target=0, credit=0, info=info)
         listLogger(userid, info, [3])
-        instanceArticleLog.insert_detail(articleid=articleid, type=type, info=info)
+        instanceArticleLog.insertDetail(articleid=articleid, type=type, info=info)
         return f"limit-error-{judgeType}"
     # 再判断修改次数
     if instanceArticleLog.checkLimitModify() is True and judgeType == 4:
         info = f"userid为{userid}的用户 超出了每天修改文章次数的限制"
         type = "修改失败"
-        instanceLog.insert_detail(type=type, target=0, credit=0, info=info)
+        instanceLog.insertDetail(type=type, target=0, credit=0, info=info)
         listLogger(userid, info, [3])
-        instanceArticleLog.insert_detail(articleid=articleid, type=type, info=info)
+        instanceArticleLog.insertDetail(articleid=articleid, type=type, info=info)
         return "modify-limited"
     # 文章生成缩略图，如果没有，就随机生成一张
     url_list = parser_image_url(content)
     # 如果文章中有图片，那就根据一定规则生成该文章的缩略图，否则就为其分配一个对应序号的缩略图
     if len(url_list) > 0:
         thumbname = generate_thumb(url_list, userid)
-        instanceUpload.insert_detail(imgname=thumbname, info="上传缩略图")
+        instanceUpload.insertDetail(imgname=thumbname, info="上传缩略图")
     else:
         # 如果文章中没有图片，那么就根据文章类型指定一个
         thumbname = "default/" + "%d.jpg" % (int(type))
     if judgeType != 4:  # 直接进行插入数据库操作
         try:
             # 返回新插入文章的id
-            id = instanceArticle.insert_article(type=typeArticle, headline=headline, content=content, credit=credit,
-                                                drafted=drafted, checked=checked, thumbnail=thumbname)
+            id = instanceArticle.insertArticle(type=typeArticle, headline=headline, content=content, credit=credit,
+                                               drafted=drafted, checked=checked, thumbnail=thumbname)
             # 编辑发布文章成功的情况下 给积分
             if judgeType == 2:
                 info = f"userid为{userid}的编辑 发布文章的articleid为{id}的需要消耗{credit}的文章，并且奖励{postArticleCredit}积分"
                 type = "发布文章"
                 # 这里奖励积分
-                instanceCredit.insert_detail(type=type, credit=postArticleCredit, target=id, info=info)
+                instanceCredit.insertDetail(type=type, credit=postArticleCredit, target=id, info=info)
                 # 这里保存log
                 listLogger(userid, info, [3, 5])
 
@@ -202,16 +219,16 @@ def addArticle():
             elif judgeType == 1:
                 type = "保存草稿"
                 info = f"userid为{userid}的普通用户 保存文章的articleid为{id}的需要消耗{credit}的文章"
-                instanceLog.insert_detail(type=type, credit=0, target=id, info=info)
+                instanceLog.insertDetail(type=type, credit=0, target=id, info=info)
                 listLogger(userid, info, [3])
             elif judgeType == 3:
                 type = "投递文章"
                 info = f"userid为{userid}的普通用户 投递文章的articleid为{id}的需要消耗{credit}的文章"
                 # 这里奖励积分
-                instanceCredit.insert_detail(type=type, credit=postArticleCredit, target=id, info=info)
+                instanceCredit.insertDetail(type=type, credit=postArticleCredit, target=id, info=info)
                 # 这里保存log
                 listLogger(userid, info, [3, 5])
-            instanceArticleLog.insert_detail(articleid=id, type=type, info=info)
+            instanceArticleLog.insertDetail(articleid=id, type=type, info=info)
             return str(id)
         except:
             e = traceback.format_exc()
@@ -224,22 +241,22 @@ def addArticle():
             if whetherDrafted is True:
                 drafted = 1
 
-            id = instanceArticle.update_article(articleid=articleid, type=typeArticle, headline=headline,
-                                                content=content,
-                                                credit=credit, thumbnail=thumbname, drafted=drafted,
-                                                checked=checked)
+            id = instanceArticle.updateArticle(articleid=articleid, type=typeArticle, headline=headline,
+                                               content=content,
+                                               credit=credit, thumbnail=thumbname, drafted=drafted,
+                                               checked=checked)
             if whetherDrafted is False:
                 type = "修改文章"
                 info = f"userid为{userid}的用户 修改了文章的articleid为{id}的需要消耗{credit}的文章"
-                instanceLog.insert_detail(type="修改文章", credit=0, target=id, info=info)
-                instanceArticleLog.insert_detail(articleid=articleid, type=type, info=info)
+                instanceLog.insertDetail(type="修改文章", credit=0, target=id, info=info)
+                instanceArticleLog.insertDetail(articleid=articleid, type=type, info=info)
                 listLogger(userid, info, [3])
                 return str(id)
             else:
                 type = "修改草稿"
                 info = f"userid为{userid}的用户 修改了文章的articleid为{id}的需要消耗{credit}的草稿"
-                instanceLog.insert_detail(type="修改草稿", credit=0, target=id, info=info)
-                instanceArticleLog.insert_detail(articleid=articleid, type=type, info=info)
+                instanceLog.insertDetail(type="修改草稿", credit=0, target=id, info=info)
+                instanceArticleLog.insertDetail(articleid=articleid, type=type, info=info)
                 listLogger(userid, info, [3])
                 return "xiu"
         except:

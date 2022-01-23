@@ -16,18 +16,18 @@ class Users(DBase):
     __table__ = Table("users", md, autoload=True)
 
     # 登录校验，查看账户对应的密码是否正确
-    def find_by_username(self, username):
+    def searchUserByUsername(self, username):
         result = dbsession.query(Users).filter_by(username=username).all()
         return result
 
     # 根userid返回作者的相关信息
-    def find_by_userid(self, userid):
+    def searchUserByUserid(self, userid):
         row = dbsession.query(Users).filter_by(userid=userid).first()
         return row
 
     # 实现注册，首次注册只需要用户名和密码
     # 通常用户不会填写太多资料，后续可以在用户中心完善
-    def do_register(self, username, password):
+    def doRegister(self, username, password):
         avatarPath = rootDir + "\\static\\img\\avatar"
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         nickname = username.split("@")[0]  # 默认账号前缀作为昵称
@@ -40,7 +40,7 @@ class Users(DBase):
         return user
 
     # 修改用户积分
-    def update_credit(self, credit, userid):
+    def updateCredit(self, credit, userid):
         user = dbsession.query(Users).filter_by(userid=userid).one()
         user.credit = int(user.credit) + int(credit)
         dbsession.commit()

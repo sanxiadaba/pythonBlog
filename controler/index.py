@@ -19,8 +19,9 @@ from flask.json import jsonify
 
 from common.myLog import logDanger
 from constant import howArticleInWeb
+
 from database.article import Article
-from database.instanceDatabase import instanceArticle
+instanceArticle=Article()
 
 index = Blueprint("index", __name__)
 
@@ -30,10 +31,10 @@ index = Blueprint("index", __name__)
 @logDanger
 def home():
     # 这里主要是反对侧边栏对应填充的东西
-    last, most, recommended = instanceArticle.find_last_most_recommended()
-    result = instanceArticle.find_limit_with_users(0, howArticleInWeb)
+    last, most, recommended = instanceArticle.searchLastMostRecommended()
+    result = instanceArticle.searchArticleWithUserByPage(0, howArticleInWeb)
     # 一页显示几篇文章
-    total = math.ceil((instanceArticle.get_total_count() / howArticleInWeb))
+    total = math.ceil((instanceArticle.getAllCountOfArticle() / howArticleInWeb))
     return render_template("index.html", result=result, total=total, page=1, last=last, most=most,
                            recommended=recommended)
 
@@ -44,8 +45,8 @@ def home():
 def paginate(page):
     start = (page - 1) * howArticleInWeb
     article = Article()
-    result = article.find_limit_with_users(start, howArticleInWeb)
-    total = math.ceil((article.get_total_count() / howArticleInWeb))
+    result = article.searchArticleWithUserByPage(start, howArticleInWeb)
+    total = math.ceil((article.getAllCountOfArticle() / howArticleInWeb))
     return render_template("index.html", result=result, total=total, page=page)
 
 
@@ -54,8 +55,8 @@ def paginate(page):
 @logDanger
 def classify(type, page):
     start = (page - 1) * 10
-    result = instanceArticle.find_by_type(type, start, howArticleInWeb)
-    total = math.ceil(instanceArticle.get_count_by_type(type) / howArticleInWeb)
+    result = instanceArticle.searchArticleByType(type, start, howArticleInWeb)
+    total = math.ceil(instanceArticle.searchCountByType(type) / howArticleInWeb)
     return render_template("type.html", result=result, page=page, total=total, type=type)
 
 
@@ -67,8 +68,8 @@ def search(page, keyword):
     if keyword is None or keyword == "" or "%" in keyword or len(keyword) > 10:
         abort(404)
     start = (page - 1) * 10
-    result = instanceArticle.find_by_headline(keyword, start, 10)
-    total = math.ceil(instanceArticle.get_count_by_headline(keyword) / 10)
+    result = instanceArticle.searchHeadlineBySearchWord(keyword, start, 10)
+    total = math.ceil(instanceArticle.searchCountOfArticleBySearchWord(keyword) / 10)
     return render_template("search.html", page=page, total=total, result=result, keyword=keyword)
 
 
@@ -76,5 +77,5 @@ def search(page, keyword):
 @index.route("/recommended")
 @logDanger
 def recommended():
-    last, most, recommended = instanceArticle.find_last_most_recommended()
+    last, most, recommended = instanceArticle.searchLastMostRecommended()
     return jsonify(last, most, recommended)
