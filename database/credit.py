@@ -5,7 +5,7 @@ import traceback
 from flask import session, request
 from sqlalchemy import Table
 
-from common.connect_db import connect_db
+from common.connectDb import connectDb
 from common.myLog import listLogger, allLogger
 from constant import rateCreditForArticle
 from database.article import Article
@@ -16,7 +16,7 @@ instanceArticle = Article()
 instanceLog = Log()
 instanceUser = Users()
 
-dbsession, md, DBase = connect_db()
+dbsession, md, DBase = connectDb()
 
 
 class Credit(DBase):

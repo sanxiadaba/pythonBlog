@@ -13,6 +13,7 @@ encoding: utf-8
 """
 
 import random
+import smtplib
 import string
 import time
 from datetime import datetime
@@ -26,8 +27,10 @@ from PIL import Image, ImageFont, ImageDraw
 from flask import request, session
 
 from common.myLog import listLogger
+from common.myLog import logDanger
 from common.myLog import rootDir, dirInDir
 from constant import emailAdmit, emailAccount, portNum
+from constant import emailType
 
 
 # Generate verification code (with jamming line)
@@ -81,6 +84,8 @@ class ImageCode:
 
 
 # Send Email
+
+@logDanger
 def send_email(receiver, ecode, n):
     sender = emailAccount
     # Set the content of the sent file
@@ -96,7 +101,13 @@ def send_email(receiver, ecode, n):
     message["To"] = Header(receiver, 'utf-8')  # Specify the recipient's email address
     message['Date'] = Header(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                              'utf-8')  # Time can be obtained this way：datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    smtpObj = SMTP_SSL("smtp.qq.com", 465)
+    if emailType == "QQMAIL":
+        smtpObj = SMTP_SSL("smtp.qq.com", 465)
+    elif emailType == "GMAIL":
+        smtpObj = smtplib.SMTP('smtp.gmail.com', 587)
+        smtpObj.starttls()
+    else:
+        raise Exception("Mail type USE_GMAIL_OR_QQMAIL error")
     smtpObj.login(user=emailAccount, password=emailAdmit)
     smtpObj.sendmail(sender, receiver, str(message))
     smtpObj.quit()

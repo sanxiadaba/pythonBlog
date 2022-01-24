@@ -64,15 +64,20 @@ def read(articleid):
         if not k.startswith("_sa_instance_state"):
             dict[k] = v
     dict["nickname"] = result.nickname
-    #  Check if you have already bought this article, so that if you click again, you can buy it again by default in the author's words
-    if instanceCredit.whetherPaidForArticle(articleid) or int(session.get("userid")) == int(
-            instanceArticle.searchUseridByArticleid(articleid)[0]):
-        dict["paid"] = "true"
+    if session.get("islogin") == "true":
+        #  Check if you have already bought this article, so that if you click again, you can buy it again by default in the author's words
+        if instanceCredit.whetherPaidForArticle(articleid) or int(session.get("userid")) == int(
+                instanceArticle.searchUseridByArticleid(articleid)[0]):
+            dict["paid"] = "true"
+        else:
+            dict["paid"] = "false"
     else:
         dict["paid"] = "false"
     # Determine if the article is in your collection
-    is_favorite = instanceFavorite.checkFavorite(articleid)
-
+    if session.get("islogin") == "true":
+        is_favorite = instanceFavorite.checkFavorite(articleid)
+    else:
+        is_favorite = "0"
     # Get the previous and next post of the current article
     prev_next = instanceArticle.searchPrevNextArticleByArticleid(articleid)
 
@@ -89,6 +94,14 @@ def read(articleid):
     return render_template("article.html", article=dict, is_favorite=is_favorite, prev_next=prev_next,
                            comment_list=comment_list, total=total, restOfCredit=restOfCredit,
                            articleOfUserid=instanceArticle.searchUseridByArticleid(articleid)[0], articleid=articleid)
+
+
+# Interface to view login status
+@article.route("/islogin", methods=["POST"])
+@logDanger
+def islogin():
+    islogin = session.get("islogin")
+    return "1" if islogin == "true" else "0"
 
 
 # Article to expand all, read more

@@ -3,11 +3,11 @@ import time
 from flask import session
 from sqlalchemy import Table, func
 
-from common.connect_db import connect_db
+from common.connectDb import connectDb
 from constant import recommendedNumOfSide
 from database.users import Users
 
-dbsession, md, DBase = connect_db()
+dbsession, md, DBase = connectDb()
 
 
 class Article(DBase):

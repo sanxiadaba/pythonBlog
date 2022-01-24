@@ -11,49 +11,18 @@ encoding: utf-8
 @time: 2022/1/12
 @gituhb: sanxiadaba/pythonBlog
 """
+# Load environment variables first
+from dotenv import load_dotenv, find_dotenv
 
+load_dotenv(find_dotenv(), override=True)
+import os
 from datetime import timedelta
-
-"""Fill in the mysql configuration here
-若是远程 配置格式例如“root(Remote host username):root(mysql username)@***.**.**.***(ip address):3306(Port number)” 
-比如
-config_mysql=mysql://root:root@120.28.243.198:3306(This address does not exist, just do an example)
-"""
-config_mysql = "root@localhost:3306"
-
-# Set the name of the database (the following is the name of my test database, specific items need to be changed)
-databaseName = "myBlog"
-
-# Set the port number
-portNum = 1234
-
-# Whether to start in debug mode or not (if enabled, the server will restart automatically after the code is modified in the backend)
-# The server will restart automatically, it is recommended to set to false in the official project)
-whetherDebug = True
 
 # Set the session expiration time Here you can also set weeks, months, etc.
 sessionExpirationTime = timedelta(days=30)
 
-# Set whether session is invalid after each server restart, default is false, i.e. session is still valid after server restart
-sessionRestart = False
-
 # Set the category name of the homepage, here write five, you can also add
 classification = ["Python", "LeetCode", "Project", "Learning", "Others"]
-
-# Send account with registered email
-emailAccount = "*******"
-
-""" Authorization code for registering mailbox (not mailbox login password) #Refer to this website (https://www.ujcms.com/documentation/351.html)
-Now only qq mailbox sending service is supported, and it is also better to use qq mailbox registration when registering (please excuse any inconvenience) """
-
-emailAdmit = "*******"
-
-# Whether to use github's third-party login feature (requires configuration, see the readme documentation for details)
-whetherUseGithubLogin = True
-
-# Set the Client ID and Client secrets required for github third-party login # To be developed
-# GITHUB_CLIENT_ID = '*********'
-# GITHUB_CLIENT_SECRET = '***********'
 
 # Set the maximum number of comments per day for no one
 commentNum = 10
@@ -146,3 +115,39 @@ everyPageInHou = 2
 
 # Set the language of the ueditor (optionally "English" or "Chinese")
 ueiditorLanguage = "English"
+
+# Here are some variables about the environment configuration
+localOrRemote = os.environ.get("LOCAL_OR_REMOTE")
+
+mysqlUserName = os.environ.get("MYSQL_USER_NAME")
+
+mysqlPort = int(os.environ.get("MYSQL_PORT"))
+
+mysqlUrl = os.environ.get("MYSQL_URL")
+
+databaseName = os.environ.get("MYSQL_DATABASE_NAME")
+
+portNum = int(os.environ.get("PORT_NUM"))
+
+if localOrRemote == "localhost":
+    config_mysql = mysqlUserName + "@" + mysqlUrl + ":" + str(mysqlPort)
+elif localOrRemote == "remote":
+    remoteAccount = os.environ.get("REMOTE_ADDRESS_ACCOUNT")
+    config_mysql = remoteAccount + ":" + mysqlUserName + "@" + mysqlUrl + ":" + str(portNum)
+else:
+    raise Exception("Please configure the correct mysql")
+
+adminLogin = os.environ.get("ADMIN_LOGIN_NAME")
+userLogin = os.environ.get("USER_LOGIN_NAME")
+adminPassword = os.environ.get("ADMIN_PASSWORD")
+userPassword = os.environ.get("USER_PASSWORD")
+
+whetherDebug = True if os.environ.get("DEBUG_MODE") == "True" else False
+
+sessionRestart = True if os.environ.get("SESSION_RESTART") == "True" else False
+
+# Send account with registered email
+emailType = os.environ.get("USE_GMAIL_OR_QQMAIL")
+emailAccount = os.environ.get("EMAIL_ACCOUNT")
+emailAdmit = os.environ.get("EMAIL_PASSWORD")
+mysqlPassword = os.environ.get("MYSQL_PASSWORD")

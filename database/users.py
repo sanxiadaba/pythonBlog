@@ -4,12 +4,12 @@ import time
 from flask import session
 from sqlalchemy import Table
 
-from common.connect_db import connect_db
+from common.connectDb import connectDb
 from common.myLog import dirInDir, rootDir
 from common.utility import genearteMD5
 from constant import thumbNailNum
 
-dbsession, md, DBase = connect_db()
+dbsession, md, DBase = connectDb()
 
 
 class Users(DBase):

@@ -138,23 +138,31 @@
                             class="oi oi-heart"
                             aria-hidden="true" style="color: red"></span>
                         Cancel Favorites</label>
-                {% else %}
+                {% elif is_favorite==False %}
                     <label class="favorite-btn" onclick="add_favorite('{{ article.articleid }}')"><span
                             class="oi oi-heart "
                             aria-hidden="true"></span>
                         Collected Articles</label>
+                {% else %}
+                    <label class="favorite-btn"><span
+                            class="oi oi-heart "
+                            aria-hidden="true"></span>
+                        Login can favorite</label>
                 {% endif %}
             </div>
             <div class="col-12 info">
-                Author：{{ article.nickname }} Category：{{ article_type[article.type | string] }}
-                Date：{{ article.createtime }}
-                Reads：{{ article.readcount }} Points consumption：<font color="red">{{ article.credit }}</font>
+                Author: {{ article.nickname }}&nbsp;&nbsp;Category: {{ article_type[article.type | string] }}&nbsp;&nbsp;
+                Date: {{ article.createtime }}&nbsp;&nbsp;
+                Reads: {{ article.readcount }}&nbsp;&nbsp;Points consumption: <font
+                    color="red">{{ article.credit }}</font>
             </div>
             <div class="col-12 content_t" id="content_t">
                 {{ article.content | safe }}
-            {% if session.get("userid")==articleOfUserid %}
-            <button class="form-control btn-primary col-2" onclick="modifyArticle({{ articleid }})">Modify article</button>
-            {% endif %}
+                {% if session.get("userid")==articleOfUserid %}
+                    <button class="form-control btn-primary col-2" onclick="modifyArticle({{ articleid }})">Modify
+                        article
+                    </button>
+                {% endif %}
             </div>
 
             <div class="col-12 readall ">
@@ -191,7 +199,7 @@
         <div class="col-12 article-comment">
             <div class="col-12 row">
                 <div class="col-2">
-                    <label for="nickname">Your nickname：</label>
+                    <label for="nickname">Nickname：</label>
                 </div>
 
                 <div class="col-10">
@@ -208,7 +216,7 @@
 
             <div class="col-12 row" style="padding-top: 10px">
                 <div class="col-2">
-                    <label for="comment">Your comments：</label>
+                    <label for="comment">Comments：</label>
                 </div>
                 <div class="col-10">
                     <textarea class="form-control " style="height: 100px" id="comment"></textarea>
@@ -282,13 +290,14 @@
                                             <label onclick="cancle_opposeComment(this,'{{ comment.commentid }}','{{ comment["opposecount"] }}')"
                                                    style="visibility: visible;" id="opposeComment1">
                                                 <font color="red"><span class="oi oi-x"
-                                                                        aria-hidden="true"></span>Cancel Objections(<span>{{ comment["opposecount"] }}</span>)</font>
+                                                                        aria-hidden="true"></span>Cancel
+                                                    Objections(<span>{{ comment["opposecount"] }}</span>)</font>
                                             </label>
                                         {% else %}
                                             <label onclick="agreeComment(this,'{{ comment.commentid }}','{{ comment["agreecount"] }}')"
                                                    style="visibility: visible;" id="agreeComment1">
                                             <span class="oi oi-chevron-bottom"
-                                                  aria-hidden="true"></span><font>赞成(<span>{{ comment["agreecount"] }}</span>)</font>
+                                                  aria-hidden="true"></span><font>Agree(<span>{{ comment["agreecount"] }}</span>)</font>
                                             </label>&nbsp;&nbsp;
 
                                             <label onclick="opposeComment(this,'{{ comment.commentid }}','{{ comment["opposecount"] }}')"

@@ -3,10 +3,10 @@ import time
 from flask import session, request
 from sqlalchemy import Table
 
-from common.connect_db import connect_db
+from common.connectDb import connectDb
 from constant import maxUploadPicNum
 
-dbsession, md, DBase = connect_db()
+dbsession, md, DBase = connectDb()
 
 
 class Upload(DBase):

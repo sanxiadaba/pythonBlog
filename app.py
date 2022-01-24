@@ -19,6 +19,7 @@ import pymysql
 from flask import Flask, render_template, request, session
 from flask_sqlalchemy import SQLAlchemy
 
+from common.initDatabase import ininDatabase
 from common.myLog import ininLogDir, logDanger, allLogger
 from constant import config_mysql, replyAndAddCommentCredit, regGiveCredit, postArticleCredit
 from constant import sessionExpirationTime, sessionRestart, classification, portNum, creditListForReleaseArticle, \
@@ -29,12 +30,7 @@ from constant import sessionExpirationTime, sessionRestart, classification, port
 pymysql.install_as_MySQLdb()
 
 # Initialize flask
-app = Flask(__name__)
-
-# If you use the github third-party login function, initialize the github third-party login
-# if whetherUseGithubLogin is True:
-#     from flask_github import GitHub
-#     githubApp = GitHub(app)
+app = Flask(__name__, template_folder='templates')
 
 # Some settings for flask connections
 
@@ -45,7 +41,7 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Set auto-recycle time (in seconds)
 app.config["SQLALCHEMY_POOL_RECYCLE"] = 10
 # 	Size of the database connection pool
-app.config["SQLALCHEMY_POOL_SIZE"] = 100
+app.config["SQLALCHEMY_POOL_SIZE"] = 200
 #  Specify the timeout for the database connection pool
 app.config["SQLALCHEMY_POOL_TIMEOUT"] = 20
 # controls the number of connections that can be created after the connection pool reaches its maximum. These additional connections will be disconnected and discarded when they are recycled to the connection pool.
@@ -54,8 +50,7 @@ app.config["SQLALCHEMY_MAX_OVERFLOW"] = 100
 app.config["pool_pre_ping"] = True
 # Error prevention settings
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_FILE_DIR'] = '/flask-session'  # session类型为filesystem
-# 随机指定的SCRET_KEY   也可设置为os.urandom(24)  不过每次服务器重启原来session就失效了
+app.config['SESSION_FILE_DIR'] = '/flask-session'  # session type is filesystem
 app.config['SECRET_KEY'] = "123456" if sessionRestart is False else os.urandom(24)
 # sesssion expiration time
 app.config['PERMANENT_SESSION_LIFETIME'] = sessionExpirationTime
@@ -95,7 +90,7 @@ def gettype():
 def listOfCredit():
     type = {}
     for i in creditListForReleaseArticle:
-        type[i] = str(i) + "分"
+        type[i] = str(i) + "points"
     return dict(listOfCredit=type)
 
 
@@ -222,6 +217,11 @@ def changeBlogParams():
 
 # Main runner
 if __name__ == '__main__':
+    # Initialize logs (check some necessary directories for logs to work)
+    ininLogDir()
+    # Initializing the database
+    ininDatabase()
+
     # Importing instantiated database operation classes
     from database.credit import Credit
     from database.users import Users
@@ -248,8 +248,6 @@ if __name__ == '__main__':
     app.register_blueprint(userManage)
     app.register_blueprint(adminManage)
 
-    # Initialize logs (check some necessary directories for logs to work)
-    ininLogDir()
 
     #  Start in debug mode on the specified port
     app.run(debug=whetherDebug, port=portNum)

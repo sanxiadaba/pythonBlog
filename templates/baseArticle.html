@@ -61,7 +61,8 @@
                     <a class="nav-item nav-link" href="#">Welcome：{{session.get("nickname")}}</a>
                     &nbsp;&nbsp;&nbsp;
                     {%if session.get("role")=="admin"%}
-                    <a class="nav-item nav-link" href="/admainManage">Management</a>&nbsp;&nbsp;&nbsp;
+                        <a class="nav-item nav-link" href="/adminManage">Management</a>&nbsp;&nbsp;&nbsp;
+                        <a class="nav-item nav-link" href="/prepost">Articles</a>&nbsp;&nbsp;&nbsp;
                     {%elif session.get("role")=="editor"%}
                     <a class="nav-item nav-link" href="/userManage">Management</a>&nbsp;&nbsp;&nbsp;
                     <a class="nav-item nav-link" href="/prepost">Articles</a>&nbsp;&nbsp;&nbsp;
@@ -145,17 +146,19 @@
                     <div class="modal-content" style="margin: 20px 0px;">
                         <div class="modal-body">
                             <div class="form-group row" style="margin-top: 20px;">
-                                <label for="loginname" class="col-4">&nbsp;&nbsp;Login Email：</label>
-                                <input type="text" id="loginname" class="form-control col-7 " placeholder="Please enter your email address"/>
+                                <label for="loginname" class="col-4">&nbsp;&nbsp;Email：</label>
+                                <input type="text" id="loginname" class="form-control col-7 "
+                                       placeholder="enter your email address"/>
                             </div>
 
                             <div class="form-group row">
                                 <label for="loginpass" class="col-4">&nbsp;&nbsp;Password：</label>
-                                <input type="password" id="loginpass" class="form-control col-7" placeholder="enter your password"/>
+                                <input type="password" id="loginpass" class="form-control col-7"
+                                       placeholder="enter your password"/>
                             </div>
                             <div class="form-group row">
                                 <label for="logincode" class="col-4"> &nbsp;&nbsp;Image Code：</label>
-                                <input type="text" id="logincode" class="form-control col-5" placeholder="enter the code on the right"
+                                <input type="text" id="logincode" class="form-control col-5" placeholder="enter code"
                                        onkeyup="doLogin(event)"/>
                                 <img src="/vcode" id="loginvcode" class="col-3" style="cursor:pointer;"
                                      onclick="this.src='/vcode?'+Math.random()"/>
@@ -174,25 +177,29 @@
                     <div class="modal-content" style="margin: 20px 0px;">
                         <div class="modal-body">
                             <div class="form-group row" style="margin-top: 20px;">
-                                <label for="regname" class="col-4">&nbsp;&nbsp;Register Email：</label>
-                                <input type="text" id="regname" class="form-control col-7" placeholder="Please enter your email address"/>
+                                <label for="regname" class="col-4">&nbsp;&nbsp;Email：</label>
+                                <input type="text" id="regname" class="form-control col-7"
+                                       placeholder="enter your email address"/>
                             </div>
                             <div class="form-group row">
-                                <label for="regpass" class="col-4">&nbsp;&nbsp;Registration Password：</label>
-                                <input type="password" id="regpass" class="form-control col-7" placeholder="enter your registration password"/>
+                                <label for="regpass" class="col-4">&nbsp;&nbsp;Password：</label>
+                                <input type="password" id="regpass" class="form-control col-7"
+                                       placeholder="enter your registration password"/>
                             </div>
                             <div class="form-group row">
-                                <label for="regcode" class="col-4">&nbsp;&nbsp;E-mail verification code：</label>
-                                <input type="text" id="regcode" class="form-control col-4" placeholder="Please enter your email code"
+                                <label for="regcode" class="col-4">&nbsp;&nbsp;E-mail code：</label>
+                                <input type="text" id="regcode" class="form-control col-4" placeholder="enter code"
                                        onkeyup="doRegister(event)"/>
-                                <button type="button" class="btn btn-primary col-3" onclick="doSendMail(this,1)">Send Email
+                                <button type="button" class="btn btn-primary col-3" onclick="doSendMail(this,1)">Send
+                                    Email
                                 </button>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <span>Please use your email address when registering to facilitate password retrieval。&nbsp;&nbsp;</span>
+                            <span>use your email address when registering to facilitate password retrieval。&nbsp;&nbsp;</span>
                             <button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" onclick="doRegister(null)">Registration</button>
+                            <button type="button" class="btn btn-primary" onclick="doRegister(null)">Registration
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -202,23 +209,29 @@
                     <div class="modal-content" style="margin: 20px 0px;">
                         <div class="modal-body">
                             <div class="form-group row" style="margin-top: 20px;">
-                                <label for="finame" class="col-4">&nbsp;&nbsp;Register Email：</label>
-                                <input type="text" id="finame" class="form-control col-7" placeholder="Please enter your email address"/>
+                                <label for="finame" class="col-4">&nbsp;&nbsp;Email：</label>
+                                <input type="text" id="finame" class="form-control col-7"
+                                       placeholder="enter your email address"/>
                             </div>
                             <div class="form-group row">
                                 <label for="fipass" class="col-4">&nbsp;&nbsp;New password：</label>
-                                <input type="password" id="fipass" class="form-control col-7" placeholder="enter your registration password"/>
+                                <input type="password" id="fipass" class="form-control col-7"
+                                       placeholder="enter your registration password"/>
                             </div>
                             <div class="form-group row">
-                                <label for="ficode" class="col-4">&nbsp;&nbsp;E-mail verification code：</label>
-                                <input type="text" id="ficode" class="form-control col-4" placeholder="enter your email verification code"/>
-                                <button type="button" class="btn btn-primary col-3" onclick="doSendMail(this,2)">Send Email</button>
+                                <label for="ficode" class="col-4">&nbsp;&nbsp;E-mail code：</label>
+                                <input type="text" id="ficode" class="form-control col-4"
+                                       placeholder="enter your code"/>
+                                <button type="button" class="btn btn-primary col-3" onclick="doSendMail(this,2)">Email
+                                </button>
                             </div>
                         </div>
                         <div class="modal-footer">
                             <span>Please enter your registered email address and reset your password。&nbsp;&nbsp;</span>
                             <button type="button" class="btn btn-dark" data-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" onclick="findPassword(null)">Retrieve password</button>
+                            <button type="button" class="btn btn-primary" onclick="findPassword(null)">Retrieve
+                                password
+                            </button>
                         </div>
                     </div>
                 </div>

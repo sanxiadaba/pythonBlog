@@ -42,7 +42,7 @@
 
     // Execution starts when the document is loaded No trigger required
     $(document).ready(function () {
-        //    第一步 发送Ajax请求/recommended 获取json
+        //    Step 1 Send Ajax request/recommended to get json
         $.get("/recommended", function (data) {
             //    Get the response and dynamically populate it to the appropriate recommendation position
             var lastData = data[0];

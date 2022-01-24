@@ -35,24 +35,26 @@
     {# 文章1#}
 
     {% for nickname,article in result %}
-    <div class="col-12 row article-list">
-        <div class="col-sm-3 col-3 thumb d-none d-sm-block">
-            <img src="/static/img/{{article.thumbnail}}" class="img-fluid"/>
-        </div>
-        <div class="col-sm-9 col-xs-12 detail">
-            <div class="title"><a href="/article/{{article.articleid}}">{{article.headline}}</a></div>
-            <div class="info">Author：{{nickname}}&nbsp;&nbsp;&nbsp; Category：{{article_type[article.type |string]}}
-                &nbsp;Date：{{article.createtime}}&nbsp;&nbsp;&nbsp;Reads：{{article.readcount}}&nbsp;&nbsp;&nbsp;Points consumption：{{article.credit}}
+        <div class="col-12 row article-list">
+            <div class="col-sm-3 col-3 thumb d-none d-sm-block">
+                <img src="/static/img/thumb/{{ article.thumbnail }}" class="img-fluid"/>
             </div>
-            <div class="intro">
-                {{article.content | striptags |truncate(80)}}
+            <div class="col-sm-9 col-xs-12 detail">
+                <div class="title"><a href="/article/{{ article.articleid }}">{{ article.headline }}</a></div>
+                <div class="info">
+                    Author:{{ nickname }}&nbsp;&nbsp;&nbsp;Category:{{ article_type[article.type |string] }}&nbsp;
+                    &nbsp;Date{{ article.createtime }}&nbsp;&nbsp;&nbsp;&nbsp;Reads:{{ article.readcount }}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Points
+                    consumption：{{ article.credit }}
+                </div>
+                <div class="intro">
+                    {{ article.content | striptags |truncate(80) }}
+                </div>
             </div>
         </div>
-    </div>
     {% endfor %}
     <div class="col-12 paginate article-list">
         {% if page==1 %}
-        <a href="/type/{{type}}-1">Previous page</a>&nbsp;&nbsp;
+            <a href="/type/{{ type }}-1">Previous page</a>&nbsp;&nbsp;
         {% else %}
         <a href="/type/{{type}}-{{page-1}}">Previous page</a>&nbsp;&nbsp;
         {% endif %}

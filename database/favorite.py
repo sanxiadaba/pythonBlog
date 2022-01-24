@@ -6,9 +6,9 @@ from sqlalchemy import Table
 from database.article import Article
 
 instanceArticle = Article()
-from common.connect_db import connect_db
+from common.connectDb import connectDb
 
-dbsession, md, DBase = connect_db()
+dbsession, md, DBase = connectDb()
 
 
 class Favorite(DBase):

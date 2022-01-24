@@ -3,12 +3,12 @@ import time
 from flask import session, request
 from sqlalchemy import Table
 
-from common.connect_db import connect_db
+from common.connectDb import connectDb
 from common.utility import model_join_list
 from constant import commentNum
 from database.users import Users
 
-dbsession, md, DBase = connect_db()
+dbsession, md, DBase = connectDb()
 
 
 class Comment(DBase):

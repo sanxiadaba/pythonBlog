@@ -223,26 +223,32 @@ function  qingti(s) {
 
 // Write approval function
 function agreeComment(s,j,n){
-    $.post("/agreeComment", param="commentid="+j, function (data) {
+    $.post("/islogin", function (data) {
+        if (data === "0") {
+            bootbox.alert({title: "Error Alert", message: "Please login first"})
+        } else {
+            $.post("/agreeComment", param = "commentid=" + j, function (data) {
 
-            if(data==="1"){
-                $(s).children("font").text("Cancel endorsement("+(parseInt(n)+1).toString()+")")
-                $(s).children("font").attr('color','red')
-                $(s).next().css("visibility","hidden");
-                // Remove response events
-                $(s).removeAttr('onclick')
-                // Modify response events
-                $(s).click(function (){
-                    cancle_agreeComment(this,j,n)
-                })
-                qingti("Have agreed with the comment")
-                ;
-            }
-            else {
-                bootbox.alert({title: "Error Alert", message: "Agree to fail, please contact the administrator"});
-            }
-            }
-        )
+                    if (data === "1") {
+                        $(s).children("font").text("Cancel endorsement(" + (parseInt(n) + 1).toString() + ")")
+                        $(s).children("font").attr('color', 'red')
+                        $(s).next().css("visibility", "hidden");
+                        // Remove response events
+                        $(s).removeAttr('onclick')
+                        // Modify response events
+                        $(s).click(function () {
+                            cancle_agreeComment(this, j, n)
+                        })
+                        qingti("Have agreed with the comment")
+                        ;
+                    } else {
+                        bootbox.alert({title: "Error Alert", message: "Agree to fail, please contact the administrator"});
+                    }
+                }
+            )
+        }
+    })
+
 }
 
 // The first parameter is the location of the div i.e. :this The second parameter is the commentid of the comment The third parameter is used to determine whether this is the original comment or a reply to the comment
@@ -324,27 +330,36 @@ function hideComment_1(commentid){
 }
 
 // Writing the opposition function
-function opposeComment(s,j,n){
-    $.post("/disagreeComment", param="commentid="+j, function (data) {
-            if(data==="1"){
-                $(s).children("font").text("Cancel Objections("+(parseInt(n)+1).toString()+")")
-                $(s).children("font").attr('color','red')
-                $(s).prev().css("visibility","hidden");
-                // Remove response events
-                $(s).removeAttr('onclick')
-                // Modify response events
-                $(s).click(function (){
-                    cancle_opposeComment(this,j,n)
-                })
-                qingti("Have objected to the comment")
-                ;
+function opposeComment(s,j,n) {
+    $.post("/islogin", function (data) {
+        if (data === "0") {
+            bootbox.alert({title: "error alert", message: "please login first"})
+        } else {
+            $.post("/disagreeComment", param = "commentid=" + j, function (data) {
+                    if (data === "1") {
+                        $(s).children("font").text("Cancel Objections(" + (parseInt(n) + 1).toString() + ")")
+                        $(s).children("font").attr('color', 'red')
+                        $(s).prev().css("visibility", "hidden");
+                        // Remove response events
+                        $(s).removeAttr('onclick')
+                        // Modify response events
+                        $(s).click(function () {
+                            cancle_opposeComment(this, j, n)
+                        })
+                        qingti("Have objected to the comment")
+                        ;
 
-            }
-            else {
-                bootbox.alert({title: "Error Alert", message: "Objection failed, please contact the administrator"});
-            }
-            }
-        )
+                    } else {
+                        bootbox.alert({
+                            title: "Error Alert",
+                            message: "Objection failed, please contact the administrator"
+                        });
+                    }
+                }
+            )
+        }
+    })
+
 }
 
 // Write the cancel endorsement function
@@ -855,7 +870,7 @@ function modifyNickname(s,yuan) {
 
                                         <label onclick="agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: visible;" id="agreeComment1">
                                             <span class="oi oi-chevron-bottom"
-                                                  aria-hidden="true"></span><font>赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                                  aria-hidden="true"></span><font>Agree(<span>${comment[i]["agreecount"]}</span>)</font>
                                         </label>&nbsp;&nbsp;
 
                                         <label onclick="opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: visible;" id="opposeComment1">
@@ -931,7 +946,7 @@ function modifyNickname(s,yuan) {
                         if (comment[i]["agreeOrdisAgreeType"] === 0) {
                             content += `<label onclick="agreeComment(this,${comment[i]["commentid"]},${comment[i]["agreecount"]})" style="visibility: visible;" id="agreeComment1">
                                             <span class="oi oi-chevron-bottom"
-                                                  aria-hidden="true"></span><font>赞成(<span>${comment[i]["agreecount"]}</span>)</font>
+                                                  aria-hidden="true"></span><font>Agree(<span>${comment[i]["agreecount"]}</span>)</font>
                                         </label>&nbsp;&nbsp;
 
                                         <label onclick="opposeComment(this,${comment[i]["commentid"]},${comment[i]["opposecount"]})" style="visibility: visible;" id="opposeComment1">
