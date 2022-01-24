@@ -68,12 +68,12 @@ to learn
 .
 ├── . /.img 					# Store the image displayed by the readme
 ├─ . /common 					# Functions for some common functions
-│ ├── . /connectDb.py 			# Connect to the database
+│ ├── . /connectDb.py 			        # Connect to the database
 │ ├── . /myLog.py 				# Configure logs
 │ ...
 │
 ├─ . /controler 				# Controller for different pages
-| ├── . /article.py 			# The corresponding control for the article page
+| ├── . /article.py 			        # The corresponding control for the article page
 | ...
 | /controler
 ├─ . /static 					# Store static resources
@@ -84,10 +84,10 @@ to learn
 | ├── . /credit.py 				# Operate on the credit table
 | ...
 | ...
-├─ . /logs 						# Store the logs
-├─ . /.env 						# Environment configuration
+├─ . /logs 					# Store the logs
+├─ . /.env 					# Environment configuration
 ├── . /constant.py 				# Page related parameter settings
-├─ . /requirements.txt 			# Packages to be installed for the project
+├─ . /requirements.txt 			        # Packages to be installed for the project
 ├─ . /README.md
 ├─ . /LICENCE	
 ├─ . /gitignore		
