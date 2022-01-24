@@ -143,10 +143,10 @@ pip3 install -r requirements.txt
 
 #### Related links
 
-- bootstrap[](https://getbootstrap.com/)
-- flask[](https://flask.palletsprojects.com/en/2.0.x/)
-- sqlalchemy[](https://docs.sqlalchemy.org/en/13/dialects/mysql.html)
-- loguru[](https://github.com/Delgan/loguru)
+- [bootstrap](https://getbootstrap.com/)
+- [flask](https://flask.palletsprojects.com/en/2.0.x/)
+- [sqlalchemy](https://docs.sqlalchemy.org/en/13/dialects/mysql.html)
+- [loguru](https://github.com/Delgan/loguru)
 
 #### Features to be developed
 
