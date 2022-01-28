@@ -105,6 +105,7 @@ def watchVersionOfMysql():
         allLogger(0, e)
         return 0
     finally:
+
         # Close cursor connections
         con.commit()
         cur.close()

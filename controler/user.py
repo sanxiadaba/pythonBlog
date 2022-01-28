@@ -156,6 +156,7 @@ def resetUserPassword():
         userid = instanceUser.findUseridByUsername(username)
         # Convert password to md5 encryption under
         try:
+
             instanceUser.modifyUserPassword(userid, password)
             info = f"userid is {userid},nickname is {userNickname} reset password successfully by email verification code"
             instanceLog.insertDetail(userid=userid, type="Reset password", credit=0, target=0)

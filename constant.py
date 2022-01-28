@@ -76,6 +76,7 @@ indexAboveStr = ["Welcome to my blog", "Study well", "Day Up"]
 
 # of randomly generated avatar thumbnails (a random thumbnail is generated when the user registers, which can be changed by the reader later)
 # Be sure to have the appropriate number of avatar images at the bottom of /static/img/avatar
+
 thumbNailNum = 10
 
 # of recommendations in the three columns of the sidebar

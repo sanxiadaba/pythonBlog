@@ -250,6 +250,7 @@ if __name__ == '__main__':
     app.register_blueprint(adminManage)
 
     # Add logs for each server startup
+
     now = time.strftime('%Y-%m-%d %H:%M:%S')
     instanceLog.insertDetail(type="Start the server", target=0, credit=0, userid=0,
                              info=f"The server was started in {now}")
