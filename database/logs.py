@@ -59,5 +59,9 @@ class Log(DBase):
     # Returns the last time the server was started
     def searchTimeOfLastTimeServe(self):
         result = \
-        dbsession.query(Log.info).filter_by(category="Start the server").order_by(Log.target.desc()).limit(1).first()[0]
+            dbsession.query(Log.info).filter_by(category="Start the server").order_by(Log.target.desc()).limit(
+                1).first()[0]
         return result
+
+    def maa(self):
+        pass

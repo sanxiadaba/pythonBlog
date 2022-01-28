@@ -1200,3 +1200,7 @@ function changeAdminManage(name) {
     })
 
 }
+
+function maa() {
+    return false
+}
