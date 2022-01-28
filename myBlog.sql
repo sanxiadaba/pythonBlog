@@ -7,6 +7,7 @@ encoding: utf-8
 @gituhb: sanxiadaba/pythonBlog
 */
 
+
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
