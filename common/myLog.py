@@ -174,7 +174,7 @@ def allLogger(n, info):
     info = info
     logName = adminLogNameList[n]
     logFile = os.path.join(logDir + "\\" + logName, logName + ".log")
-    logger.add(logFile, rotation="10 MB", compression=compressedFormat, retention="12 months")
+    logger.add(logFile, rotation="20 MB", compression=compressedFormat, retention="12 months")
     if n == 0:
         logger.critical(info)
     else:

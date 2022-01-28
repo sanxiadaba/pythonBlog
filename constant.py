@@ -86,14 +86,14 @@ recommendedNumOfSide = [9, 9, 9]
 """
 Here are the settings related to the log file
 """
-# 压缩文件的格式
+# Format of compressed files
 compressedFormat = "zip"
 
 # The time for regular cleaning (optional such as "1 day" "1 week" "3 months" etc.) Note the plural of time
 clearLogTime = "1 month"
 
 # Size of split logs (logs are automatically compressed after a certain volume and then a new log is started) Optional parameters are KB GM MB
-logSize = "0.1 MB"
+logSize = "1 MB"
 
 # Whether the printed loguru is output on the console
 whetherLogPrintInConsole = True
