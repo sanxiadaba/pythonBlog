@@ -1,8 +1,8 @@
-# 本地存储log日志的文件夹不上传
-logs/adminLog/*.log
-logs/allLogs/*.log
-logs/errorLog/*.log
-logs/userLog/*.log
+# The folder where logs are stored locally is not uploaded
+logs/adminLog/*
+logs/allLogs/*
+logs/errorLog/*
+logs/userLog/*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
