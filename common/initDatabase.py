@@ -84,5 +84,29 @@ def ininDatabase():
         # Close cursor connections
         con.commit()
         cur.close()
-    # Close the database connection
-    con.close()
+        # Close the database connection
+        con.close()
+
+
+#  watch the version od MySql
+def watchVersionOfMysql():
+    con = pymysql.connect(host=mysqlUrl, user=mysqlUserName, password=mysqlPassword, database="mysql", port=mysqlPort,
+                          charset='utf8mb4')
+    cur = con.cursor()
+    sql = """
+            select version();
+        """
+    try:
+        cur.execute(sql)
+        version = cur.fetchall()[0][0]
+        return version
+    except:
+        e = traceback.format_exc()
+        allLogger(0, e)
+        return 0
+    finally:
+        # Close cursor connections
+        con.commit()
+        cur.close()
+        # Close the database connection
+        con.close()

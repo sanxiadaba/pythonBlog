@@ -236,21 +236,26 @@ class Article(DBase):
 
     # Number of all articles by the author
     def searchAllArticleNum(self):
+        return dbsession.query(Article).count()
+
+    # Number of all articles by the author
+    def searchAllArticleNumByUserid(self):
         userid = session.get("userid")
         return dbsession.query(Article).filter_by(userid=userid).count()
 
     # The number of articles the author has deleted in addition to
     def exceptDeleteNum(self):
-        return self.searchAllArticleNum() - self.searchDeleteArticleCount()
+        return self.searchAllArticleNumByUserid() - self.searchDeleteArticleCount()
 
     # The sum of the number of comments and visits to all articles
     def searchALLNumberOfComment(self):
-        result = dbsession.query(Article.replycount, Article.readcount)
+        result = dbsession.query(Article.replycount, Article.readcount).filter_by(drafted=0, hide=0, checked=1)
         allReplyCountList = []
         allReadCountList = []
         for row in result:
             allReplyCountList.append(row[0])
             allReadCountList.append(row[1])
+        #   Return the number of comments and reads of all articles
         return sum(allReplyCountList), sum(allReadCountList)
 
     # Number of visits to published articles

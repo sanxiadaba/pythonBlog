@@ -1138,18 +1138,65 @@ function delMany(){
                 })
 
 
-
-
-
             }
         }
 
+                })
+
+
+}
+
+
+// Functions for switching tabs on the admin page
+function changeAdminManage(name) {
+    var bians = ["webInfo_1", "webUser_1", "webComment_1", "webDrafted_1", "webArticle_1", "webType_1", "webCredit_1", "webLog_1", "webContact_1", "webGetCredit_1"];
+    for (let bian_1 of bians) {
+        var bian_2;
+        bian_1 = "#" + bian_1;
+        bian_2 = bian_1.slice(0, -2)
+        $(bian_1).removeClass("active")
+        $(bian_2).css("display", "none")
+    }
+    var bian_3 = "#" + name;
+    var bian_4 = bian_3.slice(0, -2)
+    $(bian_3).addClass("active")
+    $(bian_4).css("display", "")
+    var tiao
+    switch (name) {
+        case "webInfo_1":
+            tiao = 1
+            break;
+        case "webUser_1":
+            tiao = 2
+            break;
+        case "webComment_1":
+            tiao = 3
+            break;
+        case "webDrafted_1":
+            tiao = 4
+            break;
+        case "webArticle_1":
+            tiao = 5
+            break;
+        case "webType_1":
+            tiao = 6
+            break;
+        case "webCredit_1":
+            tiao = 7
+            break;
+        case "webLog_1":
+            tiao = 8
+            break;
+        case "webContact_1":
+            tiao = 9
+            break;
+        case "webGetCredit_1":
+            tiao = 10
+            break;
+    }
+
+    $.post("/adminTiaoNum", param = "adminTiaoNum=" + tiao, function (data) {
+        return false
     })
 
-
-
-			}
-
-
-
-
+}

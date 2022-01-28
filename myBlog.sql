@@ -1,17 +1,10 @@
 /*
- Navicat Premium Data Transfer
-
- Source Server         : yun
- Source Server Type    : MySQL
- Source Server Version : 50736
- Source Host           : 120.27.242.197:3306
- Source Schema         : myBlog_1
-
- Target Server Type    : MySQL
- Target Server Version : 50736
- File Encoding         : 65001
-
- Date: 24/01/2022 14:29:26
+encoding: utf-8
+@author: Zhang Jiajun
+@contact: jz272381@gmail.com
+@software: Pycharm
+@time: 2022/1/27
+@gituhb: sanxiadaba/pythonBlog
 */
 
 SET NAMES utf8mb4;

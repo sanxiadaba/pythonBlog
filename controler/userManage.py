@@ -250,7 +250,7 @@ def controlBiaoNum():
     if request.method == 'GET':
         controlBiaoNum = session.get("controlBiaoNum")
         session["controlBiaoNum"] = 0
-        if controlBiaoNum is not None or controlBiaoNum != "0":
+        if controlBiaoNum is not None and controlBiaoNum != "0":
             return str(controlBiaoNum)
         else:
             return "0"

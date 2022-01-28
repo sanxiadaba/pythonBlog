@@ -28,12 +28,14 @@
                 <div class="navbar-header">
                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
                             data-target="#bs-example-navbar-collapse-1" aria-expanded="false"><span
-                            class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span class="icon-bar"></span>
+                            class="sr-only">Toggle navigation</span> <span class="icon-bar"></span> <span
+                            class="icon-bar"></span>
                         <span class="icon-bar"></span></button>
                     <a class="navbar-brand" href="/">Back to home page</a></div>
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav navbar-right">
-                        <li><a href="/logout" onClick="if(!confirm('Whether to confirm withdrawal？'))return false;">Logout</a></li>
+                        <li><a href="/logout" onClick="if(!confirm('Whether to confirm withdrawal？'))return false;">Logout</a>
+                        </li>
                         <li><a data-toggle="modal" data-target="#WeChat">Help</a></li>
                     </ul>
                 </div>
@@ -62,43 +64,66 @@
 </div>
 
 
-
-<script type="text/javascript">
-
-　　function myfun_3(){ 　
-    $.get("/controlBiaoNum",function (data){
-        if (data==="0"){
-            return false
-        }
-        else if(data==="1") {
-            changeUserManageModel('myArticle_1')
-        }
-        else if (data==="2"){
-            changeUserManageModel('myComment_1')
-        }
-        else if (data==="3"){
-            changeUserManageModel('myCredit_1')
-        }
-        else if (data==="4"){
-            changeUserManageModel('myContact_1')
-        }
-        else if (data==="5"){
-            changeUserManageModel('myLog_1')
-        }
-        else if (data==="6"){
-            changeUserManageModel('myFavo_1')
-        }
-        else if (data==="7"){
-            changeUserManageModel('getCredit_1')
-        }
-
-    })
-    　
-
-
-} 　　
-window.onload = myfun_3;//No brackets
-</script>
-
 </body>
 </html>
+{#Before implementing the "Memory" tab jump#}
+<script type="text/javascript">
+    function myfun_4() {
+        $.get("/adminTiaoNum", function (data) {
+            if (data === "0") {
+                return false
+            } else if (data === "1") {
+                changeAdminManage('webInfo_1')
+            } else if (data === "2") {
+                changeAdminManage('webUser_1')
+            } else if (data === "3") {
+                changeAdminManage('webComment_1')
+            } else if (data === "4") {
+                changeAdminManage('webDrafted_1')
+            } else if (data === "5") {
+                changeAdminManage('webArticle_1')
+            } else if (data === "6") {
+                changeAdminManage('webType_1')
+            } else if (data === "7") {
+                changeAdminManage('webCredit_1')
+            } else if (data === "8") {
+                changeAdminManage('webLog_1')
+            } else if (data === "9") {
+                changeAdminManage('webContact_1')
+            } else if (data === "10") {
+                changeAdminManage('webGetCredit_1')
+            }
+
+        })
+
+
+    }
+
+    function myfun_3() {
+        $.get("/controlBiaoNum", function (data) {
+            if (data === "0") {
+                return false
+            } else if (data === "1") {
+                changeUserManageModel('myArticle_1')
+            } else if (data === "2") {
+                changeUserManageModel('myComment_1')
+            } else if (data === "3") {
+                changeUserManageModel('myCredit_1')
+            } else if (data === "4") {
+                changeUserManageModel('myContact_1')
+            } else if (data === "5") {
+                changeUserManageModel('myLog_1')
+            } else if (data === "6") {
+                changeUserManageModel('myFavo_1')
+            } else if (data === "7") {
+                changeUserManageModel('getCredit_1')
+            }
+
+        })
+    }
+
+    window.onload = function () {
+        myfun_3();
+        myfun_4();
+    }
+</script>

@@ -157,3 +157,23 @@ class Users(DBase):
     def whetherApplyForEditor(self, userid):
         whetherApplyForEditor = dbsession.query(Users.apply).filter_by(userid=userid).first()[0]
         return whetherApplyForEditor
+
+    # View the number of all people
+    def searchAllNumOfUser(self):
+        allUserNum = dbsession.query(Users).count()
+        return allUserNum
+
+    # view number of admin
+    def searchNumOfAdmin(self):
+        numOfAdmin = dbsession.query(Users).filter_by(role="admin").count()
+        return numOfAdmin
+
+    # view number of editor
+    def searchNumOfEditor(self):
+        numOfEditor = dbsession.query(Users).filter_by(role="editor").count()
+        return numOfEditor
+
+    # view number of user
+    def searchNumOfUser(self):
+        numOfUser = dbsession.query(Users).filter_by(role="user").count()
+        return numOfUser

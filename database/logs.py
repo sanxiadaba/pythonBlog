@@ -15,11 +15,15 @@ class Log(DBase):
     def insertDetail(self, type, target, credit, userid=None, info=None):
         if userid is None:
             userid = session.get("userid")
-        if info is not None:
+        if info is not None and type != "Start the server":
             info = info + f" The ip address is{request.remote_addr}"
         now = time.strftime("%Y-%m-%d %H:%M:%S")
+        if type == "Start the server":
+            ipaddr = None
+        else:
+            ipaddr = request.remote_addr
         logP = Log(userid=userid, category=type, target=target, credit=credit, createtime=now,
-                   ipaddr=request.remote_addr, info=info)
+                   ipaddr=ipaddr, info=info)
         dbsession.add(logP)
         dbsession.commit()
 
@@ -49,5 +53,11 @@ class Log(DBase):
     # View user login, logout, registration, and password retrieval records
     def searchLoginLog(self, userid):
         result = dbsession.query(Log.category, Log.createtime).filter(Log.userid == userid, Log.category.in_(
-            ["每日登录", "登录成功", "登出账户", "重设密码"])).all()
+            ["Daily Login", "Successful login", "Logout page", "Reset password"])).all()
+        return result
+
+    # Returns the last time the server was started
+    def searchTimeOfLastTimeServe(self):
+        result = \
+        dbsession.query(Log.info).filter_by(category="Start the server").order_by(Log.target.desc()).limit(1).first()[0]
         return result

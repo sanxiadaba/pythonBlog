@@ -111,7 +111,7 @@ maxModifyArticleNum = 10
 maxUploadPicNum = 20
 
 # Set in the backend page of managing articles, not many article pagination
-everyPageInHou = 2
+everyPageInHou = 5
 
 # Set the language of the ueditor (optionally "English" or "Chinese")
 ueiditorLanguage = "English"

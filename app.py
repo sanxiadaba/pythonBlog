@@ -12,6 +12,7 @@ encoding: utf-8
 """
 
 import os
+import time
 import traceback
 from collections import defaultdict
 
@@ -221,13 +222,13 @@ if __name__ == '__main__':
     ininLogDir()
     # Initializing the database
     ininDatabase()
-
     # Importing instantiated database operation classes
     from database.credit import Credit
     from database.users import Users
-
+    from database.logs import Log
     instanceCredit = Credit()
     instanceUser = Users()
+    instanceLog = Log()
     from common.myLog import listLogger
     # Register flask blueprint
     from controler.index import index
@@ -248,6 +249,10 @@ if __name__ == '__main__':
     app.register_blueprint(userManage)
     app.register_blueprint(adminManage)
 
-
+    # Add logs for each server startup
+    now = time.strftime('%Y-%m-%d %H:%M:%S')
+    instanceLog.insertDetail(type="Start the server", target=0, credit=0, userid=0,
+                             info=f"The server was started in {now}")
+    allLogger(1, f"The server was started in {now}")
     #  Start in debug mode on the specified port
     app.run(debug=whetherDebug, port=portNum)
