@@ -23,7 +23,7 @@ from flask import Blueprint, make_response, session, request, url_for
 from common.myLog import ininUserDir, logDanger, listLogger, allLogger, dirInDir, avatarPath
 from common.utility import ImageCode, gen_email_code, send_email
 from common.utility import genearteMD5
-from constant import whetherDistinguishCapital, regGiveCredit, loginEvereDayCredit, timeoutOfEcode
+from constant import whetherDistinguishCapital, regGiveCredit, loginEvereDayCredit, timeoutOfEcode, md5Salt
 from database.credit import Credit
 from database.logs import Log
 from database.users import Users
@@ -60,7 +60,7 @@ def ecode():
     global timeStart
     timeStart = time.time()
     email = request.form.get("email")
-    # 转换下数字类型
+    # Convert to numeric type
     n = int(request.form.get("n"))
     if not re.match(".+@.+\..+", email):
         return "email-invailid"
@@ -80,7 +80,7 @@ def ecode():
 def register():
     global timeStart
     username = request.form.get("username").strip()
-    password = request.form.get("password").strip()
+    password = request.form.get("password").strip() + md5Salt
     ecode = request.form.get("ecode").strip()
     nickname = username.split("@")[0]
     # Verify the correctness of the email address and the validity of the password
@@ -124,7 +124,7 @@ def register():
 @logDanger
 def resetUserPassword():
     username = request.form.get("username").strip()
-    password = request.form.get("password").strip()
+    password = request.form.get("password").strip() + md5Salt
     ecode = request.form.get("ecode").strip()
     # First check whether the email account and password match the format
     if not re.match(".+@.+\..+", username) or len(password) < 5:
@@ -173,7 +173,7 @@ def resetUserPassword():
 @logDanger
 def login():
     username = request.form.get("username").strip()
-    password = request.form.get("password").strip()
+    password = request.form.get("password").strip() + md5Salt
     vcode = request.form.get("logincode").lower().strip()
     # First determine if the account exists
     userid = instanceUser.findUseridByUsername(username)

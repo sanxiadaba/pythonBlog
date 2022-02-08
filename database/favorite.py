@@ -3,12 +3,21 @@ import time
 from flask import session
 from sqlalchemy import Table
 
-from database.article import Article
-
-instanceArticle = Article()
 from common.connectDb import connectDb
 
 dbsession, md, DBase = connectDb()
+
+
+class Article(DBase):
+    __table__ = Table("article", md, autoload=True)
+
+    # Check the title according to the article id
+    def searchHeadlineByArticleId(self, articleid):
+        row = dbsession.query(Article.headline).filter_by(articleid=articleid).first()
+        return row.headline
+
+
+instanceArticle = Article()
 
 
 class Favorite(DBase):

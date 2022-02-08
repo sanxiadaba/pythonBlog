@@ -114,10 +114,11 @@ maxUploadPicNum = 20
 # Set in the backend page of managing articles, not many article pagination
 everyPageInHou = 5
 
-# Set the language of the ueditor (optionally "English" or "Chinese")
-ueiditorLanguage = "English"
-
 # Here are some variables about the environment configuration
+blogLanguage = os.environ.get("blogLanguage")
+
+md5Salt = os.environ.get("md5Salt")
+
 localOrRemote = os.environ.get("LOCAL_OR_REMOTE")
 
 mysqlUserName = os.environ.get("MYSQL_USER_NAME")

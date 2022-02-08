@@ -36,7 +36,8 @@ class ArticleLog(DBase):
         end = time.strftime("%Y-%m-%d 23:59:59")
         result = dbsession.query(ArticleLog).filter(ArticleLog.userid == session.get("userid"),
                                                     ArticleLog.createtime.between(start, end),
-                                                    ArticleLog.type != "修改文章", ArticleLog.type != "修改失败").count()
+                                                    ArticleLog.type != "Modify article",
+                                                    ArticleLog.type != "Modification failure").count()
         role = session.get("role")
         if (result >= maxUserPostArticleNum and role == "user") or (
                 result >= maxUserPostArticleNumOfEditor and role == "editor"):

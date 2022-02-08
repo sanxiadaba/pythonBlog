@@ -6,10 +6,11 @@ from sqlalchemy import Table
 from common.connectDb import connectDb
 from common.utility import model_join_list
 from constant import commentNum
-from database.users import Users
 
 dbsession, md, DBase = connectDb()
 
+class Users(DBase):
+    __table__ = Table("users", md, autoload=True)
 
 class Comment(DBase):
     __table__ = Table("comment", md, autoload=True)
@@ -132,6 +133,13 @@ class Comment(DBase):
         userid = session.get("userid") if userid is None else userid
         numOfALLMyComment = dbsession.query(Comment).filter_by(userid=userid, hide=0, replyid=0).count()
         return numOfALLMyComment
+
+    # 查询所有评论，和隐藏评论的数量
+    def numOfDeletedComment(self, userid=None):
+        userid = session.get("userid") if userid is None else userid
+        numOfAll = dbsession.query(Comment).filter_by(userid=userid, hide=0).count()
+        numOfDeleted = dbsession.query(Comment).filter_by(userid=userid, hide=1).count()
+        return numOfAll, numOfDeleted
 
     # The module of my comments of the back office management
     def searchMyComment(self, userid):

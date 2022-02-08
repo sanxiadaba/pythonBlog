@@ -19,10 +19,10 @@ from common.myLog import allLogger
 from common.myLog import rootDir
 from common.utility import genearteMD5
 from constant import mysqlPassword, mysqlPort, databaseName, mysqlUserName, mysqlUrl, adminLogin, adminPassword, \
-    userLogin, userPassword
+    userLogin, userPassword, md5Salt
 
-adminPassword = genearteMD5(adminPassword)
-userPassword = genearteMD5(userPassword)
+adminPassword = genearteMD5(adminPassword + md5Salt)
+userPassword = genearteMD5(userPassword + md5Salt)
 
 
 def ininDatabase():

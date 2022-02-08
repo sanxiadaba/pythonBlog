@@ -21,7 +21,7 @@ from flask import Blueprint, session, request, abort, render_template
 from common.myLog import logDanger, listLogger, allLogger
 from common.utility import parser_image_url, generate_thumb
 from constant import postArticleCredit, howCommentInArticle, maxUserPostArticleNum, \
-    maxUserPostArticleNumOfEditor, maxModifyArticleNum, ueiditorLanguage
+    maxUserPostArticleNumOfEditor, maxModifyArticleNum, blogLanguage
 from database.article import Article
 from database.articleLog import ArticleLog
 from database.comment import Comment
@@ -52,7 +52,7 @@ def read(articleid):
     # Query the article, if you can't find the article, throw a 404 error, if other errors occur, throw a 500 error
     # Then the error page will redirect to the home page
     try:
-        result = instanceArticle.find_by_id(articleid)
+        result = instanceArticle.searchArticleByUserid(articleid)
         if result is None:
             abort(404)
     except:
@@ -110,7 +110,7 @@ def islogin():
 def readAll():
     # The determination of whether there are enough points here has already been done in the front-end
     articleid = request.form.get("articleid")
-    result = instanceArticle.find_by_id(articleid)
+    result = instanceArticle.searchArticleByUserid(articleid)
     userid = session.get("userid")
     authorid = int(instanceArticle.searchUseridByArticleid(articleid)[0])
     authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
@@ -145,9 +145,9 @@ def pre_post():
     judge = True if ((s1.split("/")[-1].isdigit() is True and s1.split("/")[-2] == "article") or s1.split("/")[
         -1] == "userManage") else False
     # Fill the value of the modified page Of course, whether to fill the empty or the corresponding article needs to be determined with the articleJudge parameter
-    if ueiditorLanguage == "Chinese":
+    if blogLanguage == "Chinese":
         language = "zh-cn/zh-cn.js"
-    elif ueiditorLanguage == "English":
+    elif blogLanguage == "English":
         language = "en/en.js"
     else:
         allLogger(0, "ueditor language configuration error")

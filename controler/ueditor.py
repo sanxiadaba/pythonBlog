@@ -20,7 +20,7 @@ from flask import Blueprint, request, jsonify, session
 from common.myLog import rootDir, dirInDir, logDanger, listLogger
 from common.ueditorConf import returnUeConf
 from common.utility import compress_image
-from constant import ueiditorLanguage
+from constant import blogLanguage
 from database.logs import Log
 from database.upload import Upload
 
@@ -51,7 +51,7 @@ def uedit():
             if instanceUpload.checkLimitUpload() is True:
                 result = {}
                 # There is a daily upload limit, and the front-end will prompt if the number of uploads is used up.
-                if ueiditorLanguage == "Chinese":
+                if blogLanguage == "Chinese":
                     result["state"] = "今日上传次数已用完"
                 else:
                     result["state"] = "Exceeding the number of times limit"

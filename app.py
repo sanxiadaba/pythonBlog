@@ -147,8 +147,8 @@ app.jinja_env.filters.update(my_truncate=my_truncate, numAddNum=numAddNum)
 @logDanger
 def before():
     url = request.path
-    pass_list = ["/user", "/login", "logout"]
-    if url in pass_list or url.endswith(".js") or url.endswith(".png") or url.endswith(".jpg"):
+    passList = ["/user", "/login", "logout"]
+    if url in passList or url.endswith(".js") or url.endswith(".png") or url.endswith(".jpg") or url.endswith(".css"):
         pass
     elif session.get("islogin") is None:
         username = request.cookies.get("username")
@@ -173,6 +173,7 @@ def before():
                         session["judgeLin"] = "1"
                     else:
                         pass
+
 
 
 # The interface to determine automatic daily login, which is accessed by the front-end inherited baseArticle template file when the page is loaded
@@ -226,6 +227,7 @@ if __name__ == '__main__':
     from database.credit import Credit
     from database.users import Users
     from database.logs import Log
+
     instanceCredit = Credit()
     instanceUser = Users()
     instanceLog = Log()
@@ -252,8 +254,11 @@ if __name__ == '__main__':
     # Add logs for each server startup
 
     now = time.strftime('%Y-%m-%d %H:%M:%S')
-    instanceLog.insertDetail(type="Start the server", target=0, credit=0, userid=0,
-                             info=f"The server was started in {now}")
-    allLogger(1, f"The server was started in {now}")
+    if instanceLog.judgeStartServe() is False:
+        instanceLog.insertDetail(type="Start the server", target=0, credit=0, userid=0,
+                                 info=f"The server was started in {now}")
+        allLogger(1, f"The server was started in {now}")
+    else:
+        pass
     #  Start in debug mode on the specified port
     app.run(debug=whetherDebug, port=portNum)

@@ -12,6 +12,22 @@ from constant import thumbNailNum
 dbsession, md, DBase = connectDb()
 
 
+class Article(DBase):
+    __table__ = Table("article", md, autoload=True)
+
+    # The number of articles the author has deleted in addition to
+    def exceptDeleteNum(self, userid=None):
+        return self.searchAllArticleNumByUserid(userid) - self.searchDeleteArticleCount(userid)
+
+    #  Check the number of articles you have deleted
+    def searchDeleteArticleCount(self, userid=None):
+        userid = session.get("userid") if userid == None else userid
+        return dbsession.query(Article).filter_by(userid=userid, delete=1).count()
+
+
+instanceArticle = Article()
+
+
 class Users(DBase):
     __table__ = Table("users", md, autoload=True)
 
@@ -177,3 +193,13 @@ class Users(DBase):
     def searchNumOfUser(self):
         numOfUser = dbsession.query(Users).filter_by(role="user").count()
         return numOfUser
+
+    # Return all users, editors' information
+    def searchInfoOfUserAndEditor(self):
+        result = dbsession.query(Users).filter(Users.role != "admin").all()
+        info = []
+        for user in result:
+            userid = user.userid
+            info.extend([user.username, user.nickname, instanceArticle.exceptDeleteNum(userid),
+                         instanceArticle.searchDeleteArticleCount(userid)])
+        pass

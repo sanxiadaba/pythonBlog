@@ -1,3 +1,4 @@
+import datetime
 import time
 
 from flask import session, request
@@ -11,7 +12,7 @@ dbsession, md, DBase = connectDb()
 class Log(DBase):
     __table__ = Table("log", md, autoload=True)
 
-    # 插入log表
+    # Insert log table
     def insertDetail(self, type, target, credit, userid=None, info=None):
         if userid is None:
             userid = session.get("userid")
@@ -63,5 +64,13 @@ class Log(DBase):
                 1).first()[0]
         return result
 
-    def maa(self):
-        pass
+    # Check if the server has been started in the last ten seconds (I don't know why flask is "started" twice)
+    def judgeStartServe(self):
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        before = (datetime.datetime.now() + datetime.timedelta(seconds=-10)).strftime("%Y-%m-%d %H:%M:%S")
+        count = dbsession.query(Log).filter(Log.category == "Start the server",
+                                            Log.createtime.between(before, now)).count()
+        if count > 0:
+            return True
+        else:
+            return False

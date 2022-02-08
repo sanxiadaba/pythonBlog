@@ -5,16 +5,17 @@ from sqlalchemy import Table, func
 
 from common.connectDb import connectDb
 from constant import recommendedNumOfSide
-from database.users import Users
 
 dbsession, md, DBase = connectDb()
 
+class Users(DBase):
+    __table__ = Table("users", md, autoload=True)
 
 class Article(DBase):
     __table__ = Table("article", md, autoload=True)
 
     # Search articles by id
-    def find_by_id(self, articleid):
+    def searchArticleByUserid(self, articleid):
         row = dbsession.query(Article, Users.nickname).join(Users, Users.userid \
                                                             == Article.userid).filter(Article.hide == 0,
                                                                                       Article.drafted == 0,
@@ -230,8 +231,8 @@ class Article(DBase):
         return dbsession.query(Article).count()
 
     #  Check the number of articles you have deleted
-    def searchDeleteArticleCount(self):
-        userid = session.get("userid")
+    def searchDeleteArticleCount(self, userid=None):
+        userid = session.get("userid") if userid == None else userid
         return dbsession.query(Article).filter_by(userid=userid, delete=1).count()
 
     # Number of all articles by the author
@@ -239,13 +240,13 @@ class Article(DBase):
         return dbsession.query(Article).count()
 
     # Number of all articles by the author
-    def searchAllArticleNumByUserid(self):
-        userid = session.get("userid")
+    def searchAllArticleNumByUserid(self, userid=None):
+        userid = session.get("userid") if userid == None else userid
         return dbsession.query(Article).filter_by(userid=userid).count()
 
     # The number of articles the author has deleted in addition to
-    def exceptDeleteNum(self):
-        return self.searchAllArticleNumByUserid() - self.searchDeleteArticleCount()
+    def exceptDeleteNum(self, userid=None):
+        return self.searchAllArticleNumByUserid(userid) - self.searchDeleteArticleCount(userid)
 
     # The sum of the number of comments and visits to all articles
     def searchALLNumberOfComment(self):

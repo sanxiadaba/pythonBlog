@@ -8,15 +8,68 @@ from sqlalchemy import Table
 from common.connectDb import connectDb
 from common.myLog import listLogger, allLogger
 from constant import rateCreditForArticle
-from database.article import Article
-from database.logs import Log
-from database.users import Users
+
+dbsession, md, DBase = connectDb()
+
+
+class Users(DBase):
+    __table__ = Table("users", md, autoload=True)
+
+    # Modify user points
+    def updateCredit(self, credit, userid):
+        user = dbsession.query(Users).filter_by(userid=userid).one()
+        user.credit = int(user.credit) + int(credit)
+        dbsession.commit()
+
+    # Query a user's nickname based on his or her id
+    def searchNicknameByUserid(self, userid):
+        return dbsession.query(Users.nickname).filter_by(userid=userid).first()
+
+
+class Article(DBase):
+    __table__ = Table("article", md, autoload=True)
+
+    # Search author id by article id
+    def searchUseridByArticleid(self, articleid):
+        return dbsession.query(Article.userid).filter_by(articleid=articleid).first()
+
+    # Look up the title of the article by its id
+    def searchHeadlineByArticleid(self, articleid):
+        row = dbsession.query(Article.headline).filter_by(articleid=articleid).first()[0]
+        return row
+
+    # Check if the article is hidden
+    def searchWhetherHide(self, articleid):
+        try:
+            result = dbsession.query(Article.hide).filter_by(articleid=articleid).first()[0]
+            return True if result == 1 else False
+        except:
+            return True
+
+
+class Log(DBase):
+    __table__ = Table("log", md, autoload=True)
+
+    # Insert log table
+    def insertDetail(self, type, target, credit, userid=None, info=None):
+        if userid is None:
+            userid = session.get("userid")
+        if info is not None and type != "Start the server":
+            info = info + f" The ip address is{request.remote_addr}"
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        if type == "Start the server":
+            ipaddr = None
+        else:
+            ipaddr = request.remote_addr
+        logP = Log(userid=userid, category=type, target=target, credit=credit, createtime=now,
+                   ipaddr=ipaddr, info=info)
+        dbsession.add(logP)
+        dbsession.commit()
+
 
 instanceArticle = Article()
 instanceLog = Log()
 instanceUser = Users()
-
-dbsession, md, DBase = connectDb()
 
 
 class Credit(DBase):
@@ -26,7 +79,7 @@ class Credit(DBase):
     def insertDetail(self, type, target, credit, userid=None, info=None):
         # userid determines the user directory to write to. If you don't enter a userid, it defaults to the current user.
         userid = session.get("userid") if userid is None else userid
-        # 设置时间
+        # set time
         now = time.strftime("%Y-%m-%d %H:%M:%S")
         # View the current visitor's ip interface
         ipaddr = request.remote_addr
@@ -43,7 +96,7 @@ class Credit(DBase):
 
         # Start inserting insert log logs (different types correspond to insert different tables, different information)
         try:
-            if type == "购买文章":
+            if type == "Buy Article":
                 # The userid and nickname of the author of the article and the number of points that should be earned
                 authorid = int(instanceArticle.searchUseridByArticleid(target)[0])
                 authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]

@@ -21,7 +21,7 @@ from common.initDatabase import watchVersionOfMysql
 from common.myLog import logDanger
 from constant import classification, commentNum, regGiveCredit, loginEvereDayCredit, postArticleCredit, \
     replyAndAddCommentCredit, rateCreditForArticle, creditListForReleaseArticle, howArticleInWeb, howCommentInArticle, \
-    maxUserPostArticleNum, maxUserPostArticleNumOfEditor, maxModifyArticleNum, maxUploadPicNum, ueiditorLanguage, \
+    maxUserPostArticleNum, maxUserPostArticleNumOfEditor, maxModifyArticleNum, maxUploadPicNum, blogLanguage, \
     recommendedNumOfSide
 from database.article import Article
 from database.logs import Log
@@ -45,6 +45,7 @@ def baseAdminManage():
     webInfo["numOfAdmin"] = instanceUser.searchNumOfAdmin()
     webInfo["numOfEditor"] = instanceUser.searchNumOfEditor()
     webInfo["numOfUser"] = instanceUser.searchNumOfUser()
+    webInfo["numOfUserAndEditor"] = int(webInfo["numOfUser"]) + int(webInfo["numOfEditor"])
     webInfo["pythonVersion"] = sys.version.split("(")[0]
     webInfo["platForm"] = platform.platform()
     webInfo["mysqlVersion"] = watchVersionOfMysql()
@@ -70,7 +71,9 @@ def baseAdminManage():
     webInfo["maxModifyArticleNum"] = maxModifyArticleNum
     webInfo["recommendedNumOfSide"] = " ".join(recommendedNumOfSide)
     webInfo["maxUploadPicNum"] = maxUploadPicNum
-    webInfo["ueiditorLanguage"] = ueiditorLanguage
+    webInfo["ueiditorLanguage"] = blogLanguage
+
+    usersInfo = {}
 
     end = time.time()
     loadTime = end - start
