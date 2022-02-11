@@ -272,7 +272,7 @@ class Article(DBase):
     def articleInfo(self, userid):
         result = dbsession.query(Article.articleid, Article.headline, Article.type, Article.replycount,
                                  Article.readcount, Article.createtime, Article.credit, Article.drafted,
-                                 Article.checked, Article.hide, Article.recommended, Article.delete).filter(
+                                 Article.checked, Article.hide, Article.recommended).filter(
             Article.userid == userid, Article.delete == 0).all()
         return result
 

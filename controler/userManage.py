@@ -179,6 +179,23 @@ def applyEditor():
         return "0"
 
 
+# cancle the Apply for a role
+@userManage.route("/cancleApplyEditor", methods=["POST"])
+@logDanger
+def cancleApplyEditor():
+    userid = session.get('userid')
+    try:
+        instanceUser.cancleApplyForBecomeEditor()
+        info = f"Users with userid {userid} cancle the apply to become editors"
+        listLogger(userid, info, [0])
+        instanceLog.insertDetail(type="cancle Apply to become an editor", target=userid, credit=0, info=info)
+        return "1"
+    except:
+        e = traceback.format_exc()
+        allLogger(0, e)
+        return "0"
+
+
 # Delete comments (note that the number of comments on the article will be set to subtract 1 when the time comes)
 # Note that all comments under the article will also be set to hidden
 @userManage.route("/hideArticle", methods=["POST"])

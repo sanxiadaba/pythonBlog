@@ -19,9 +19,10 @@ from common.myLog import allLogger
 from common.myLog import rootDir
 from common.utility import genearteMD5
 from constant import mysqlPassword, mysqlPort, databaseName, mysqlUserName, mysqlUrl, adminLogin, adminPassword, \
-    userLogin, userPassword, md5Salt
+    userLogin, userPassword, md5Salt, editorPassword, editorLogin
 
 adminPassword = genearteMD5(adminPassword + md5Salt)
+editorPassword = genearteMD5(editorPassword + md5Salt)
 userPassword = genearteMD5(userPassword + md5Salt)
 
 
@@ -64,9 +65,10 @@ def ininDatabase():
             with open(f"{rootDir}\\templates\\exampleArticle.html") as e:
                 exampleArticle = e.read()
             now = time.strftime("%Y-%m-%d %H:%M:%S")
-            sql = "insert into users (username,password,nickname,avatar,role,credit,createtime) values (%s, %s, %s,%s,%s,%s,%s)"
-            cur.execute(sql, (adminLogin, adminPassword, "admin", "default/1.png", "admin", 1000, now))
-            cur.execute(sql, (userLogin, userPassword, "editor", "default/2.png", "editor", 1000, now))
+            sql = "insert into users (username,password,nickname,avatar,role,credit,createtime,apply) values (%s, %s, %s,%s,%s,%s,%s,%s)"
+            cur.execute(sql, (adminLogin, adminPassword, "admin", "default/1.png", "admin", 1000, now, 0))
+            cur.execute(sql, (editorLogin, editorPassword, "editor", "default/2.png", "editor", 1000, now, 0))
+            cur.execute(sql, (userLogin, userPassword, "user", "default/3.png", "user", 1000, now, 1))
             sql = "insert into article (userid,type,headline,content,thumbnail,readcount,replycount,createtime,updatetime,recommended) values (%s, %s, %s,%s,%s,%s,%s,%s,%s,%s)"
             cur.execute(sql, (2, 1, "example", exampleArticle, "default/1.jpg", 0, 1, now, now, 1))
             sql = "insert into comment (userid,articleid,content,ipaddr,agreecount,opposecount,createtime) values (%s, %s, %s,%s,%s,%s,%s)"

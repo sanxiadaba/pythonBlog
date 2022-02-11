@@ -201,14 +201,25 @@ function showReset() {
                 bootbox.alert({title: "Error Alert", message: "No such user or wrong password, if you have other questions, please contact the administrator (verification code has been refreshed)"});
 
             }
-            else if (data=="add-credit"){
-                $.get("/loginEvereDayCredit",function (data){
-                    var loginEvereDayCredit=data["loginEvereDayCredit"]
-                qingti("Login successfully, points+"+loginEvereDayCredit)
+            else if (data == "add-credit") {
+                $.get("/loginEvereDayCredit", function (data) {
+                    var loginEvereDayCredit = data["loginEvereDayCredit"]
+                    qingti("Login successfully, points+" + loginEvereDayCredit)
                     bootbox.alert({title: "Information Tips", message: "Congratulations on your successful login!"});
-                setTimeout("location.reload();", 2000)
+                    setTimeout("location.reload();", 2000)
 
-    })
+                })
+            } else if (data == "forbid") {
+                $.get("/adminMail", function (data) {
+                    var adminMail = data
+                    qingti("Login Error")
+                    bootbox.alert({
+                        title: "error tips",
+                        message: "This account has been disabled by the administrator, please contact\n" + adminMail
+                    });
+                    setTimeout("location.reload();", 2000)
+                })
+
             }
         })
     }
@@ -509,10 +520,14 @@ function modifyNickname(s,yuan) {
         },
         callback: function (result) {
             if (result.toString() === "true") {
-                $.post("/applyEditor",function (data){
-                    if (data==="1"){
-                        bootbox.alert({title: "Operation Tips", message: "Application is successful, please wait for the administrator's review"});
-                        $(s).text("Applied for")
+                $.post("/applyEditor", function (data) {
+                    if (data === "1") {
+                        bootbox.alert({
+                            title: "Operation Tips",
+                            message: "Application is successful, please wait for the administrator's review"
+                        });
+                        $(s).text("Cancel Application")
+                        $(s).attr('onclick', "cancleApplyEditor(this)")
                     }
                 })
             }
@@ -521,14 +536,160 @@ function modifyNickname(s,yuan) {
     })
  }
 
+// cancleApply to become an editor
+function cancleApplyEditor(s) {
+    bootbox.confirm({
+        title: "Operation Tips",
+        message: "Whether to  cancle the apply to become an editor, after the consent of the administrator, the editor can publish articles directly without the review of the administrator",
+        buttons: {
+            cancel: {
+                label: 'Reconsider'
+            },
+            confirm: {
+                label: 'Determine to do it'
+            }
+        },
+        callback: function (result) {
+            if (result.toString() === "true") {
+                $.post("/cancleApplyEditor", function (data) {
+                    if (data === "1") {
+                        bootbox.alert({title: "Operation Tips", message: "Application is cancled"});
+                        $(s).text("Apply to become an editor")
+                        $(s).attr('onclick', "applyEditor(this)")
+                    }
+                })
+            }
+        }
+
+    })
+}
+
+
+// become an editor
+function becomeEditor(s, userid) {
+    userid = userid.toString()
+    bootbox.confirm({
+        title: "Operation Tips",
+        message: "Is it sure to set this user as an editor?",
+        buttons: {
+            cancel: {
+                label: 'Reconsider'
+            },
+            confirm: {
+                label: 'Make sure the setting is set to edit'
+            }
+        },
+        callback: function (result) {
+            if (result.toString() === "true") {
+                $.post("/becomeEditor", param = "userid=" + userid, function (data) {
+                    if (data === "1") {
+                        bootbox.alert({title: "Operation Tips", message: "Set up successfully"});
+                        $(s).text("set to user")
+                        $(s).attr('onclick', "becomeUser(this," + userid + ")")
+                    }
+                })
+            }
+        }
+
+    })
+}
+
+// cancleApply to become an editor
+function becomeUser(s, userid) {
+    userid = userid.toString()
+    bootbox.confirm({
+        title: "Operation Tips",
+        message: "Is it sure to set this user as an user?",
+        buttons: {
+            cancel: {
+                label: 'Reconsider'
+            },
+            confirm: {
+                label: 'Make sure the setting is set to user'
+            }
+        },
+        callback: function (result) {
+            if (result.toString() === "true") {
+                $.post("/becomeUser", param = "userid=" + userid, function (data) {
+                    if (data === "1") {
+                        bootbox.alert({title: "Operation Tips", message: "Set up successfully"});
+                        $(s).text("Set to editor&nbsp;&nbsp;")
+                        $(s).attr('onclick', "becomeEditor(this," + userid + ")")
+                    }
+                })
+            }
+        }
+
+    })
+}
+
+
+// Disable login for specified users
+function forbidLogin(s, userid) {
+    userid = userid.toString()
+    bootbox.confirm({
+        title: "Operation Tips",
+        message: "Whether to determine the prohibition of login?",
+        buttons: {
+            cancel: {
+                label: 'Reconsider'
+            },
+            confirm: {
+                label: 'Make sure to disable the user\'s login'
+            }
+        },
+        callback: function (result) {
+            if (result.toString() === "true") {
+                $.post("/forbidLogin", param = "userid=" + userid, function (data) {
+                    if (data === "1") {
+                        bootbox.alert({title: "Operation Tips", message: "Login disabled successfully"});
+                        $(s).text("Restore Login")
+                        $(s).attr('onclick', "restoreLogin(this," + userid + ")")
+                    }
+                })
+            }
+        }
+
+    })
+}
+
+// Restore a user's normal login privileges
+function restoreLogin(s, userid) {
+    userid = userid.toString()
+    bootbox.confirm({
+        title: "Operation Tips",
+        message: "Make sure the user's login is restored?",
+        buttons: {
+            cancel: {
+                label: 'Reconsider'
+            },
+            confirm: {
+                label: 'OK to resume login'
+            }
+        },
+        callback: function (result) {
+            if (result.toString() === "true") {
+                $.post("/restoreLogin", param = "userid=" + userid, function (data) {
+                    if (data === "1") {
+                        bootbox.alert({title: "Operation Tips", message: "Set up successfully"});
+                        $(s).text("Forbid Login")
+                        $(s).attr('onclick', "forbidLogin(this," + userid + ")")
+                    }
+                })
+            }
+        }
+
+    })
+}
+
+
 // Modify qq number
- function modifyQQ(s,yuan) {
+function modifyQQ(s, yuan) {
     var newQQ = $.trim($(s).parent().prev().children("input").val());
     var reg = new RegExp("^[0-9]*$");
     if (newQQ === yuan) {
         return false
-    }
-    else if (newQQ.length>11||!reg.test(newQQ)){
+    } else if (newQQ.length > 11 || !reg.test(newQQ)) {
         bootbox.alert({title: "Error Alert", message: "QQ number format error, please try again"});
         return false
     }
@@ -1199,8 +1360,4 @@ function changeAdminManage(name) {
         return false
     })
 
-}
-
-function maa() {
-    return false
 }

@@ -71,14 +71,14 @@ def baseAdminManage():
     webInfo["maxModifyArticleNum"] = maxModifyArticleNum
     webInfo["recommendedNumOfSide"] = " ".join(recommendedNumOfSide)
     webInfo["maxUploadPicNum"] = maxUploadPicNum
-    webInfo["ueiditorLanguage"] = blogLanguage
+    webInfo["language"] = blogLanguage
 
-    usersInfo = {}
+    usersInfo = instanceUser.searchInfoOfUserAndEditor()
 
     end = time.time()
     loadTime = end - start
     webInfo["loadTime"] = loadTime
-    return render_template("adminManage.html", webInfo=webInfo)
+    return render_template("adminManage.html", webInfo=webInfo, usersInfo=usersInfo)
 
 
 # Jumping options for "memory" admin pages
@@ -87,11 +87,11 @@ def baseAdminManage():
 def adminTiaoNum():
     if request.method == 'GET':
         adminTiaoNum = session.get("adminTiaoNum")
-        session["adminTiaoNum"] = 0
-        if adminTiaoNum is not None and adminTiaoNum != "0":
+        session["adminTiaoNum"] = adminTiaoNum if adminTiaoNum != 0 and adminTiaoNum != "0" else "0"
+        if adminTiaoNum is not None and adminTiaoNum != "0" and adminTiaoNum != 0:
             return str(adminTiaoNum)
         else:
-            return "0"
+            return "1"
     elif request.method == 'POST':
         session["adminTiaoNum"] = str(request.form.get("adminTiaoNum"))
         return "1"

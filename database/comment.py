@@ -134,7 +134,7 @@ class Comment(DBase):
         numOfALLMyComment = dbsession.query(Comment).filter_by(userid=userid, hide=0, replyid=0).count()
         return numOfALLMyComment
 
-    # 查询所有评论，和隐藏评论的数量
+    # Check all comments, and the number of hidden comments
     def numOfDeletedComment(self, userid=None):
         userid = session.get("userid") if userid is None else userid
         numOfAll = dbsession.query(Comment).filter_by(userid=userid, hide=0).count()

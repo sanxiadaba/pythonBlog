@@ -180,7 +180,7 @@ CREATE TABLE `users`
     `createtime`  datetime(0)                                                   NULL     DEFAULT NULL COMMENT 'Time of user creation',
     `apply`       int(1)                                                        NULL     DEFAULT 0 COMMENT 'Whether to apply to become an editor',
     `agreeEditor` tinyint(1)                                                    NULL     DEFAULT 0 COMMENT 'Does the administrator agree to become an editor',
-    `fobidLogin`  tinyint(1)                                                    NULL     DEFAULT 0 COMMENT 'Does the administrator disable this user from logging in',
+    `forbidLogin` tinyint(1)                                                    NULL     DEFAULT 0 COMMENT 'Does the administrator disable this user from logging in',
     PRIMARY KEY (`userid`) USING BTREE
 ) ENGINE = InnoDB
   AUTO_INCREMENT = 1

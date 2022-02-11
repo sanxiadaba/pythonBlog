@@ -15,17 +15,22 @@ dbsession, md, DBase = connectDb()
 class Article(DBase):
     __table__ = Table("article", md, autoload=True)
 
-    # The number of articles the author has deleted in addition to
     def exceptDeleteNum(self, userid=None):
-        return self.searchAllArticleNumByUserid(userid) - self.searchDeleteArticleCount(userid)
+        userid = session.get("userid") if userid is None else userid
+        return dbsession.query(Article).filter(Article.userid == userid, Article.delete == 0).count()
 
-    #  Check the number of articles you have deleted
-    def searchDeleteArticleCount(self, userid=None):
-        userid = session.get("userid") if userid == None else userid
-        return dbsession.query(Article).filter_by(userid=userid, delete=1).count()
+
+class Comment(DBase):
+    __table__ = Table("comment", md, autoload=True)
+
+    def numOfComment(self, userid=None):
+        userid = session.get("userid") if userid is None else userid
+        numOfAll = dbsession.query(Comment).filter_by(userid=userid, hide=0).count()
+        return numOfAll
 
 
 instanceArticle = Article()
+instanceComment = Comment()
 
 
 class Users(DBase):
@@ -63,8 +68,8 @@ class Users(DBase):
         dbsession.commit()
 
     # Check the remaining points of the user
-    def findRestCredit(self):
-        userid = session.get("userid")
+    def findRestCredit(self, userid=None):
+        userid = session.get("userid") if userid is None else userid
         restOfCredit = dbsession.query(Users.credit).filter_by(userid=userid).first()
         if restOfCredit is None:
             return None
@@ -134,6 +139,13 @@ class Users(DBase):
         user.apply = 1
         dbsession.commit()
 
+    # cancle Apply to become an editor
+    def cancleApplyForBecomeEditor(self):
+        userid = session.get("userid")
+        user = dbsession.query(Users).filter_by(userid=userid).first()
+        user.apply = 0
+        dbsession.commit()
+
     # View all member information (number of users, identity, qq, etc.)
     def searchAllUserInfo(self):
         result = dbsession.query(Users).all()
@@ -163,11 +175,6 @@ class Users(DBase):
         row.credit = int(newCredit)
         dbsession.commit()
 
-    # Remove the user (make the user non-loginable)
-    def forbidUserLogin(self, userid):
-        row = dbsession.query(Users).filter_by(userid=userid)
-        row.forbidLogin = 1
-        dbsession.commit()
 
     # Check whether to apply to become an editor
     def whetherApplyForEditor(self, userid):
@@ -197,9 +204,44 @@ class Users(DBase):
     # Return all users, editors' information
     def searchInfoOfUserAndEditor(self):
         result = dbsession.query(Users).filter(Users.role != "admin").all()
-        info = []
+        infoList = []
         for user in result:
+            info = []
             userid = user.userid
-            info.extend([user.username, user.nickname, instanceArticle.exceptDeleteNum(userid),
-                         instanceArticle.searchDeleteArticleCount(userid)])
-        pass
+            info.extend([user.username, user.nickname, instanceArticle.exceptDeleteNum(userid=userid),
+                         instanceComment.numOfComment(userid=userid), user.credit, user.createtime, user.apply,
+                         user.userid,
+                         user.forbidLogin, user.role])
+            infoList.append(info)
+        newInfoList = []
+        for i in infoList:
+            if i[-1] == "admin":
+                newInfoList.append(i)
+                infoList.remove(i)
+        for i in infoList:
+            newInfoList.append(i)
+        return newInfoList
+
+    # Set the user role of the specified user to Edit
+    def becomeEditor(self, userid):
+        row = dbsession.query(Users).filter_by(userid=userid).first()
+        row.role = "editor"
+        dbsession.commit()
+
+    # Set the user role of the specified user to user
+    def becomeUser(self, userid):
+        row = dbsession.query(Users).filter_by(userid=userid).first()
+        row.role = "user"
+        dbsession.commit()
+
+    # Disabling a user's login
+    def forbidUserLogin(self, userid):
+        row = dbsession.query(Users).filter_by(userid=userid).first()
+        row.forbidUserLogin = 1
+        dbsession.commit()
+
+    # Reply to a user's login
+    def restoreLogin(self, userid):
+        row = dbsession.query(Users).filter_by(userid=userid).first()
+        row.forbidUserLogin = 0
+        dbsession.commit()

@@ -23,7 +23,8 @@ from flask import Blueprint, make_response, session, request, url_for
 from common.myLog import ininUserDir, logDanger, listLogger, allLogger, dirInDir, avatarPath
 from common.utility import ImageCode, gen_email_code, send_email
 from common.utility import genearteMD5
-from constant import whetherDistinguishCapital, regGiveCredit, loginEvereDayCredit, timeoutOfEcode, md5Salt
+from constant import whetherDistinguishCapital, regGiveCredit, loginEvereDayCredit, timeoutOfEcode, md5Salt, \
+    emailAccount
 from database.credit import Credit
 from database.logs import Log
 from database.users import Users
@@ -197,6 +198,8 @@ def login():
         password = hashlib.md5(password.encode()).hexdigest()
         result = instanceUser.searchUserByUsername(username)
         if len(result) == 1 and result[0].password == password:
+            if result[0].forbidUserLogin == 1:
+                return "forbid"
             session["islogin"] = "true"
             session["userid"] = result[0].userid
             session["nickname"] = nickname
@@ -250,3 +253,62 @@ def logout():
     # Disable cookies
     response.set_cookie("password", max_age=0)  # This is another way of writing
     return response
+
+
+# Return to the administrator's account
+@user.route("/adminMail", methods=["GET"])
+@logDanger
+def adminMail():
+    return str(emailAccount)
+
+
+# Set a user as editor
+@user.route("/becomeEditor", methods=["POST"])
+@logDanger
+def becomeEditor():
+    userid = int(request.form.get("userid"))
+    nickname = instanceUser.searchNicknameByUserid(userid)
+    info = f"Set the user with userid {userid} and nickname {nickname} to edit"
+    instanceLog.insertDetail(userid=userid, type="set to editor", credit=0, target=userid, info=info)
+    listLogger(userid, info, [0])
+    instanceUser.becomeEditor(userid)
+    return "1"
+
+
+# Set a user as user
+@user.route("/becomeUser", methods=["POST"])
+@logDanger
+def becomeUser():
+    userid = int(request.form.get("userid"))
+    nickname = instanceUser.searchNicknameByUserid(userid)
+    info = f"Set the user with userid {userid} and nickname {nickname} to user"
+    instanceLog.insertDetail(userid=userid, type="set to user", credit=0, target=userid, info=info)
+    listLogger(userid, info, [0])
+    instanceUser.becomeUser(userid)
+    return "1"
+
+
+# Blocking a user's login
+@user.route("/forbidLogin", methods=["POST"])
+@logDanger
+def forbidLogin():
+    userid = int(request.form.get("userid"))
+    nickname = instanceUser.searchNicknameByUserid(userid)
+    info = f"Block users with userid {userid} and nickname {nickname} from logging in"
+    instanceLog.insertDetail(userid=userid, type="Forbid Login", credit=0, target=userid, info=info)
+    listLogger(userid, info, [0])
+    instanceUser.forbidUserLogin(userid)
+    return "1"
+
+
+# Unblock a user's login
+@user.route("/restoreLogin", methods=["POST"])
+@logDanger
+def restoreLogin():
+    userid = int(request.form.get("userid"))
+    nickname = instanceUser.searchNicknameByUserid(userid)
+    info = f"unblock users with userid {userid} and nickname {nickname} from logging in"
+    instanceLog.insertDetail(userid=userid, type="Restore Login", credit=0, target=userid, info=info)
+    listLogger(userid, info, [0])
+    instanceUser.restoreLogin(userid)
+    return "1"

@@ -70,9 +70,7 @@
 <script type="text/javascript">
     function myfun_4() {
         $.get("/adminTiaoNum", function (data) {
-            if (data === "0") {
-                return false
-            } else if (data === "1") {
+            if (data === "1") {
                 changeAdminManage('webInfo_1')
             } else if (data === "2") {
                 changeAdminManage('webUser_1')

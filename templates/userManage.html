@@ -68,7 +68,8 @@
                             </td>
                         {% else %}
                             <td>
-                                <button class="btn btn-primary" onclick="applyEditor(this)">Applied for</button>
+                                <button class="btn btn-primary" onclick="cancleApplyEditor(this)">Cancel Application
+                                </button>
                             </td>
                         {% endif %}
                     {% endif %}
@@ -134,7 +135,6 @@
             </thead>
             <tbody>
             {% for article in articleInfo %}
-                {% if article[11] ==0 %}
                     {% if loop.index<=everyPageInHou %}
                         <tr id="article__{{ article[0] }}" class="index_{{ loop.index }}" style="">
                             {#              Select#}
@@ -238,7 +238,6 @@
 
                         </tr>
                     {% endif %}
-                {% endif %}
             {% endfor %}
             </tbody>
         </table>

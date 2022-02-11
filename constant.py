@@ -140,8 +140,10 @@ else:
     raise Exception("Please configure the correct mysql")
 
 adminLogin = os.environ.get("ADMIN_LOGIN_NAME")
+editorLogin = os.environ.get("EDITOR_LOGIN_NAME")
 userLogin = os.environ.get("USER_LOGIN_NAME")
 adminPassword = os.environ.get("ADMIN_PASSWORD")
+editorPassword = os.environ.get("EDITOR_PASSWORD")
 userPassword = os.environ.get("USER_PASSWORD")
 
 whetherDebug = True if os.environ.get("DEBUG_MODE") == "True" else False

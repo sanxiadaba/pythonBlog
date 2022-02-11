@@ -28,8 +28,8 @@ to learn
 
 #### extra functions
 
-- In the .env file, you can create an administrator and editor account for the initial experience of the project (the
-  two users created by default have the following accounts and passwords)
+- In the .env file, you can create an administrator,editor and user account for the initial experience of the project (
+  the three users created by default have the following accounts and passwords)
 
    ```
    account: adminTest
@@ -37,6 +37,9 @@ to learn
    
    account: editorTest
    password editorTest
+  
+   account: userTest
+   password userTest
    ```
 
 - If you want to use the mailbox registration, login and other functions
@@ -140,6 +143,9 @@ pip3 install -r requirements.txt
 - 21-1-24
     - Fixed the bug that you can favorite articles and reply comments when you are not logged in.
     - The database can be initialized automatically in the background.
+- 21-2-8
+    - Solve the problem of circular references that may occur in databases
+    - "Salt" the database to make it more secure
 
 #### Related links
 
@@ -158,4 +164,5 @@ pip3 install -r requirements.txt
 - flask-limiter limit
 - flask backend monitoring
 - markdown editor support
+- Chinese and English dual mode
 
