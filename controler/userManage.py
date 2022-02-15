@@ -54,7 +54,7 @@ def baseUserManage():
     # Number of my comments
     numOfALLMyComment = instanceComment.numOfALLMyComment()
     # My nickname
-    myNickname = instanceUser.searchNicknameByUserid(userid)[0]
+    myNickname = instanceUser.searchNicknameByUserid(userid)
     # My registered email
     myEmail = instanceUser.searchMyEmail(userid)
     # User Roles

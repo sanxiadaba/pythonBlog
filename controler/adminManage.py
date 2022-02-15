@@ -18,12 +18,13 @@ import time
 from flask import Blueprint, render_template, request, session
 
 from common.initDatabase import watchVersionOfMysql
-from common.myLog import logDanger
+from common.myLog import logDanger, adminLog, listLogger
 from constant import classification, commentNum, regGiveCredit, loginEvereDayCredit, postArticleCredit, \
     replyAndAddCommentCredit, rateCreditForArticle, creditListForReleaseArticle, howArticleInWeb, howCommentInArticle, \
     maxUserPostArticleNum, maxUserPostArticleNumOfEditor, maxModifyArticleNum, maxUploadPicNum, blogLanguage, \
     recommendedNumOfSide
 from database.article import Article
+from database.comment import Comment
 from database.logs import Log
 from database.users import Users
 
@@ -32,6 +33,7 @@ adminManage = Blueprint("adminManage", __name__)
 instanceArticle = Article()
 instanceUser = Users()
 instanceLog = Log()
+instanceComment = Comment()
 
 
 @adminManage.route("/adminManage", methods=["GET"])
@@ -74,11 +76,14 @@ def baseAdminManage():
     webInfo["language"] = blogLanguage
 
     usersInfo = instanceUser.searchInfoOfUserAndEditor()
-
+    commentInfo = instanceComment.searchCommentInfo()
     end = time.time()
     loadTime = end - start
     webInfo["loadTime"] = loadTime
-    return render_template("adminManage.html", webInfo=webInfo, usersInfo=usersInfo)
+    webNumOfDraft = instanceArticle.searchNumOfDraft()
+    webDraft = instanceArticle.searchDraft()
+    return render_template("adminManage.html", webInfo=webInfo, usersInfo=usersInfo, commentInfo=commentInfo,
+                           webDraft=webDraft, webNumOfDraft=webNumOfDraft)
 
 
 # Jumping options for "memory" admin pages
@@ -95,3 +100,54 @@ def adminTiaoNum():
     elif request.method == 'POST':
         session["adminTiaoNum"] = str(request.form.get("adminTiaoNum"))
         return "1"
+
+
+# Agree to the article being reviewed
+@adminManage.route("/passDraft", methods=["POST"])
+@logDanger
+def passDraft():
+    articleid = int(request.form.get("articleid"))
+    userid = instanceArticle.searchUseridByArticleid(articleid)
+    username = instanceUser.searchUsernameByUserd(userid)
+    nickname = instanceUser.searchNicknameByUserid(userid)
+    headline = instanceArticle.searchHeadlineByArticleid(articleid)
+    info = f"userid is {userid},nickname is {username},nickname is {nickname} Administrators pass articleid is {articleid},headline is {headline} draft"
+    listLogger(userid, info, [3])
+    adminLog(info)
+    authorUserid = instanceArticle.searchUseridByArticleid(articleid)
+    authorUsername = instanceUser.searchUsernameByUserd(authorUserid)
+    authorNickname = instanceUser.searchNicknameByUserid(authorUserid)
+    info = f"userid is {authorUserid},nickname is {authorUsername},nickname is {authorNickname} Administrators pass articleid is {articleid},headline is {headline} draft"
+    listLogger(authorUserid, info, [3])
+    instanceArticle.passDraft(articleid)
+    return "1"
+
+
+# Rejecting articles from review
+@adminManage.route("/rejectDraft", methods=["POST"])
+@logDanger
+def rejectDraft():
+    articleid = int(request.form.get("articleid"))
+    userid = instanceArticle.searchUseridByArticleid(articleid)
+    username = instanceUser.searchUsernameByUserd(userid)
+    nickname = instanceUser.searchNicknameByUserid(userid)
+    headline = instanceArticle.searchHeadlineByArticleid(articleid)
+    info = f"userid is {userid},nickname is {username},nickname is {nickname} Administrators reject articleid is {articleid},headline is {headline} draft"
+    listLogger(userid, info, [3])
+    adminLog(info)
+    authorUserid = instanceArticle.searchUseridByArticleid(articleid)
+    authorUsername = instanceUser.searchUsernameByUserd(authorUserid)
+    authorNickname = instanceUser.searchNicknameByUserid(authorUserid)
+    info = f"userid is {authorUserid},nickname is {authorUsername},nickname is {authorNickname} Administrators reject articleid is {articleid},headline is {headline} draft"
+    listLogger(authorUserid, info, [3])
+    instanceArticle.passDraft(articleid)
+    return "1"
+
+
+# Preview of draft articles
+@adminManage.route("/reviewDraft/<int:articleid>")
+@logDanger
+def reviewDraft(articleid):
+    articleid = int(articleid)
+    article = instanceArticle.reviewDraft(articleid)
+    return render_template("reviewDraft.html", article=article)

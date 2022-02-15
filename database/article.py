@@ -8,14 +8,28 @@ from constant import recommendedNumOfSide
 
 dbsession, md, DBase = connectDb()
 
+
 class Users(DBase):
     __table__ = Table("users", md, autoload=True)
+
+    # Query username by userid
+    def searchUsernameByUserd(self, userid):
+        row = dbsession.query(Users.username).filter_by(userid=userid).first()[0]
+        return row
+
+    # Query a user's nickname based on his or her id
+    def searchNicknameByUserid(self, userid):
+        return dbsession.query(Users.nickname).filter_by(userid=userid).first()[0]
+
+
+instanceUser = Users()
+
 
 class Article(DBase):
     __table__ = Table("article", md, autoload=True)
 
     # Search articles by id
-    def searchArticleByUserid(self, articleid):
+    def searchArticleByArticleid(self, articleid):
         row = dbsession.query(Article, Users.nickname).join(Users, Users.userid \
                                                             == Article.userid).filter(Article.hide == 0,
                                                                                       Article.drafted == 0,
@@ -172,7 +186,7 @@ class Article(DBase):
 
     # Search author id by article id
     def searchUseridByArticleid(self, articleid):
-        return dbsession.query(Article.userid).filter_by(articleid=articleid).first()
+        return dbsession.query(Article.userid).filter_by(articleid=articleid).first()[0]
 
     # Search the title and content of an article by its id
     def searchHeadlineAndContentByArticleid(self, articleid):
@@ -272,7 +286,7 @@ class Article(DBase):
     def articleInfo(self, userid):
         result = dbsession.query(Article.articleid, Article.headline, Article.type, Article.replycount,
                                  Article.readcount, Article.createtime, Article.credit, Article.drafted,
-                                 Article.checked, Article.hide, Article.recommended).filter(
+                                 Article.checked, Article.hide, Article.recommended, Article.reject).filter(
             Article.userid == userid, Article.delete == 0).all()
         return result
 
@@ -288,3 +302,50 @@ class Article(DBase):
             return True if result == 1 else False
         except:
             return True
+
+    # Query the number of articles to be reviewed
+    def searchNumOfDraft(self):
+        result = dbsession.query(Article).filter_by(checked=0).count()
+        return result
+
+    # Search for articles to be reviewed
+    def searchDraft(self):
+        result = dbsession.query(Article).filter_by(checked=0).all()
+        result.sort(key=lambda x: x.userid)
+        ex = []
+        for draft in result:
+            lin = []
+            userid = draft.userid
+            lin.extend([instanceUser.searchUsernameByUserd(userid), instanceUser.searchNicknameByUserid(userid),
+                        draft.headline, draft.createtime, draft.articleid])
+            ex.append(lin)
+        return ex
+
+    # Agree to the article being reviewed
+    def passDraft(self, articleid):
+        row = dbsession.query(Article).filter_by(articleid=articleid).first()
+        row.checked = 1
+        dbsession.commit()
+
+    # Rejecting articles from review
+    def rejectDraft(self, articleid):
+        row = dbsession.query(Article).filter_by(articleid=articleid).first()[0]
+        row.reject = 1
+        dbsession.commit()
+
+    # View Draft Articles
+    def reviewDraft(self, articleid):
+        row = dbsession.query(Article.type, Article.createtime, Article.readcount, Article.credit, Article.headline,
+                              Article.content, Users.nickname).join(Users, Users.userid \
+                                                                    == Article.userid).filter(
+            Article.articleid == articleid).first()
+        row = list(row)
+        ex = {}
+        ex["type"] = row[0]
+        ex["createtime"] = row[1]
+        ex["readcount"] = row[2]
+        ex["credit"] = row[3]
+        ex["headline"] = row[4]
+        ex["content"] = row[5]
+        ex["nickname"] = row[6]
+        return ex

@@ -584,7 +584,7 @@ function becomeEditor(s, userid) {
                 $.post("/becomeEditor", param = "userid=" + userid, function (data) {
                     if (data === "1") {
                         bootbox.alert({title: "Operation Tips", message: "Set up successfully"});
-                        $(s).text("set to user")
+                        $(s).text("set to user&nbsp;&nbsp;")
                         $(s).attr('onclick', "becomeUser(this," + userid + ")")
                     }
                 })
@@ -1358,6 +1358,69 @@ function changeAdminManage(name) {
 
     $.post("/adminTiaoNum", param = "adminTiaoNum=" + tiao, function (data) {
         return false
+    })
+
+}
+
+// Reviewed and approved articles
+function passDraft(articleid) {
+    articleid = articleid.toString()
+    bootbox.confirm({
+        title: "Operation Tips",
+        message: "Whether the review of the article is confirmed?",
+        buttons: {
+            cancel: {
+                label: 'Reconsider'
+            },
+            confirm: {
+                label: 'Confirmation of adoption'
+            }
+        },
+        callback: function (result) {
+            if (result.toString() === "true") {
+                $.post("/passDraft", param = "articleid=" + articleid, function (data) {
+                    if (data === "1") {
+                        var biao = "#draft_" + articleid.toString()
+                        $(biao).html("")
+                        $(biao).html('<font color="red">Adopted</font>')
+                        qingti("Article has been reviewed")
+                    }
+                })
+
+            }
+        }
+
+    })
+}
+
+// Review Rejected Articles
+function rejectDraft(articleid) {
+    articleid = articleid.toString()
+    bootbox.confirm({
+        title: "Operation Tips",
+        message: "Whether the review of the article is confirmed?",
+        buttons: {
+            cancel: {
+                label: 'Reconsider'
+            },
+            confirm: {
+                label: 'OK to reject'
+            }
+        },
+        callback: function (result) {
+            if (result.toString() === "true") {
+                $.post("/rejectDraft", param = "articleid=" + articleid, function (data) {
+                    if (data === "1") {
+                        qingti("Article has been rejected")
+                        $(biao).html("")
+                        $(biao).html('<font color="red">Rejected</font>')
+                        qingti("Article has been rejected")
+                    }
+                })
+
+            }
+        }
+
     })
 
 }

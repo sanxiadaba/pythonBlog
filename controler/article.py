@@ -52,7 +52,7 @@ def read(articleid):
     # Query the article, if you can't find the article, throw a 404 error, if other errors occur, throw a 500 error
     # Then the error page will redirect to the home page
     try:
-        result = instanceArticle.searchArticleByUserid(articleid)
+        result = instanceArticle.searchArticleByArticleid(articleid)
         if result is None:
             abort(404)
     except:
@@ -67,7 +67,7 @@ def read(articleid):
     if session.get("islogin") == "true":
         #  Check if you have already bought this article, so that if you click again, you can buy it again by default in the author's words
         if instanceCredit.whetherPaidForArticle(articleid) or int(session.get("userid")) == int(
-                instanceArticle.searchUseridByArticleid(articleid)[0]):
+                instanceArticle.searchUseridByArticleid(articleid)):
             dict["paid"] = "true"
         else:
             dict["paid"] = "false"
@@ -93,7 +93,7 @@ def read(articleid):
             comment_list[i]["commentid"])
     return render_template("article.html", article=dict, is_favorite=is_favorite, prev_next=prev_next,
                            comment_list=comment_list, total=total, restOfCredit=restOfCredit,
-                           articleOfUserid=instanceArticle.searchUseridByArticleid(articleid)[0], articleid=articleid)
+                           articleOfUserid=instanceArticle.searchUseridByArticleid(articleid), articleid=articleid)
 
 
 # Interface to view login status
@@ -110,10 +110,10 @@ def islogin():
 def readAll():
     # The determination of whether there are enough points here has already been done in the front-end
     articleid = request.form.get("articleid")
-    result = instanceArticle.searchArticleByUserid(articleid)
+    result = instanceArticle.searchArticleByArticleid(articleid)
     userid = session.get("userid")
-    authorid = int(instanceArticle.searchUseridByArticleid(articleid)[0])
-    authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
+    authorid = int(instanceArticle.searchUseridByArticleid(articleid))
+    authorNickname = instanceUser.searchNicknameByUserid(authorid)
     # Points spent by readers
     readerPaidCredit = result[0].credit
     """

@@ -84,9 +84,14 @@ class Users(DBase):
         else:
             return None
 
+    # Query username by userid
+    def searchUsernameByUserd(self, userid):
+        row = dbsession.query(Users.username).filter_by(userid=userid).first()[0]
+        return row
+
     # Query a user's nickname based on his or her id
     def searchNicknameByUserid(self, userid):
-        return dbsession.query(Users.nickname).filter_by(userid=userid).first()
+        return dbsession.query(Users.nickname).filter_by(userid=userid).first()[0]
 
     # Search registered mailbox according to userid
     def searchMyEmail(self, userid):
@@ -245,3 +250,8 @@ class Users(DBase):
         row = dbsession.query(Users).filter_by(userid=userid).first()
         row.forbidUserLogin = 0
         dbsession.commit()
+
+    # Determine if it is an administrator by id
+    def judgeAdminByUserid(self, userid):
+        row = dbsession.query(Users.role).filter_by(userid=userid).first()[0]
+        return True if row == "admin" else False

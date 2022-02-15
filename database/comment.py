@@ -9,8 +9,30 @@ from constant import commentNum
 
 dbsession, md, DBase = connectDb()
 
+
 class Users(DBase):
     __table__ = Table("users", md, autoload=True)
+
+    # Check if you are an administrator
+    def judgeAdminByUserid(self, userid):
+        row = dbsession.query(Users.role).filter_by(userid=userid).first()[0]
+        if row == "admin":
+            return True
+        else:
+            return False
+
+    # Query username by userid
+    def searchUsernameByUserd(self, userid):
+        row = dbsession.query(Users.username).filter_by(userid=userid).first()[0]
+        return row
+
+    # Query a user's nickname based on his or her id
+    def searchNicknameByUserid(self, userid):
+        return dbsession.query(Users.nickname).filter_by(userid=userid).first()[0]
+
+
+instanceUser = Users()
+
 
 class Comment(DBase):
     __table__ = Table("comment", md, autoload=True)
@@ -162,3 +184,23 @@ class Comment(DBase):
             lin = dbsession.query(Comment).filter_by(commentid=i).first()
             lin.hide = 1
         dbsession.commit()
+
+    # Get the information about the comment and populate the front-end page
+    def searchCommentInfo(self):
+        ex = []
+        result = dbsession.query(Comment).all()
+        for comment in result:
+            if instanceUser.judgeAdminByUserid(comment.userid) is True and comment.hide == 0:
+                pass
+            else:
+                ex.append(comment)
+        newResult = sorted(ex, key=lambda x: x.userid)
+        newEx = []
+        for comment in newResult:
+            userid = comment.userid
+            lin = []
+            lin.extend([instanceUser.searchUsernameByUserd(userid), instanceUser.searchNicknameByUserid(userid),
+                        comment.content, comment.agreecount, comment.opposecount, comment.createtime,
+                        comment.commentid])
+            newEx.append(lin)
+        return newEx

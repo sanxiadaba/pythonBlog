@@ -38,8 +38,8 @@ def add_favorite():
     articleid = request.form.get("articleid")
     userid = session.get("userid")
     nickname = session.get("nickname")
-    authorid = int(instanceArticle.searchUseridByArticleid(articleid)[0])
-    authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
+    authorid = int(instanceArticle.searchUseridByArticleid(articleid))
+    authorNickname = instanceUser.searchNicknameByUserid(authorid)
     try:
         info = f"The user with userid {userid} and nickname {nickname} has unfavored the articles with userid {authorid}, nickname {authorNickname} and articleid {articleid}."
         instanceFavorite.insertFavorite(articleid)
@@ -62,8 +62,8 @@ def add_favorite():
 def cancel_favorite(articleid):
     userid = session.get("userid")
     nickname = session.get("nickname")
-    authorid = int(instanceArticle.searchUseridByArticleid(articleid)[0])
-    authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
+    authorid = int(instanceArticle.searchUseridByArticleid(articleid))
+    authorNickname = instanceUser.searchNicknameByUserid(authorid)
     try:
         instanceFavorite.cancelFavorite(articleid)
         info = f"The user with userid {userid} and nickname {nickname} has unfavored the articles with userid {authorid}, nickname {authorNickname} and articleid {articleid}."

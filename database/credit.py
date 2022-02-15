@@ -23,7 +23,7 @@ class Users(DBase):
 
     # Query a user's nickname based on his or her id
     def searchNicknameByUserid(self, userid):
-        return dbsession.query(Users.nickname).filter_by(userid=userid).first()
+        return dbsession.query(Users.nickname).filter_by(userid=userid).first()[0]
 
 
 class Article(DBase):
@@ -31,7 +31,7 @@ class Article(DBase):
 
     # Search author id by article id
     def searchUseridByArticleid(self, articleid):
-        return dbsession.query(Article.userid).filter_by(articleid=articleid).first()
+        return dbsession.query(Article.userid).filter_by(articleid=articleid).first()[0]
 
     # Look up the title of the article by its id
     def searchHeadlineByArticleid(self, articleid):
@@ -43,7 +43,7 @@ class Article(DBase):
         try:
             result = dbsession.query(Article.hide).filter_by(articleid=articleid).first()[0]
             return True if result == 1 else False
-        except:
+        except Exception as e:
             return True
 
 
@@ -98,8 +98,8 @@ class Credit(DBase):
         try:
             if type == "Buy Article":
                 # The userid and nickname of the author of the article and the number of points that should be earned
-                authorid = int(instanceArticle.searchUseridByArticleid(target)[0])
-                authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
+                authorid = int(instanceArticle.searchUseridByArticleid(target))
+                authorNickname = instanceUser.searchNicknameByUserid(authorid)
                 #  Note that here the credit should be multiplied by -1 to change back
                 authorGetCredit = math.ceil(rateCreditForArticle * credit * -1)
 
@@ -125,8 +125,8 @@ class Credit(DBase):
                 dbsession.add(creditP2)
             elif type == "Read the article":
                 # The userid and nickname of the author of the article and the number of points that should be earned
-                authorid = int(instanceArticle.searchUseridByArticleid(target)[0])
-                authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
+                authorid = int(instanceArticle.searchUseridByArticleid(target))
+                authorNickname = instanceUser.searchNicknameByUserid(authorid)
 
                 # Read people's logs
                 userPaidInfo = f"The reader with userid {userid} has read the article with articleid number '{target}' with authorid {authorid} and nickname `{authorNickname}`."
@@ -187,8 +187,10 @@ class Credit(DBase):
             # Then determine if the article has been hidden
             if instanceArticle.searchWhetherHide(i[2]) is False:
                 lin.append("0")
-            else:
+            elif instanceArticle.searchWhetherHide(i[2]):
                 lin.append("1")
+            else:
+                lin.append("2")
             result.append(lin)
         allCreditChangeLog = result
         return allCreditChangeLog

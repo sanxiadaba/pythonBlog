@@ -19,7 +19,7 @@ from common.myLog import allLogger
 from common.myLog import rootDir
 from common.utility import genearteMD5
 from constant import mysqlPassword, mysqlPort, databaseName, mysqlUserName, mysqlUrl, adminLogin, adminPassword, \
-    userLogin, userPassword, md5Salt, editorPassword, editorLogin
+    userLogin, userPassword, md5Salt, editorPassword, editorLogin, postArticleCredit
 
 adminPassword = genearteMD5(adminPassword + md5Salt)
 editorPassword = genearteMD5(editorPassword + md5Salt)
@@ -73,6 +73,10 @@ def ininDatabase():
             cur.execute(sql, (2, 1, "example", exampleArticle, "default/1.jpg", 0, 1, now, now, 1))
             sql = "insert into comment (userid,articleid,content,ipaddr,agreecount,opposecount,createtime) values (%s, %s, %s,%s,%s,%s,%s)"
             cur.execute(sql, (2, 1, "this is a example comment", f"{mysqlUrl}", 0, 0, now))
+            sql = "insert into articleLog (userid,articleid,type,ipaddr,info,createtime) values (%s,%s,%s,%s,%s,%s)"
+            cur.execute(sql, (2, 1, "Post Article", "localhost", "This is my first article", now))
+            sql = "insert into credit (userid,category,target,createtime,ipaddr,info,credit) values (%s,%s,%s,%s,%s,%s,%s)"
+            cur.execute(sql, (2, "Post Article", 1, now, "localhost", "post article successfully", postArticleCredit))
             allLogger(1, "Database initialization successful")
             print("Database initialization successful")
             print("Start the flask server...")

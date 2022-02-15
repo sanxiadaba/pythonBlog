@@ -156,6 +156,15 @@ def myLogger(n, info, userid=None):
     logger.remove()
 
 
+# Logging administrator actions
+def adminLog(info=None):
+    info = info
+    logFile = logAdminLog + "\\" + "adminLog.log"
+    logger.add(logFile, rotation=logSize, compression=compressedFormat, retention=clearLogTime)
+    logger.info(info)
+    logger.remove()
+
+
 # Wraps another layer of myLogger to facilitate control of writing to multiple files
 # # After the log is placed in a specific folder, it also writes a copy to its own alllog and to the total alllog
 def listLogger(userid, info, *logList):

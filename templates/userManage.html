@@ -158,16 +158,18 @@
                             {% if article[7] == 1 %}
                                 <td>This article is a draft</td>
                                 <td><a onclick="modifyArticle({{ article[0] }})">Modification</a> <a rel="6"
-                                                                                           onclick="hideArticle('{{ article[0] }}')">Delete</a>
+                                                                                                     onclick="hideArticle('{{ article[0] }}')">Delete</a>
                                 </td>
                             {% else %}
                                 {% if article[8] ==0 %}
                                     <td>Waiting for administrator review</td>
+                                {% elif article[11]==1 %}
+                                    <td>The administrator has rejected this article</td>
                                 {% else %}
                                     {% if article[9]==1 %}
                                         <td>Article hidden by admin</td>
                                         <td><a onclick="modifyArticle({{ article[0] }})">View</a> <a rel="6"
-                                                                                                   onclick="hideArticle('{{ article[0] }}')">Delete</a>
+                                                                                                     onclick="hideArticle('{{ article[0] }}')">Delete</a>
                                         </td>
                                     {% else %}
                                         {% if article[10]==1 %}
@@ -384,8 +386,10 @@
                     {#              Target Articles#}
                     {% if credit[4] == "0" %}
                         <td onclick="tiaoArticle({{ credit[2] }},3)">{{ credit[3] }}</td>
-                    {% else %}
+                    {% elif credit[4]=="1" %}
                         <td><font color="red">The article has been deleted</font></td>
+                    {% else %}
+                        <td></td>
                     {% endif %}
                 </tr>
             {% endfor %}

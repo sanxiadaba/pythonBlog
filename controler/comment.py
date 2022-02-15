@@ -21,6 +21,7 @@ from common.myLog import allLogger, ininUserDir, listLogger, logDanger
 from constant import howCommentInArticle
 from constant import replyAndAddCommentCredit
 from database.article import Article
+from database.articleLog import ArticleLog
 from database.comment import Comment
 from database.credit import Credit
 from database.logs import Log
@@ -31,6 +32,7 @@ instanceComment = Comment()
 instanceCredit = Credit()
 instanceLog = Log()
 instanceUser = Users()
+instanceArticleLog = ArticleLog()
 
 comment = Blueprint("comment", __name__)
 
@@ -43,7 +45,7 @@ def addOriginComment():
         articleid = request.form.get("articleid")
         content = request.form.get("content").strip()
         userid = session.get("userid")
-        authorid = int(instanceArticle.searchUseridByArticleid(articleid)[0])
+        authorid = int(instanceArticle.searchUseridByArticleid(articleid))
         # Verify the content of the comment
         # If the comment is more than 1000 words or less than five words
         if len(content) < 5 or len(content) > 1000:
@@ -88,7 +90,7 @@ def reply():
     # Get the original author id by commentid
     authorid = instanceComment.searchUseridByCommentid(commentid)
     # Get the author's nickname by userid for writing logs later
-    authorNickname = instanceUser.searchNicknameByUserid(authorid)[0]
+    authorNickname = instanceUser.searchNicknameByUserid(authorid)
     if len(content) < 5 or len(content) > 1000:
         return "content-invaild"
     # Determine the daily comment limit (there is also a limit to the number of comments per day, which can be modified in the constant file)
@@ -145,7 +147,7 @@ def agreeComment():
     authorId = instanceComment.searchUseridByCommentid(commentid)
     userid = session.get("userid")
     nickname = session.get("nickname")
-    authorNickname = instanceUser.searchNicknameByUserid(authorId)[0]
+    authorNickname = instanceUser.searchNicknameByUserid(authorId)
     ininUserDir(userid=authorId)
     try:
         instanceComment.updataCommentAgree(commentid)
@@ -171,7 +173,7 @@ def disagreeComment():
     authorId = instanceComment.searchUseridByCommentid(commentid)
     userid = session.get("userid")
     nickname = session.get("nickname")
-    authorNickname = instanceUser.searchNicknameByUserid(authorId)[0]
+    authorNickname = instanceUser.searchNicknameByUserid(authorId)
     ininUserDir(userid=authorId)
     try:
         instanceComment.updataCommentAgree(commentid)
@@ -197,7 +199,7 @@ def cancle_agreeComment():
     authorId = instanceComment.searchUseridByCommentid(commentid)
     userid = session.get("userid")
     nickname = session.get("nickname")
-    authorNickname = instanceUser.searchNicknameByUserid(authorId)[0]
+    authorNickname = instanceUser.searchNicknameByUserid(authorId)
     ininUserDir(userid=authorId)
     try:
         instanceComment.updataCommentAgree(commentid)
@@ -222,7 +224,7 @@ def cancle_disagreeComment():
     authorId = instanceComment.searchUseridByCommentid(commentid)
     userid = session.get("userid")
     nickname = session.get("nickname")
-    authorNickname = instanceUser.searchNicknameByUserid(authorId)[0]
+    authorNickname = instanceUser.searchNicknameByUserid(authorId)
     ininUserDir(userid=authorId)
     try:
         instanceComment.updataCommentAgree(commentid)
@@ -247,14 +249,17 @@ def hideComment():
     authorId = instanceComment.searchUseridByCommentid(commentid)
     userid = session.get("userid")
     nickname = session.get("nickname")
-    authorNickname = instanceUser.searchNicknameByUserid(authorId)[0]
+    authorNickname = instanceUser.searchNicknameByUserid(authorId)
     try:
+
         instanceComment.hideCommentByCommentid(commentid)
         # After hiding comments, the number of replies to this post is subtracted by one
         instanceArticle.subtractReplycount(articleid=authorId)
         info = f"User id is {userid} Nickname is {nickname} Deleted comment id number {commentid} with user id is {authorId} Nickname is {authorNickname} "
         instanceLog.insertDetail(type="Delete Comments", target=commentid, credit=0,
                                  info=info)
+        if instanceUser.judgeAdminByUserid(userid) is True:
+            instanceArticleLog.insertDetail(articleid=Article, type="Delete Comments", info=info)
         listLogger(userid, info, [9])
         if userid != authorId:
             listLogger(authorId, info, [10])

@@ -161,7 +161,7 @@ def before():
                 session["userid"] = result[0].userid
                 islogin = session.get("islogin")
                 userid = session.get("userid")
-                nickname = instanceUser.searchNicknameByUserid(userid)[0]
+                nickname = instanceUser.searchNicknameByUserid(userid)
                 session["nickname"] = nickname
                 session["role"] = result[0].role
                 if islogin == "true":

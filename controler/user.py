@@ -137,7 +137,7 @@ def resetUserPassword():
 
     # Query userid according to play complete name
     userid = instanceUser.findUseridByUsername(username)
-    userNickname = instanceUser.searchNicknameByUserid(userid)[0]
+    userNickname = instanceUser.searchNicknameByUserid(userid)
 
     # Verify that the email verification code is correct
     if ecode != session.get("ecode"):
@@ -182,7 +182,7 @@ def login():
     if userid is None:
         allLogger(0, "User does not exist")
         return "login-fail"
-    nickname = instanceUser.searchNicknameByUserid(userid)[0]
+    nickname = instanceUser.searchNicknameByUserid(userid)
     # This is the time to judge the directory just in case
     ininUserDir(userid=userid)
     # Re-verify that the verification code is correct
