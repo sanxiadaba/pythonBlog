@@ -129,7 +129,7 @@ pip3 install -r requirements.txt
 #### may report errors
 
 1. urllib version is too high, suggest lowering the version pip install urllib3==1.25.11
-
+2. If you use pycharm to run the project, it's best not to configure a flask server for it, just run the main function under app.py (for some reason, pycharm's falsk has some very strange problems))
 #### version update
 
 - 21-12-8
