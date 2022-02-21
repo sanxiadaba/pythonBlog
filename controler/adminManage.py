@@ -82,8 +82,9 @@ def baseAdminManage():
     webInfo["loadTime"] = loadTime
     webNumOfDraft = instanceArticle.searchNumOfDraft()
     webDraft = instanceArticle.searchDraft()
+    webArticles=instanceArticle.searchAllArtice()
     return render_template("adminManage.html", webInfo=webInfo, usersInfo=usersInfo, commentInfo=commentInfo,
-                           webDraft=webDraft, webNumOfDraft=webNumOfDraft)
+                           webDraft=webDraft, webNumOfDraft=webNumOfDraft,allArticles=webArticles)
 
 
 # Jumping options for "memory" admin pages
@@ -151,3 +152,55 @@ def reviewDraft(articleid):
     articleid = int(articleid)
     article = instanceArticle.reviewDraft(articleid)
     return render_template("reviewDraft.html", article=article)
+
+# hide article
+@adminManage.route("/hideArticle",methods=["POST"])
+@logDanger
+def hideArticle():
+    userid=session.get("userid")
+    username=instanceUser.searchUsernameByUserd(userid)
+    articleid = request.form.get('articleid')
+    instanceArticle.hideArticle(articleid)
+    info=f"userid is {userid}, username is {username} of the administrator, hidden articleid is {articleid} of the article"
+    listLogger(userid, info, [3])
+    adminLog(info)
+    return "1"
+
+# cancle hide article
+@adminManage.route("/cancleHideArticle",methods=["POST"])
+@logDanger
+def cancleHideArticle():
+    userid=session.get("userid")
+    username=instanceUser.searchUsernameByUserd(userid)
+    articleid = request.form.get('articleid')
+    instanceArticle.cancleHideArticle(articleid)
+    info=f"userid is {userid}, username is {username} of the administrator, cancle hide articleid is {articleid} of the article"
+    listLogger(userid, info, [3])
+    adminLog(info)
+    return "1"
+
+# recommended the article
+@adminManage.route("/recommendedArticle",methods=["POST"])
+@logDanger
+def recommendedArticle():
+    userid = session.get("userid")
+    username = instanceUser.searchUsernameByUserd(userid)
+    articleid = request.form.get('articleid')
+    instanceArticle.recommendedArticle(articleid)
+    info=f"userid is {userid},username is {username} of the administrator,recommended articleid is {articleid} of the article"
+    listLogger(userid, info, [3])
+    adminLog(info)
+    return "1"
+
+# cancle recommended the article
+@adminManage.route("/cancleRecommendedArticle",methods=["POST"])
+@logDanger
+def cancleRecommendedArticle():
+    userid = session.get("userid")
+    username = instanceUser.searchUsernameByUserd(userid)
+    articleid = request.form.get('articleid')
+    instanceArticle.cancleRecommendedArticle(articleid)
+    info=f"userid is {userid},username is {username} of the administrator,cancle recommended articleid is {articleid} of the article"
+    listLogger(userid, info, [3])
+    adminLog(info)
+    return "1"

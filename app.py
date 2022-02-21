@@ -155,15 +155,15 @@ def before():
         password = request.cookies.get("password")
         if username != None and password != None:
             result = instanceUser.searchUserByUsername(username)
-            if len(result) == 1 and result[0].password == password:
+            if result!= None and result.password == password:
                 session["islogin"] = "true"
                 session["username"] = username
-                session["userid"] = result[0].userid
+                session["userid"] = result.userid
                 islogin = session.get("islogin")
                 userid = session.get("userid")
                 nickname = instanceUser.searchNicknameByUserid(userid)
                 session["nickname"] = nickname
-                session["role"] = result[0].role
+                session["role"] = result.role
                 if islogin == "true":
                     if instanceCredit.whetherFirstLoginThisDay(userid) is True:
                         info = f"Users with userid {userid} and nickname {nickname} log in successfully every day and receive {loginEvereDayCredit} points, which is an automatic login."

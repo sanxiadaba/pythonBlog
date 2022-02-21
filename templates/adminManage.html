@@ -268,7 +268,7 @@
                     <tr>
                         <td class="article-title">{{ draft[0] }}</td>
                         <td class="article-title">{{ draft[1] }}</td>
-                        <td class="article-title"><a href="/reviewDraft/{{ draft[-1] }}">{{ draft[2] }}</a></td>
+                        <td class="article-title"><a href="/reviewDraft/{{ draft[-1] }}" style="color: red" >{{ draft[2] }}</a></td>
                         <td class=article-title">{{ draft[3] }}</td>
                         <td id="draft_{{ draft[-1] }}"><a
                                 onclick="passDraft({{ draft[-1] }})">Pass&nbsp;&nbsp;&nbsp;</a><a
@@ -280,7 +280,53 @@
         </div>
     </div>
     </div>
-    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="webArticle"></div>
+
+    <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="webArticle">
+    <h1 class="page-header">Article <span class="badge">{{ webInfo["allNumOfArticle"] }}</span></h1>
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                <tr>
+                    <th><span class="glyphicon glyphicon-user"></span> <span class="visible-lg">Username</span></th>
+                    <th><span class="glyphicon glyphicon-file"></span> <span class="visible-lg">Nickname</span></th>
+                    <th><span class="glyphicon glyphicon-list-alt"></span> <span class="visible-lg">Type</span></th>
+                    <th><span class="glyphicon glyphicon-road"></span> <span class="visible-lg">Headline</span></th>
+                    <th><span class="glyphicon glyphicon-time"></span> <span class="visible-lg">Date</span></th>
+                    <th><span class="glyphicon glyphicon-flash"></span> <span class="visible-lg">Operation</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for article in allArticles %}
+                    <tr>
+                        <td class="article-title">{{ article.username }}</td>
+                        <td class="article-title">{{ article.nickname }}</td>
+                        <td class="article-title">{{ article_type[article.type | string] }}</td>
+                        <td class="article-title"><a href="/article/{{ article.articleid }}" style="color: red" >{{ article.headline }}</a></td>
+                        <td class=article-title">{{ article.createtime }}</td>
+                        <td>
+                            {% if article.hide==0 %}
+                            <a id="article_1_{{ article.articleid }}"
+                                onclick="hideArticle({{ article.articleid }})">Hide&nbsp;&nbsp;&nbsp;</a>
+                            {% else %}
+                               <a id="article_1_{{ article.articleid }}"
+                                onclick="cancleHideArticle({{ article.articleid }})">Cancle Hide&nbsp;&nbsp;&nbsp;</a>
+                            {% endif %}
+                        {% if article.recommended==0 %}
+                            <a id="article_2_{{ article.articleid }}"
+                                onclick="recommendedArticle({{ article.articleid }})">Recommend&nbsp;&nbsp;&nbsp;</a>
+
+                        {% else %}
+                            <a id="article_2_{{ article.articleid }}"
+                                onclick="cancleRecommendedArticle({{ article.articleid }})">Cancle Recommend&nbsp;&nbsp;&nbsp;</a>
+                        {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="webType"></div>
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="webCredit"></div>
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="webLog"></div>

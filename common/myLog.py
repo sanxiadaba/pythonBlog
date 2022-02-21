@@ -18,7 +18,7 @@ encoding: utf-8
 import os
 # Import the library that traces where the function went wrong, so that the printed log is more detailed
 import traceback
-# 导入这个包是用来消除装饰器的”不良影响“
+# This package is imported to eliminate the "undesirable effects" of the decorator
 from functools import wraps
 
 from flask import session, request, abort

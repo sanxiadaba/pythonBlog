@@ -724,7 +724,7 @@ function modifyQQ(s, yuan) {
 }
 
 // Delete article
- function hideArticle(articleid){
+ function deleteArticle(articleid){
     bootbox.confirm({
         title: "Operation Tips",
         message: "Is it OK to permanently delete the article",
@@ -738,7 +738,7 @@ function modifyQQ(s, yuan) {
         },
         callback: function (result) {
             if (result.toString() === "true") {
-                $.post("/hideArticle",param="articleid="+articleid,function (data) {
+                $.post("/deleteArticle",param="articleid="+articleid,function (data) {
                     if(data==="1"){
                         qingti("Delete article successfully")
                         var lin="#article__"+articleid
@@ -758,6 +758,142 @@ function modifyQQ(s, yuan) {
 
     })
  }
+
+// hide article
+function hideArticle(articleid){
+    bootbox.confirm({
+        title: "Operation Tips",
+        message: "Is it OK to permanently hide the article",
+        buttons: {
+            cancel: {
+                label: 'Reconsider'
+            },
+            confirm: {
+                label: 'OK to hide'
+            }
+        },
+        callback: function (result) {
+            if (result.toString() === "true") {
+                $.post("/hideArticle",param="articleid="+articleid,function (data) {
+                    if(data==="1"){
+                        qingti("hide article successfully")
+                        var lin="#article_1_"+articleid.toString()
+                        $(lin).attr("onclick","cancleHideArticle("+articleid+")")
+                        $(lin).html("Cancle Hide&nbsp;&nbsp;&nbsp;")
+
+                    }
+                    else {
+                         bootbox.alert({title: "Error Alert", message: "hide article failed, please contact the administrator"});
+                    }
+
+                })
+            }
+        }
+
+    })
+}
+
+// cancle hide article
+function cancleHideArticle(articleid){
+    bootbox.confirm({
+        title: "Operation Tips",
+        message: "Is it OK to permanently cancle hide the article",
+        buttons: {
+            cancel: {
+                label: 'Reconsider'
+            },
+            confirm: {
+                label: 'OK to cancle hide'
+            }
+        },
+        callback: function (result) {
+            if (result.toString() === "true") {
+                $.post("/cancleHideArticle",param="articleid="+articleid,function (data) {
+                    if(data==="1"){
+                        qingti("cancle hide article successfully")
+                        var lin="#article_1_"+articleid.toString()
+                        $(lin).attr("onclick","hideArticle("+articleid+")")
+                        $(lin).html("Hide&nbsp;&nbsp;&nbsp;")
+
+                    }
+                    else {
+                         bootbox.alert({title: "Error Alert", message: "cancle hide article failed, please contact the administrator"});
+                    }
+
+                })
+            }
+        }
+
+    })
+}
+
+// recommend Article
+function recommendedArticle(articleid){
+    bootbox.confirm({
+        title: "Operation Tips",
+        message: "Is it OK to permanently recommend the article",
+        buttons: {
+            cancel: {
+                label: 'Reconsider'
+            },
+            confirm: {
+                label: 'OK to recommend'
+            }
+        },
+        callback: function (result) {
+            if (result.toString() === "true") {
+                $.post("/recommendedArticle",param="articleid="+articleid,function (data) {
+                    if(data==="1"){
+                        qingti("recommend article successfully")
+                        var lin="#article_2_"+articleid.toString()
+                        $(lin).attr("onclick","cancleRecommendedArticle("+articleid+")")
+                        $(lin).html("Cancle Recommend&nbsp;&nbsp;&nbsp;")
+
+                    }
+                    else {
+                         bootbox.alert({title: "Error Alert", message: "hide article failed, please contact the administrator"});
+                    }
+
+                })
+            }
+        }
+
+    })
+}
+
+// cancle recommend article
+function cancleRecommendedArticle(articleid){
+    bootbox.confirm({
+        title: "Operation Tips",
+        message: "Is it OK to permanently cancle recommend the article",
+        buttons: {
+            cancel: {
+                label: 'Reconsider'
+            },
+            confirm: {
+                label: 'OK to cancle cancle recommend'
+            }
+        },
+        callback: function (result) {
+            if (result.toString() === "true") {
+                $.post("/cancleRecommendedArticle",param="articleid="+articleid,function (data) {
+                    if(data==="1"){
+                        qingti("cancle recommend article successfully")
+                        var lin="#article_2_"+articleid.toString()
+                        $(lin).attr("onclick","recommendedArticle("+articleid+")")
+                        $(lin).html("Recommend&nbsp;&nbsp;&nbsp;")
+
+                    }
+                    else {
+                         bootbox.alert({title: "Error Alert", message: "cancle hide article failed, please contact the administrator"});
+                    }
+
+                })
+            }
+        }
+
+    })
+}
 
 // Change the function of the userManage module
  function changeUserManageModel(m){

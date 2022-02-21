@@ -30,9 +30,11 @@ class Users(DBase):
     def searchNicknameByUserid(self, userid):
         return dbsession.query(Users.nickname).filter_by(userid=userid).first()[0]
 
+class Article(DBase):
+    __table__ = Table("article", md, autoload=True)
 
 instanceUser = Users()
-
+instanceArticle=Article()
 
 class Comment(DBase):
     __table__ = Table("comment", md, autoload=True)
@@ -188,7 +190,10 @@ class Comment(DBase):
     # Get the information about the comment and populate the front-end page
     def searchCommentInfo(self):
         ex = []
-        result = dbsession.query(Comment).all()
+        result = dbsession.query(Comment,Article).join(Article,Comment.articleid==Article.articleid).filter(Article.checked==1,Article.hide==0,Article.delete==0).all()
+        if result is None:
+            return None
+        result =[i[0] for i in result]
         for comment in result:
             if instanceUser.judgeAdminByUserid(comment.userid) is True and comment.hide == 0:
                 pass

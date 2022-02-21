@@ -227,6 +227,12 @@ class Article(DBase):
         row.hide = 1
         dbsession.commit()
 
+    # Cancle hide article
+    def cancleHideArticle(self, articleid):
+        row = dbsession.query(Article).filter_by(articleid=articleid).first()
+        row.hide = 0
+        dbsession.commit()
+
     # The author himself deleted the article
     def deleteArticle(self, articleid):
         row = dbsession.query(Article).filter_by(articleid=articleid).first()
@@ -236,8 +242,14 @@ class Article(DBase):
 
     # Set editorial recommendation by article
     def recommendedArticle(self, articleid):
-        row = dbsession.query(articleid).filter_by(articleid=articleid).first()
+        row = dbsession.query(Article).filter_by(articleid=articleid).first()
         row.recommended = 1
+        dbsession.commit()
+
+    # Caccle recommended the article
+    def cancleRecommendedArticle(self, articleid):
+        article = dbsession.query(Article).filter_by(articleid=articleid).first()
+        article.recommended = 0
         dbsession.commit()
 
     # Number of all articles
@@ -349,3 +361,18 @@ class Article(DBase):
         ex["content"] = row[5]
         ex["nickname"] = row[6]
         return ex
+
+    # Find all articles
+    def searchAllArtice(self):
+        result=dbsession.query(Article).filter_by(drafted=0,checked=1).all()
+        allArticles=[]
+        for article in result:
+            lin={}
+            for k,v in article.__dict__.items():
+                if not k.startswith("_sa_instance_state"):
+                    lin[k] = v
+            lin["username"]=instanceUser.searchUsernameByUserd(lin["userid"])
+            lin["nickname"]=instanceUser.searchNicknameByUserid(lin["userid"])
+            allArticles.append(lin)
+        allArticles=sorted(allArticles, key=lambda x: x["recommended"],reverse=True)
+        return allArticles

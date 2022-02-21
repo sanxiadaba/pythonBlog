@@ -158,7 +158,7 @@
                             {% if article[7] == 1 %}
                                 <td>This article is a draft</td>
                                 <td><a onclick="modifyArticle({{ article[0] }})">Modification</a> <a rel="6"
-                                                                                                     onclick="hideArticle('{{ article[0] }}')">Delete</a>
+                                                                                                     onclick="deleteArticle('{{ article[0] }}')">Delete</a>
                                 </td>
                             {% else %}
                                 {% if article[8] ==0 %}
@@ -169,18 +169,18 @@
                                     {% if article[9]==1 %}
                                         <td>Article hidden by admin</td>
                                         <td><a onclick="modifyArticle({{ article[0] }})">View</a> <a rel="6"
-                                                                                                     onclick="hideArticle('{{ article[0] }}')">Delete</a>
+                                                                                                     onclick="deleteArticle('{{ article[0] }}')">Delete</a>
                                         </td>
                                     {% else %}
                                         {% if article[10]==1 %}
                                             <td>Article is recommended</td>
                                             <td><a onclick="modifyArticle({{ article[0] }})">Modification</a> <a rel="6"
-                                                                                                       onclick="hideArticle('{{ article[0] }}')">Delete</a>
+                                                                                                       onclick="deleteArticle('{{ article[0] }}')">Delete</a>
                                             </td>
                                         {% else %}
                                             <td>Article has been published</td>
                                             <td><a onclick="modifyArticle({{ article[0] }})">Modification</a> <a rel="6"
-                                                                                                       onclick="hideArticle('{{ article[0] }}')">Delete</a>
+                                                                                                       onclick="deleteArticle('{{ article[0] }}')">Delete</a>
                                             </td>
                                         {% endif %}
                                     {% endif %}
@@ -211,7 +211,7 @@
                             {% if article[7] == 1 %}
                                 <td>This article is a draft</td>
                                 <td><a onclick="modifyArticle({{ article[0] }})">Modification</a> <a rel="6"
-                                                                                           onclick="hideArticle('{{ article[0] }}')">Delete</a>
+                                                                                           onclick="deleteArticle('{{ article[0] }}')">Delete</a>
                                 </td>
                             {% else %}
                                 {% if article[8] ==0 %}
@@ -220,18 +220,18 @@
                                     {% if article[9]==1 %}
                                         <td>Article hidden by admin</td>
                                         <td><a onclick="modifyArticle({{ article[0] }})">View</a> <a rel="6"
-                                                                                                   onclick="hideArticle('{{ article[0] }}')">Delete</a>
+                                                                                                   onclick="deleteArticle('{{ article[0] }}')">Delete</a>
                                         </td>
                                     {% else %}
                                         {% if article[10]==1 %}
                                             <td>Article is recommended</td>
                                             <td><a onclick="modifyArticle({{ article[0] }})">Modification</a> <a rel="6"
-                                                                                                       onclick="hideArticle('{{ article[0] }}')">Delete</a>
+                                                                                                       onclick="deleteArticle('{{ article[0] }}')">Delete</a>
                                             </td>
                                         {% else %}
                                             <td>Article has been published</td>
                                             <td><a onclick="modifyArticle({{ article[0] }})">Modification</a> <a rel="6"
-                                                                                                       onclick="hideArticle('{{ article[0] }}')">Delete</a>
+                                                                                                       onclick="deleteArticle('{{ article[0] }}')">Delete</a>
                                             </td>
                                         {% endif %}
                                     {% endif %}
@@ -339,7 +339,7 @@
             </tbody>
         </table>
     </div>
-    {#    我的登录记录#}
+    {#    My Login History#}
     <div class="col-sm-9 col-sm-offset-3 col-md-10 col-lg-10 col-md-offset-2 main" id="myLog" style="display: none">
         <h1 class="page-header">My Login History</h1>
         <table class="table table-striped table-hover">

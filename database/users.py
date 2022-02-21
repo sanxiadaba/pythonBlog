@@ -38,7 +38,7 @@ class Users(DBase):
 
     # Login verification to see if the password corresponding to the account is correct
     def searchUserByUsername(self, username):
-        result = dbsession.query(Users).filter_by(username=username).all()
+        result = dbsession.query(Users).filter_by(username=username).first()
         return result
 
     # Return information about the author by userid

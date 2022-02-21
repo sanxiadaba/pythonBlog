@@ -198,9 +198,9 @@ def cancleApplyEditor():
 
 # Delete comments (note that the number of comments on the article will be set to subtract 1 when the time comes)
 # Note that all comments under the article will also be set to hidden
-@userManage.route("/hideArticle", methods=["POST"])
+@userManage.route("/deleteArticle", methods=["POST"])
 @logDanger
-def hideArticle():
+def deleteArticle():
     userid = session.get("userid")
     articleid = request.form.get('articleid')
     try:
