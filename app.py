@@ -2,13 +2,6 @@
 File description.
 
 This file is the main program to run the project, just run it directly
-
-encoding: utf-8
-@author: Zhang Jiajun
-@contact: jz272381@gmail.com
-@software: Pycharm
-@time: 2022/1/14
-@gituhb: sanxiadaba/pythonBlog
 """
 
 import os
@@ -21,11 +14,15 @@ from flask import Flask, render_template, request, session
 from flask_sqlalchemy import SQLAlchemy
 
 from common.initDatabase import ininDatabase
-from common.myLog import ininLogDir, logDanger, allLogger
-from constant import config_mysql, replyAndAddCommentCredit, regGiveCredit, postArticleCredit
-from constant import sessionExpirationTime, sessionRestart, classification, portNum, creditListForReleaseArticle, \
-    shufflingFigurePicture, shufflingFigureLink, indexLogoPicture, indexLogoPictureSize, indexAboveStr, \
-    whetherSaveShufflingFigure, databaseName, emailAccount, loginEvereDayCredit, whetherDebug
+from common.myLog import allLogger, ininLogDir, logDanger
+from constant import (classification, config_mysql,
+                      creditListForReleaseArticle, databaseName, emailAccount,
+                      indexAboveStr, indexLogoPicture, indexLogoPictureSize,
+                      loginEvereDayCredit, portNum, postArticleCredit,
+                      regGiveCredit, replyAndAddCommentCredit,
+                      sessionExpirationTime, sessionRestart,
+                      shufflingFigureLink, shufflingFigurePicture,
+                      whetherDebug, whetherSaveShufflingFigure)
 
 # Some settings of the linked database to prevent error reporting
 pymysql.install_as_MySQLdb()
@@ -36,7 +33,8 @@ app = Flask(__name__, template_folder='templates')
 # Some settings for flask connections
 
 # Connecting to the database
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql://" + config_mysql + f"/{databaseName}?charset=utf8"
+app.config[
+    'SQLALCHEMY_DATABASE_URI'] = "mysql://" + config_mysql + f"/{databaseName}?charset=utf8mb4"
 # If set to True (the default), Flask-SQLAlchemy will track object modifications and send signals. This requires extra memory and is normally disabled.
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Set auto-recycle time (in seconds)
@@ -52,7 +50,8 @@ app.config["pool_pre_ping"] = True
 # Error prevention settings
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_FILE_DIR'] = '/flask-session'  # session type is filesystem
-app.config['SECRET_KEY'] = "123456" if sessionRestart is False else os.urandom(24)
+app.config['SECRET_KEY'] = "123456" if sessionRestart is False else os.urandom(
+    24)
 # sesssion expiration time
 app.config['PERMANENT_SESSION_LIFETIME'] = sessionExpirationTime
 
@@ -101,7 +100,8 @@ def listOfCredit():
 def manyParameter():
     type = defaultdict(list)
     for i in range(len(shufflingFigurePicture)):
-        type["shufflingFigure"].append([shufflingFigurePicture[i], shufflingFigureLink[i]])
+        type["shufflingFigure"].append(
+            [shufflingFigurePicture[i], shufflingFigureLink[i]])
 
     type["indexLogoPicture"].append(indexLogoPicture)
 
@@ -148,14 +148,15 @@ app.jinja_env.filters.update(my_truncate=my_truncate, numAddNum=numAddNum)
 def before():
     url = request.path
     passList = ["/user", "/login", "logout"]
-    if url in passList or url.endswith(".js") or url.endswith(".png") or url.endswith(".jpg") or url.endswith(".css"):
+    if url in passList or url.endswith(".js") or url.endswith(
+            ".png") or url.endswith(".jpg") or url.endswith(".css"):
         pass
     elif session.get("islogin") is None:
         username = request.cookies.get("username")
         password = request.cookies.get("password")
         if username != None and password != None:
             result = instanceUser.searchUserByUsername(username)
-            if result!= None and result.password == password:
+            if result != None and result.password == password:
                 session["islogin"] = "true"
                 session["username"] = username
                 session["userid"] = result.userid
@@ -167,13 +168,15 @@ def before():
                 if islogin == "true":
                     if instanceCredit.whetherFirstLoginThisDay(userid) is True:
                         info = f"Users with userid {userid} and nickname {nickname} log in successfully every day and receive {loginEvereDayCredit} points, which is an automatic login."
-                        instanceCredit.insertDetail(type="Daily Login", target=0, credit=loginEvereDayCredit, info=info)
+                        instanceCredit.insertDetail(type="Daily Login",
+                                                    target=0,
+                                                    credit=loginEvereDayCredit,
+                                                    info=info)
                         listLogger(userid, info, [0])
                         # Used to determine whether to automatically log in every day, and then collect the points themselves
                         session["judgeLin"] = "1"
                     else:
                         pass
-
 
 
 # The interface to determine automatic daily login, which is accessed by the front-end inherited baseArticle template file when the page is loaded
@@ -197,8 +200,12 @@ def judgeAutoLogin():
 @app.route("/toTransmitParam", methods=["GET"])
 @logDanger
 def toTransmitParam():
-    param = {"loginEvereDayCredit": loginEvereDayCredit, "replyAndAddCommentCredit": replyAndAddCommentCredit,
-             "regGiveCredit": regGiveCredit, "postArticleCredit": postArticleCredit}
+    param = {
+        "loginEvereDayCredit": loginEvereDayCredit,
+        "replyAndAddCommentCredit": replyAndAddCommentCredit,
+        "regGiveCredit": regGiveCredit,
+        "postArticleCredit": postArticleCredit
+    }
     return param
 
 
@@ -225,22 +232,22 @@ if __name__ == '__main__':
     ininDatabase()
     # Importing instantiated database operation classes
     from database.credit import Credit
-    from database.users import Users
     from database.logs import Log
+    from database.users import Users
 
     instanceCredit = Credit()
     instanceUser = Users()
     instanceLog = Log()
     from common.myLog import listLogger
+    from controler.adminManage import adminManage
+    from controler.article import article
+    from controler.comment import comment
+    from controler.favorite import favorite
     # Register flask blueprint
     from controler.index import index
-    from controler.user import user
-    from controler.article import article
-    from controler.favorite import favorite
-    from controler.comment import comment
     from controler.ueditor import ueditor
+    from controler.user import user
     from controler.userManage import userManage
-    from controler.adminManage import adminManage
 
     app.register_blueprint(index)
     app.register_blueprint(user)
@@ -255,7 +262,10 @@ if __name__ == '__main__':
 
     now = time.strftime('%Y-%m-%d %H:%M:%S')
     if instanceLog.judgeStartServe() is False:
-        instanceLog.insertDetail(type="Start the server", target=0, credit=0, userid=0,
+        instanceLog.insertDetail(type="Start the server",
+                                 target=0,
+                                 credit=0,
+                                 userid=0,
                                  info=f"The server was started in {now}")
         allLogger(1, f"The server was started in {now}")
     else:

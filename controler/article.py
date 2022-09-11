@@ -4,24 +4,16 @@ File description.
 This file is used to store some functions for article operations
 such as view full text, publish articles, modify articles, etc.
 Mainly operate the article table in the database
-
-encoding: utf-8
-@author: Zhang Jiajun
-@contact: jz272381@gmail.com
-@software: Pycharm
-@time: 2022/1/12
-@gituhb: sanxiadaba/pythonBlog
 """
 
 import math
 import traceback
 
-from flask import Blueprint, session, request, abort, render_template
-
-from common.myLog import logDanger, listLogger, allLogger
-from common.utility import parser_image_url, generate_thumb
-from constant import postArticleCredit, howCommentInArticle, maxUserPostArticleNum, \
-    maxUserPostArticleNumOfEditor, maxModifyArticleNum, blogLanguage
+from common.myLog import allLogger, listLogger, logDanger
+from common.utility import generate_thumb, parser_image_url
+from constant import (blogLanguage, howCommentInArticle, maxModifyArticleNum,
+                      maxUserPostArticleNum, maxUserPostArticleNumOfEditor,
+                      postArticleCredit)
 from database.article import Article
 from database.articleLog import ArticleLog
 from database.comment import Comment
@@ -30,6 +22,7 @@ from database.favorite import Favorite
 from database.logs import Log
 from database.upload import Upload
 from database.users import Users
+from flask import Blueprint, abort, render_template, request, session
 
 instanceArticle = Article()
 instanceArticleLog = ArticleLog()
@@ -66,8 +59,9 @@ def read(articleid):
     dict["nickname"] = result.nickname
     if session.get("islogin") == "true":
         #  Check if you have already bought this article, so that if you click again, you can buy it again by default in the author's words
-        if instanceCredit.whetherPaidForArticle(articleid) or int(session.get("userid")) == int(
-                instanceArticle.searchUseridByArticleid(articleid)):
+        if instanceCredit.whetherPaidForArticle(articleid) or int(
+                session.get("userid")) == int(
+                    instanceArticle.searchUseridByArticleid(articleid)):
             dict["paid"] = "true"
         else:
             dict["paid"] = "false"
@@ -83,17 +77,26 @@ def read(articleid):
 
     # Get reviews
     # Get ten on one page
-    comment_list = instanceComment.searchCommentWithUser(articleid, 0, howCommentInArticle)
+    comment_list = instanceComment.searchCommentWithUser(
+        articleid, 0, howCommentInArticle)
     count = instanceComment.searchCountOfCommentByArticleid(articleid)
     # The article has several pages of comments
     total = math.ceil(count / howCommentInArticle)
     # Determine the status of each author for each comment to facilitate the front-end loading of the corresponding page
     for i in range(len(comment_list)):
-        comment_list[i]["agreeOrdisAgreeType"] = instanceLog.whetherAgreeOrDisInThisComment(
-            comment_list[i]["commentid"])
-    return render_template("article.html", article=dict, is_favorite=is_favorite, prev_next=prev_next,
-                           comment_list=comment_list, total=total, restOfCredit=restOfCredit,
-                           articleOfUserid=instanceArticle.searchUseridByArticleid(articleid), articleid=articleid)
+        comment_list[i][
+            "agreeOrdisAgreeType"] = instanceLog.whetherAgreeOrDisInThisComment(
+                comment_list[i]["commentid"])
+    return render_template(
+        "article.html",
+        article=dict,
+        is_favorite=is_favorite,
+        prev_next=prev_next,
+        comment_list=comment_list,
+        total=total,
+        restOfCredit=restOfCredit,
+        articleOfUserid=instanceArticle.searchUseridByArticleid(articleid),
+        articleid=articleid)
 
 
 # Interface to view login status
@@ -121,11 +124,21 @@ def readAll():
     """
     if readerPaidCredit != 0:
         # Subtract your own points #
-        instanceCredit.insertDetail(type="Buy Article", target=articleid, credit=-1 * readerPaidCredit,
-                                    info=f"The user with userid {userid} consumed {readerPaidCredit} points to buy the article with articleid {articleid} from the author with userid {articleid} and nickname {authorNickname}.")
+        instanceCredit.insertDetail(
+            type="Buy Article",
+            target=articleid,
+            credit=-1 * readerPaidCredit,
+            info=
+            f"The user with userid {userid} consumed {readerPaidCredit} points to buy the article with articleid {articleid} from the author with userid {articleid} and nickname {authorNickname}."
+        )
     else:
-        instanceCredit.insertDetail(type="Read the article", target=articleid, credit=0,
-                                    info=f"The user with userid {userid} has read the article with userid {articleid} and nickname {authorNickname} with articleid {articleid}")
+        instanceCredit.insertDetail(
+            type="Read the article",
+            target=articleid,
+            credit=0,
+            info=
+            f"The user with userid {userid} has read the article with userid {articleid} and nickname {authorNickname} with articleid {articleid}"
+        )
     # Increase article readership
     instanceArticle.updateReadCount(articleid)
     return "1"
@@ -142,8 +155,9 @@ def pre_post():
     s1 = fromUrl
     if s1.split("/")[-1] == "userManage":
         session["controlBiaoNum"] = 1
-    judge = True if ((s1.split("/")[-1].isdigit() is True and s1.split("/")[-2] == "article") or s1.split("/")[
-        -1] == "userManage") else False
+    judge = True if ((s1.split("/")[-1].isdigit() is True
+                      and s1.split("/")[-2] == "article")
+                     or s1.split("/")[-1] == "userManage") else False
     # Fill the value of the modified page Of course, whether to fill the empty or the corresponding article needs to be determined with the articleJudge parameter
     if blogLanguage == "Chinese":
         language = "zh-cn/zh-cn.js"
@@ -158,10 +172,16 @@ def pre_post():
         articleContent = ""
     else:
         whetherHide = instanceArticle.searchWhetherHide(articleidModify)
-        articleContent = instanceArticle.searchHeadlineAndContentByArticleid(articleidModify)["content"]
-    return render_template("write.html", maxUserPostArticleNum=maxUserPostArticleNum, articleContent=articleContent,
-                           maxUserPostArticleNumOfEditor=maxUserPostArticleNumOfEditor,
-                           maxModifyArticleNum=maxModifyArticleNum, whetherHide=whetherHide, language=language)
+        articleContent = instanceArticle.searchHeadlineAndContentByArticleid(
+            articleidModify)["content"]
+    return render_template(
+        "write.html",
+        maxUserPostArticleNum=maxUserPostArticleNum,
+        articleContent=articleContent,
+        maxUserPostArticleNumOfEditor=maxUserPostArticleNumOfEditor,
+        maxModifyArticleNum=maxModifyArticleNum,
+        whetherHide=whetherHide,
+        language=language)
 
 
 # Button for posting articles
@@ -189,7 +209,8 @@ def addArticle():
 
     # And then determine whether today exceeded the limit of the submission (judged by 1, 2, 3 not judged by the number of revisions)
     # Add the corresponding log table and log log records
-    if instanceArticleLog.checkLimitUpload() is True and judgeType in range(1, 4):
+    if instanceArticleLog.checkLimitUpload() is True and judgeType in range(
+            1, 4):
         if judgeType == 1:
             info = f"Users with userid {userid} exceeded the limit of the number of drafts saved per day."
             type = "Failed to save draft"
@@ -201,7 +222,9 @@ def addArticle():
             info = f"Users with userid {userid} have exceeded the limit for posting articles"
         instanceLog.insertDetail(type=type, target=0, credit=0, info=info)
         listLogger(userid, info, [3])
-        instanceArticleLog.insertDetail(articleid=articleid, type=type, info=info)
+        instanceArticleLog.insertDetail(articleid=articleid,
+                                        type=type,
+                                        info=info)
         return f"limit-error-{judgeType}"
     # Then determine the number of modifications
     if instanceArticleLog.checkLimitModify() is True and judgeType == 4:
@@ -209,28 +232,39 @@ def addArticle():
         type = "Modification failure"
         instanceLog.insertDetail(type=type, target=0, credit=0, info=info)
         listLogger(userid, info, [3])
-        instanceArticleLog.insertDetail(articleid=articleid, type=type, info=info)
+        instanceArticleLog.insertDetail(articleid=articleid,
+                                        type=type,
+                                        info=info)
         return "modify-limited"
     # Generate thumbnails for articles, if not, generate a random one
     url_list = parser_image_url(content)
     # If the article has images, then generate thumbnails for the article according to certain rules, otherwise assign a thumbnail with the corresponding serial number to it
     if len(url_list) > 0:
         thumbname = generate_thumb(url_list, userid)
-        instanceUpload.insertDetail(imgname=thumbname, info="Upload thumbnails")
+        instanceUpload.insertDetail(imgname=thumbname,
+                                    info="Upload thumbnails")
     else:
         # If there is no image in the article, then specify one based on the article type
         thumbname = "default/" + "%d.jpg" % (int(type))
     if judgeType != 4:  # Direct insert database operations
         try:
             # Returns the id of the newly inserted article
-            id = instanceArticle.insertArticle(type=typeArticle, headline=headline, content=content, credit=credit,
-                                               drafted=drafted, checked=checked, thumbnail=thumbname)
+            id = instanceArticle.insertArticle(type=typeArticle,
+                                               headline=headline,
+                                               content=content,
+                                               credit=credit,
+                                               drafted=drafted,
+                                               checked=checked,
+                                               thumbnail=thumbname)
             # If an article is edited and published successfully, credit is given.
             if judgeType == 2:
                 info = f"The editor whose userid is {userid} needs to consume {credit} for articles whose articleid is {id}, and is awarded {postArticleCredit} points"
                 type = "Post Article"
                 # Bonus points here
-                instanceCredit.insertDetail(type=type, credit=postArticleCredit, target=id, info=info)
+                instanceCredit.insertDetail(type=type,
+                                            credit=postArticleCredit,
+                                            target=id,
+                                            info=info)
                 # Save log here
                 listLogger(userid, info, [3, 5])
 
@@ -238,13 +272,19 @@ def addArticle():
             elif judgeType == 1:
                 type = "Save draft"
                 info = f"Normal users with userid of {userid} Save articles with articleid of {id} that need to consume {credit}"
-                instanceLog.insertDetail(type=type, credit=0, target=id, info=info)
+                instanceLog.insertDetail(type=type,
+                                         credit=0,
+                                         target=id,
+                                         info=info)
                 listLogger(userid, info, [3])
             elif judgeType == 3:
                 type = "Submit an article"
                 info = f"The normal user with userid {userid} submits articles with articleid {id} that need to consume {credit}"
                 # Bonus points here
-                instanceCredit.insertDetail(type=type, credit=postArticleCredit, target=id, info=info)
+                instanceCredit.insertDetail(type=type,
+                                            credit=postArticleCredit,
+                                            target=id,
+                                            info=info)
                 # Save log here
                 listLogger(userid, info, [3, 5])
             instanceArticleLog.insertDetail(articleid=id, type=type, info=info)
@@ -260,22 +300,36 @@ def addArticle():
             if whetherDrafted is True:
                 drafted = 1
 
-            id = instanceArticle.updateArticle(articleid=articleid, type=typeArticle, headline=headline,
+            id = instanceArticle.updateArticle(articleid=articleid,
+                                               type=typeArticle,
+                                               headline=headline,
                                                content=content,
-                                               credit=credit, thumbnail=thumbname, drafted=drafted,
+                                               credit=credit,
+                                               thumbnail=thumbname,
+                                               drafted=drafted,
                                                checked=checked)
             if whetherDrafted is False:
                 type = "Modify article"
                 info = f"Users with userid {userid} have modified articles with articleid {id} that need to consume {credit}"
-                instanceLog.insertDetail(type="Modify article", credit=0, target=id, info=info)
-                instanceArticleLog.insertDetail(articleid=articleid, type=type, info=info)
+                instanceLog.insertDetail(type="Modify article",
+                                         credit=0,
+                                         target=id,
+                                         info=info)
+                instanceArticleLog.insertDetail(articleid=articleid,
+                                                type=type,
+                                                info=info)
                 listLogger(userid, info, [3])
                 return str(id)
             else:
                 type = "Revision Draft"
                 info = f"Users whose userid is {userid} need to consume the draft of {credit} if the articleid of the article is {id} modified"
-                instanceLog.insertDetail(type="Revision Draft", credit=0, target=id, info=info)
-                instanceArticleLog.insertDetail(articleid=articleid, type=type, info=info)
+                instanceLog.insertDetail(type="Revision Draft",
+                                         credit=0,
+                                         target=id,
+                                         info=info)
+                instanceArticleLog.insertDetail(articleid=articleid,
+                                                type=type,
+                                                info=info)
                 listLogger(userid, info, [3])
                 # A status code to determine modifications
                 return "xiu"
@@ -295,8 +349,9 @@ def modifyArticle(articleid):
 
 # Used to receive the id of the current article (used when modifying the article)
 # Here it is still mainly for the purpose of modifying the article
-@article.route('/centerVar',
-               methods=['GET', 'POST'])  # Set the route to allow both GET and POST methods to be accessible
+@article.route('/centerVar', methods=[
+    'GET', 'POST'
+])  # Set the route to allow both GET and POST methods to be accessible
 @logDanger
 def centerVar():
     if request.method == 'GET':

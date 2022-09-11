@@ -146,6 +146,9 @@ pip3 install -r requirements.txt
 - 21-2-8
     - Solve the problem of circular references that may occur in databases
     - "Salt" the database to make it more secure
+- 22-9-11
+    - Fixed some bugs that caused startup failures
+    - Now it can run directly and perform perfectly
 
 #### Related links
 

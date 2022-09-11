@@ -3,16 +3,9 @@ Document Description.
 
 Many configuration parameters for the entire blog project
 Each parameter is annotated with a description
-
-encoding: utf-8
-@author: Zhang Jiajun
-@contact: jz272381@gmail.com
-@software: Pycharm
-@time: 2022/1/12
-@gituhb: sanxiadaba/pythonBlog
 """
 # Load environment variables first
-from dotenv import load_dotenv, find_dotenv
+from dotenv import find_dotenv, load_dotenv
 
 load_dotenv(find_dotenv(), override=True)
 import os
@@ -62,8 +55,11 @@ whetherSaveShufflingFigure = True
 shufflingFigurePicture = ["banner-1.jpg", "banner-2.jpg", "banner-3.jpg"]
 
 # Click on the link of the corresponding image of the rotating image
-shufflingFigureLink = ["https://github.com/sanxiadaba/pythonBlog", "https://github.com/sanxiadaba/pythonBlog",
-                       "https://github.com/sanxiadaba/pythonBlog"]
+shufflingFigureLink = [
+    "https://github.com/sanxiadaba/pythonBlog",
+    "https://github.com/sanxiadaba/pythonBlog",
+    "https://github.com/sanxiadaba/pythonBlog"
+]
 
 # The address of the logo on the top left corner of the home page (the location of the image here is placed under /static/img/logo)
 indexLogoPicture = "logo.png"
@@ -82,7 +78,6 @@ thumbNailNum = 10
 # of recommendations in the three columns of the sidebar
 # Latest posts Most reads Special recommendations
 recommendedNumOfSide = [9, 9, 9]
-
 """
 Here are the settings related to the log file
 """
@@ -131,14 +126,6 @@ databaseName = os.environ.get("MYSQL_DATABASE_NAME")
 
 portNum = int(os.environ.get("PORT_NUM"))
 
-if localOrRemote == "localhost":
-    config_mysql = mysqlUserName + "@" + mysqlUrl + ":" + str(mysqlPort)
-elif localOrRemote == "remote":
-    remoteAccount = os.environ.get("REMOTE_ADDRESS_ACCOUNT")
-    config_mysql = remoteAccount + ":" + mysqlUserName + "@" + mysqlUrl + ":" + str(portNum)
-else:
-    raise Exception("Please configure the correct mysql")
-
 adminLogin = os.environ.get("ADMIN_LOGIN_NAME")
 editorLogin = os.environ.get("EDITOR_LOGIN_NAME")
 userLogin = os.environ.get("USER_LOGIN_NAME")
@@ -155,3 +142,13 @@ emailType = os.environ.get("USE_GMAIL_OR_QQMAIL")
 emailAccount = os.environ.get("EMAIL_ACCOUNT")
 emailAdmit = os.environ.get("EMAIL_PASSWORD")
 mysqlPassword = os.environ.get("MYSQL_PASSWORD")
+
+if localOrRemote == "localhost":
+    config_mysql = mysqlUserName + ":" + str(
+        mysqlPassword) + "@" + mysqlUrl + ":" + str(mysqlPort)
+elif localOrRemote == "remote":
+    remoteAccount = os.environ.get("REMOTE_ADDRESS_ACCOUNT")
+    config_mysql = remoteAccount + ":" + mysqlUserName + ":" + str(
+        mysqlPassword) + "@" + mysqlUrl + ":" + str(portNum)
+else:
+    raise Exception("Please configure the correct mysql")

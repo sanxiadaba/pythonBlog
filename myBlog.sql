@@ -1,21 +1,4 @@
-/*
- Navicat Premium Data Transfer
-
- Source Server         : localhost_3306
- Source Server Type    : MySQL
- Source Server Version : 50736
- Source Host           : localhost:3306
- Source Schema         : myBlog
-
- Target Server Type    : MySQL
- Target Server Version : 50736
- File Encoding         : 65001
-
- Date: 15/02/2022 20:24:27
-*/
-
 SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
 -- Table structure for article
@@ -40,13 +23,13 @@ CREATE TABLE `article`  (
   `delete` tinyint(4) NULL DEFAULT 0 COMMENT 'Determine if the author has removed this article',
   `reject` tinyint(4) NOT NULL DEFAULT 0 COMMENT 'Determining whether a draft has been reviewed',
   PRIMARY KEY (`articleid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Table structure for articleLog
+-- Table structure for articlelog
 -- ----------------------------
-DROP TABLE IF EXISTS `articleLog`;
-CREATE TABLE `articleLog`  (
+DROP TABLE IF EXISTS `articlelog`;
+CREATE TABLE `articlelog`  (
   `articleLogId` int(11) NOT NULL AUTO_INCREMENT COMMENT 'This table is used to record the posting, draft and revision records of articles\n',
   `userid` int(11) NULL DEFAULT NULL COMMENT 'User id for this operation',
   `articleid` int(11) NULL DEFAULT NULL COMMENT 'The id number of the draft or article',
@@ -55,7 +38,7 @@ CREATE TABLE `articleLog`  (
   `info` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Note on this operation',
   `createtime` datetime(0) NULL DEFAULT NULL COMMENT 'Operation time of this operation',
   PRIMARY KEY (`articleLogId`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for comment
@@ -74,7 +57,7 @@ CREATE TABLE `comment`  (
   `createtime` datetime(0) NULL DEFAULT NULL COMMENT 'Comment creation time',
   `info` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Additional instructions for adding comments',
   PRIMARY KEY (`commentid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for credit
@@ -90,7 +73,7 @@ CREATE TABLE `credit`  (
   `info` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Explanation of point changes',
   `credit` int(255) NULL DEFAULT NULL COMMENT 'How many change points (can be negative)',
   PRIMARY KEY (`creditid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for favorite
@@ -119,7 +102,7 @@ CREATE TABLE `log`  (
   `ipaddr` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Operation Address',
   `info` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Additional description information',
   PRIMARY KEY (`logid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 49 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Table structure for upload
@@ -153,6 +136,4 @@ CREATE TABLE `users`  (
   `agreeEditor` tinyint(1) NULL DEFAULT 0 COMMENT 'Does the administrator agree to become an editor',
   `forbidLogin` tinyint(1) NULL DEFAULT 0 COMMENT 'Does the administrator disable this user from logging in',
   PRIMARY KEY (`userid`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
-
-SET FOREIGN_KEY_CHECKS = 1;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
