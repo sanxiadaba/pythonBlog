@@ -17,7 +17,8 @@ import traceback
 
 from flask import Blueprint, request, session
 
-from common.myLog import listLogger, logDanger, allLogger
+from common.auth import login_required
+from common.myLog import allLogger, listLogger, logDanger
 from database.article import Article
 from database.favorite import Favorite
 from database.logs import Log
@@ -29,6 +30,12 @@ instanceLog = Log()
 instanceUser = Users()
 
 favorite = Blueprint("favorite", __name__)
+
+
+@favorite.before_request
+@login_required
+def require_login():
+    """Favorites always belong to the authenticated user."""
 
 
 # 收藏文章的函数
@@ -50,7 +57,7 @@ def add_favorite():
         instanceLog.insertDetail(userid=userid, type="Add Favorite", credit=0, target=articleid)
         instanceLog.insertDetail(userid=userid, type="Articles Bookmarked", credit=0, target=articleid)
         return "favorite-pass"
-    except:
+    except Exception:
         e = traceback.format_exc()
         allLogger(0, e)
         return "favorite-fail"
@@ -75,7 +82,7 @@ def cancel_favorite(articleid):
         instanceLog.insertDetail(userid=userid, type="Cancel Favorites", credit=0, target=articleid)
         instanceLog.insertDetail(userid=userid, type="Articles are unfavored", credit=0, target=articleid)
         return "cancel-pass"
-    except:
+    except Exception:
         e = traceback.format_exc()
         allLogger(0, e)
         return "cancel-fail"

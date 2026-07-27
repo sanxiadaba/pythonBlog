@@ -1,274 +1,232 @@
-"""
-File description.
-
-This file is the main program to run the project, just run it directly
-"""
-
 import os
-import time
-import traceback
 from collections import defaultdict
+from pathlib import Path
 
-import pymysql
-from flask import Flask, render_template, request, session
-from flask_sqlalchemy import SQLAlchemy
+import click
+from flask import Flask, abort, jsonify, render_template, request, session
+from flask_wtf.csrf import CSRFError
+from markupsafe import Markup
+from sqlalchemy import event
 
-from common.initDatabase import ininDatabase
-from common.myLog import allLogger, ininLogDir, logDanger
-from constant import (classification, config_mysql,
-                      creditListForReleaseArticle, databaseName, emailAccount,
-                      indexAboveStr, indexLogoPicture, indexLogoPictureSize,
-                      loginEvereDayCredit, portNum, postArticleCredit,
-                      regGiveCredit, replyAndAddCommentCredit,
-                      sessionExpirationTime, sessionRestart,
-                      shufflingFigureLink, shufflingFigurePicture,
-                      whetherDebug, whetherSaveShufflingFigure)
-
-# Some settings of the linked database to prevent error reporting
-pymysql.install_as_MySQLdb()
-
-# Initialize flask
-app = Flask(__name__, template_folder='templates')
-
-# Some settings for flask connections
-
-# Connecting to the database
-app.config[
-    'SQLALCHEMY_DATABASE_URI'] = "mysql://" + config_mysql + f"/{databaseName}?charset=utf8mb4"
-# If set to True (the default), Flask-SQLAlchemy will track object modifications and send signals. This requires extra memory and is normally disabled.
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-# Set auto-recycle time (in seconds)
-app.config["SQLALCHEMY_POOL_RECYCLE"] = 10
-# 	Size of the database connection pool
-app.config["SQLALCHEMY_POOL_SIZE"] = 200
-#  Specify the timeout for the database connection pool
-app.config["SQLALCHEMY_POOL_TIMEOUT"] = 20
-# controls the number of connections that can be created after the connection pool reaches its maximum. These additional connections will be disconnected and discarded when they are recycled to the connection pool.
-app.config["SQLALCHEMY_MAX_OVERFLOW"] = 100
-# Whether to ping before using the connection (see official website for detailed parameters)
-app.config["pool_pre_ping"] = True
-# Error prevention settings
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_FILE_DIR'] = '/flask-session'  # session type is filesystem
-app.config['SECRET_KEY'] = "123456" if sessionRestart is False else os.urandom(
-    24)
-# sesssion expiration time
-app.config['PERMANENT_SESSION_LIFETIME'] = sessionExpirationTime
-
-# Using SQLAlchemy
-db = SQLAlchemy(app)
+from common.initDatabase import create_user, initialize_database
+from common.myLog import ininLogDir
+from common.schema import define_schema
+from common.utility import sanitize_article_html
+from constant import (
+    classification,
+    creditListForReleaseArticle,
+    emailAccount,
+    indexAboveStr,
+    indexLogoPicture,
+    indexLogoPictureSize,
+    loginEvereDayCredit,
+    portNum,
+    postArticleCredit,
+    regGiveCredit,
+    replyAndAddCommentCredit,
+    sessionExpirationTime,
+    shufflingFigureLink,
+    shufflingFigurePicture,
+    whetherDebug,
+    whetherSaveShufflingFigure,
+)
+from extensions import csrf, db, limiter, migrate
 
 
-# 404 processing
-@app.errorhandler(404)
-@logDanger
-def page_not_find(e):
-    return render_template("erroe-404.html", myemail=emailAccount)
+def _database_uri(app):
+    configured = os.getenv("DATABASE_URL", "").strip()
+    if configured:
+        return configured
+    database_file = Path(app.instance_path) / "pythonblog.db"
+    return f"sqlite:///{database_file.as_posix()}"
 
 
-# 500 processing
-@app.errorhandler(500)
-@logDanger
-def page_not_find(e):
-    return render_template("error-500.html", myemail=emailAccount)
+def create_app(test_config=None):
+    app = Flask(__name__, instance_relative_config=True)
+    Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+    database_uri = _database_uri(app)
+    is_sqlite = database_uri.startswith("sqlite:")
+    secret_key = os.getenv("SECRET_KEY", "dev-only-change-me")
 
+    app.config.from_mapping(
+        SECRET_KEY=secret_key,
+        DEBUG=whetherDebug,
+        SQLALCHEMY_DATABASE_URI=database_uri,
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
+        SQLALCHEMY_ENGINE_OPTIONS=(
+            {"connect_args": {"check_same_thread": False}}
+            if is_sqlite
+            else {"pool_pre_ping": True, "pool_recycle": 1800, "pool_size": 10, "max_overflow": 20}
+        ),
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
+        SESSION_COOKIE_SECURE=os.getenv("SESSION_COOKIE_SECURE", "False").lower() == "true",
+        PERMANENT_SESSION_LIFETIME=sessionExpirationTime,
+        MAX_CONTENT_LENGTH=int(os.getenv("MAX_CONTENT_LENGTH_MB", "8")) * 1024 * 1024,
+        WTF_CSRF_TIME_LIMIT=3600,
+        RATELIMIT_STORAGE_URI=os.getenv("RATELIMIT_STORAGE_URI", "memory://"),
+        ALLOW_REMOTE_IMAGES=os.getenv("ALLOW_REMOTE_IMAGES", "False").lower() == "true",
+        AUTO_INIT_DB=os.getenv("AUTO_INIT_DB", "True").lower() == "true",
+    )
+    if test_config:
+        app.config.update(test_config)
+    if not app.config.get("TESTING") and not app.config["DEBUG"] and secret_key == "dev-only-change-me":
+        raise RuntimeError("SECRET_KEY must be configured outside development")
 
-# "Register" the category of the article into the global function
-@app.context_processor
-@logDanger
-def gettype():
-    type = {}
-    for i, j in enumerate(classification):
-        type[str(i + 1)] = j
-    # Transfer to a previous dictionary
-    return dict(article_type=type)
+    db.init_app(app)
+    define_schema(db.metadata)
+    csrf.init_app(app)
+    migrate.init_app(app, db)
+    limiter.init_app(app)
 
+    with app.app_context():
+        if is_sqlite:
+            def enable_sqlite_foreign_keys(connection, _record):
+                cursor = connection.cursor()
+                cursor.execute("PRAGMA foreign_keys=ON")
+                cursor.close()
 
-# Register the optional points of the author of the published article to the global function
-@app.context_processor
-@logDanger
-def listOfCredit():
-    type = {}
-    for i in creditListForReleaseArticle:
-        type[i] = str(i) + "points"
-    return dict(listOfCredit=type)
+            event.listen(db.engine, "connect", enable_sqlite_foreign_keys)
+        if app.config["AUTO_INIT_DB"]:
+            initialize_database()
+        _register_blueprints(app)
 
-
-# Here the logo, rotating images, etc. are passed to the front end
-@app.context_processor
-@logDanger
-def manyParameter():
-    type = defaultdict(list)
-    for i in range(len(shufflingFigurePicture)):
-        type["shufflingFigure"].append(
-            [shufflingFigurePicture[i], shufflingFigureLink[i]])
-
-    type["indexLogoPicture"].append(indexLogoPicture)
-
-    for i in indexLogoPictureSize:
-        type["indexLogoPictureSize"].append(i)
-
-    for i in indexAboveStr:
-        type["indexAboveStr"].append(i)
-
-    if whetherSaveShufflingFigure is True:
-        type["display"].append("block")
-    else:
-        type["display"].append("none")
-    return dict(manyParameter=type)
-
-
-# Custom filter function to set the length of the fetched word
-def my_truncate(s, length, end="..."):
-    count = 0
-    new = ""
-    for c in s:
-        new += c
-        if ord(c) <= 128:
-            count += 0.5
-        else:
-            count += 1
-        if count > length:
-            break
-    return new + end
-
-
-# Customize a function that adds one to the number to prevent flashing errors in the html (although it does not affect the operation, but OCD look uncomfortable)
-def numAddNum(n, a):
-    return n + a
-
-
-# Register the function in
-app.jinja_env.filters.update(my_truncate=my_truncate, numAddNum=numAddNum)
-
-
-# Define global interceptor to achieve automatic login
-@app.before_request
-@logDanger
-def before():
-    url = request.path
-    passList = ["/user", "/login", "logout"]
-    if url in passList or url.endswith(".js") or url.endswith(
-            ".png") or url.endswith(".jpg") or url.endswith(".css"):
-        pass
-    elif session.get("islogin") is None:
-        username = request.cookies.get("username")
-        password = request.cookies.get("password")
-        if username != None and password != None:
-            result = instanceUser.searchUserByUsername(username)
-            if result != None and result.password == password:
-                session["islogin"] = "true"
-                session["username"] = username
-                session["userid"] = result.userid
-                islogin = session.get("islogin")
-                userid = session.get("userid")
-                nickname = instanceUser.searchNicknameByUserid(userid)
-                session["nickname"] = nickname
-                session["role"] = result.role
-                if islogin == "true":
-                    if instanceCredit.whetherFirstLoginThisDay(userid) is True:
-                        info = f"Users with userid {userid} and nickname {nickname} log in successfully every day and receive {loginEvereDayCredit} points, which is an automatic login."
-                        instanceCredit.insertDetail(type="Daily Login",
-                                                    target=0,
-                                                    credit=loginEvereDayCredit,
-                                                    info=info)
-                        listLogger(userid, info, [0])
-                        # Used to determine whether to automatically log in every day, and then collect the points themselves
-                        session["judgeLin"] = "1"
-                    else:
-                        pass
-
-
-# The interface to determine automatic daily login, which is accessed by the front-end inherited baseArticle template file when the page is loaded
-# Determine whether to automatically log in to receive points
-@app.route("/judgeAutoLogin", methods=["POST"])
-@logDanger
-def judgeAutoLogin():
-    try:
-        if session.get("judgeLin") == "1":
-            return "1"
-        else:
-            return "0"
-    except:
-        e = traceback.format_exc()
-        allLogger(0, e)
-    finally:
-        session["judgeLin"] = "0"
-
-
-# An interface for passing parameters
-@app.route("/toTransmitParam", methods=["GET"])
-@logDanger
-def toTransmitParam():
-    param = {
-        "loginEvereDayCredit": loginEvereDayCredit,
-        "replyAndAddCommentCredit": replyAndAddCommentCredit,
-        "regGiveCredit": regGiveCredit,
-        "postArticleCredit": postArticleCredit
-    }
-    return param
-
-
-# Used to release unconnected dbsessions to prevent blocking
-@app.teardown_appcontext
-def shutdown_session(exception=None):
-    if exception is None:
-        db.session.remove()
-
-
-# Change some parameters of the site, for example, how many times a day no one can comment
-# How many points are given for login, registration, etc.
-@app.route("/changeBlogParams", methods=["POST"])
-def changeBlogParams():
-    pass
-    return "1"
-
-
-# Main runner
-if __name__ == '__main__':
-    # Initialize logs (check some necessary directories for logs to work)
+    _register_handlers(app)
+    _register_template_helpers(app)
+    _register_cli(app)
     ininLogDir()
-    # Initializing the database
-    ininDatabase()
-    # Importing instantiated database operation classes
-    from database.credit import Credit
-    from database.logs import Log
-    from database.users import Users
+    return app
 
-    instanceCredit = Credit()
-    instanceUser = Users()
-    instanceLog = Log()
-    from common.myLog import listLogger
+
+def _register_blueprints(app):
     from controler.adminManage import adminManage
     from controler.article import article
     from controler.comment import comment
     from controler.favorite import favorite
-    # Register flask blueprint
     from controler.index import index
     from controler.ueditor import ueditor
     from controler.user import user
     from controler.userManage import userManage
 
-    app.register_blueprint(index)
-    app.register_blueprint(user)
-    app.register_blueprint(article)
-    app.register_blueprint(favorite)
-    app.register_blueprint(comment)
-    app.register_blueprint(ueditor)
-    app.register_blueprint(userManage)
-    app.register_blueprint(adminManage)
+    for blueprint in (index, user, article, favorite, comment, ueditor, userManage, adminManage):
+        app.register_blueprint(blueprint)
 
-    # Add logs for each server startup
 
-    now = time.strftime('%Y-%m-%d %H:%M:%S')
-    if instanceLog.judgeStartServe() is False:
-        instanceLog.insertDetail(type="Start the server",
-                                 target=0,
-                                 credit=0,
-                                 userid=0,
-                                 info=f"The server was started in {now}")
-        allLogger(1, f"The server was started in {now}")
-    else:
-        pass
-    #  Start in debug mode on the specified port
-    app.run(debug=whetherDebug, port=portNum)
+def _register_handlers(app):
+    @app.errorhandler(404)
+    def page_not_found(_error):
+        return render_template("erroe-404.html", myemail=emailAccount), 404
+
+    @app.errorhandler(500)
+    def internal_error(_error):
+        db.session.rollback()
+        return render_template("error-500.html", myemail=emailAccount), 500
+
+    @app.errorhandler(CSRFError)
+    def csrf_error(error):
+        return jsonify(error="csrf_failed", reason=error.description), 400
+
+    @app.teardown_appcontext
+    def shutdown_session(_exception=None):
+        db.session.remove()
+
+    @app.after_request
+    def security_headers(response):
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        response.headers.setdefault(
+            "Content-Security-Policy",
+            "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; "
+            "script-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self'",
+        )
+        return response
+
+    @app.before_request
+    def reject_blocked_sessions():
+        userid = session.get("userid")
+        if not userid:
+            return None
+        from database.users import Users
+
+        user = Users().searchUserByUserid(userid)
+        if user is None or user.forbidLogin == 1:
+            session.clear()
+            if request.endpoint not in {"user.login", "index.home"}:
+                abort(403)
+        return None
+
+    @app.get("/healthz")
+    def healthz():
+        return {"status": "ok"}
+
+    @app.get("/toTransmitParam")
+    def transmit_parameters():
+        return {
+            "loginEvereDayCredit": loginEvereDayCredit,
+            "replyAndAddCommentCredit": replyAndAddCommentCredit,
+            "regGiveCredit": regGiveCredit,
+            "postArticleCredit": postArticleCredit,
+        }
+
+    @app.get("/replyAndAddCommentCredit")
+    def reply_credit():
+        return str(replyAndAddCommentCredit)
+
+    @app.get("/loginEvereDayCredit")
+    def login_credit():
+        return str(loginEvereDayCredit)
+
+    @app.post("/judgeAutoLogin")
+    def judge_auto_login():
+        earned = session.pop("judgeLin", "0")
+        return "1" if earned == "1" else "0"
+
+
+def _register_template_helpers(app):
+    @app.context_processor
+    def article_types():
+        return {"article_type": {str(index + 1): name for index, name in enumerate(classification)}}
+
+    @app.context_processor
+    def credits():
+        return {"listOfCredit": {value: f"{value} points" for value in creditListForReleaseArticle}}
+
+    @app.context_processor
+    def page_parameters():
+        values = defaultdict(list)
+        values["shufflingFigure"] = list(zip(shufflingFigurePicture, shufflingFigureLink, strict=False))
+        values["indexLogoPicture"].append(indexLogoPicture)
+        values["indexLogoPictureSize"].extend(indexLogoPictureSize)
+        values["indexAboveStr"].extend(indexAboveStr)
+        values["display"].append("block" if whetherSaveShufflingFigure else "none")
+        return {"manyParameter": values}
+
+    def truncate_text(value, length, end="..."):
+        value = value or ""
+        return value if len(value) <= length else value[:length] + end
+
+    app.jinja_env.filters["my_truncate"] = truncate_text
+    app.jinja_env.filters["numAddNum"] = lambda number, amount: number + amount
+    app.jinja_env.filters["safe_html"] = lambda value: Markup(sanitize_article_html(value or ""))
+
+
+def _register_cli(app):
+    @app.cli.command("init-db")
+    def init_db_command():
+        initialize_database()
+        click.echo("Database initialized.")
+
+    @app.cli.command("create-user")
+    @click.option("--username", prompt=True)
+    @click.option("--password", prompt=True, hide_input=True, confirmation_prompt=True)
+    @click.option("--role", type=click.Choice(["user", "editor", "admin"]), default="user")
+    @click.option("--nickname", default=None)
+    def create_user_command(username, password, role, nickname):
+        user_id = create_user(username, password, role=role, nickname=nickname)
+        click.echo(f"Created {role} user {username} with id {user_id}.")
+
+
+if __name__ == "__main__":
+    create_app().run(host="127.0.0.1", port=portNum, debug=whetherDebug)

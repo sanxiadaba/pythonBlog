@@ -1,19 +1,16 @@
 import random
-import time
+from datetime import datetime
 
 from flask import session
-from sqlalchemy import Table
 
 from common.connectDb import connectDb
-from common.myLog import dirInDir, rootDir
-from common.utility import genearteMD5
 from constant import thumbNailNum
 
 dbsession, md, DBase = connectDb()
 
 
 class Article(DBase):
-    __table__ = Table("article", md, autoload=True)
+    __table__ = md.tables["article"]
 
     def exceptDeleteNum(self, userid=None):
         userid = session.get("userid") if userid is None else userid
@@ -21,7 +18,7 @@ class Article(DBase):
 
 
 class Comment(DBase):
-    __table__ = Table("comment", md, autoload=True)
+    __table__ = md.tables["comment"]
 
     def numOfComment(self, userid=None):
         userid = session.get("userid") if userid is None else userid
@@ -34,7 +31,7 @@ instanceComment = Comment()
 
 
 class Users(DBase):
-    __table__ = Table("users", md, autoload=True)
+    __table__ = md.tables["users"]
 
     # Login verification to see if the password corresponding to the account is correct
     def searchUserByUsername(self, username):
@@ -49,14 +46,12 @@ class Users(DBase):
     # Implement registration, the first registration only need user name and password
     # Usually users do not fill in too much information, and can subsequently improve in the user center
     def doRegister(self, username, password):
-        avatarPath = rootDir + "\\static\\img\\avatar"
-        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now()
         nickname = username.split("@")[0]  # Default account prefix as nickname
         avatar = "default/" + str(
             random.randint(1, thumbNailNum))  # Choose one of the ten random images as the initial default avatar
         user = Users(username=username, password=password, role="user", credit=0, nickname=nickname,
                      avatar=avatar + ".png", createtime=now)
-        dirInDir(f"myPic_{user.userid}", avatarPath)
         dbsession.add(user)
         dbsession.commit()
         return user
@@ -111,7 +106,6 @@ class Users(DBase):
 
     # Change password
     def modifyUserPassword(self, userid, newPassword):
-        newPassword = genearteMD5(newPassword)
         user = dbsession.query(Users).filter_by(userid=userid).first()
         user.password = newPassword
         dbsession.commit()
@@ -160,7 +154,7 @@ class Users(DBase):
     # changeType 0 means change editor to user, 1 means change user to editor
     def changeIdentity(self, userid, changeType):
         row = dbsession.query(Users).filter_by(userid=userid).first()
-        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now()
         if changeType == 1:
             row.apply = 0
             row.role = "user"
@@ -242,13 +236,13 @@ class Users(DBase):
     # Disabling a user's login
     def forbidUserLogin(self, userid):
         row = dbsession.query(Users).filter_by(userid=userid).first()
-        row.forbidUserLogin = 1
+        row.forbidLogin = 1
         dbsession.commit()
 
     # Reply to a user's login
     def restoreLogin(self, userid):
         row = dbsession.query(Users).filter_by(userid=userid).first()
-        row.forbidUserLogin = 0
+        row.forbidLogin = 0
         dbsession.commit()
 
     # Determine if it is an administrator by id

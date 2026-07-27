@@ -14,7 +14,7 @@ encoding: utf-8
 
 import math
 
-from flask import Blueprint, render_template, abort
+from flask import Blueprint, abort, render_template
 from flask.json import jsonify
 
 from common.myLog import logDanger

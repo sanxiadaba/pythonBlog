@@ -1,8 +1,6 @@
 import datetime
-import time
 
-from flask import session, request
-from sqlalchemy import Table
+from flask import request, session
 
 from common.connectDb import connectDb
 
@@ -10,7 +8,7 @@ dbsession, md, DBase = connectDb()
 
 
 class Log(DBase):
-    __table__ = Table("log", md, autoload=True)
+    __table__ = md.tables["log"]
 
     # Insert log table
     def insertDetail(self, type, target, credit, userid=None, info=None):
@@ -18,7 +16,7 @@ class Log(DBase):
             userid = session.get("userid")
         if info is not None and type != "Start the server":
             info = info + f" The ip address is{request.remote_addr}"
-        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.datetime.now()
         if type == "Start the server":
             ipaddr = None
         else:
@@ -59,15 +57,15 @@ class Log(DBase):
 
     # Returns the last time the server was started
     def searchTimeOfLastTimeServe(self):
-        result = \
-            dbsession.query(Log.info).filter_by(category="Start the server").order_by(Log.target.desc()).limit(
-                1).first()[0]
-        return result
+        result = dbsession.query(Log.info).filter_by(category="Start the server").order_by(
+            Log.createtime.desc()
+        ).first()
+        return result[0] if result else "No startup record"
 
     # Check if the server has been started in the last ten seconds (I don't know why flask is "started" twice)
     def judgeStartServe(self):
-        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        before = (datetime.datetime.now() + datetime.timedelta(seconds=-10)).strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.datetime.now()
+        before = now - datetime.timedelta(seconds=10)
         count = dbsession.query(Log).filter(Log.category == "Start the server",
                                             Log.createtime.between(before, now)).count()
         if count > 0:

@@ -7,7 +7,7 @@
         var ue = UE.getEditor('content', {
             initialFrameHeight: 400,
             autoHeightEnabled: true,
-            serverUrl: "/uedit",
+            serverUrl: "/uedit?csrf_token={{ csrf_token() }}",
             toolbars: [
                 [
                     'source', //源代码
@@ -85,7 +85,7 @@
 
     <div class="row">
         <script id="content" type="text/plain"  style="padding-top: 10px">
-            {{ articleContent | safe }}
+            {{ articleContent | safe_html }}
         </script>
     </div>
 
@@ -111,7 +111,7 @@
 
         <button class="form-control btn-default col-2" onclick="doPost('-1','1')" id="biaoji1">Save draft</button>
         {% if whetherHide is false %}
-        {% if session.get("role")=="editor" %}
+        {% if session.get("role") in ("editor", "admin") %}
             <button class="form-control btn-primary col-2" onclick="doPost('-1','2')" id="xiugaiwenzhang">Post Article</button>
         {% else %}
             <button class="form-control btn-primary col-2" onclick="doPost('-1','3')" id="xiugaiwenzhang">Contributions</button>

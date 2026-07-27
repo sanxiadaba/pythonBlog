@@ -6,24 +6,23 @@ encoding: utf-8
 @time: 2022/1/13
 @gituhb: sanxiadaba/pythonBlog
 """
-import time
+from datetime import datetime, timedelta
 
-from flask import session, request
-from sqlalchemy import Table
+from flask import request, session
 
 from common.connectDb import connectDb
-from constant import maxUserPostArticleNum, maxUserPostArticleNumOfEditor, maxModifyArticleNum
+from constant import maxModifyArticleNum, maxUserPostArticleNum, maxUserPostArticleNumOfEditor
 
 dbsession, md, DBase = connectDb()
 
 
 class ArticleLog(DBase):
-    __table__ = Table("articleLog", md, autoload=True)
+    __table__ = md.tables["articleLog"]
 
     def insertDetail(self, articleid, type, info=None):
         info = None if info is None else info
         userid = session.get("userid")
-        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now()
         ArticleLogP = ArticleLog(userid=userid, articleid=articleid, createtime=now,
                                  ipaddr=request.remote_addr, info=info, type=type)
 
@@ -32,8 +31,8 @@ class ArticleLog(DBase):
 
     # Determine if the number of user uploads exceeds the daily limit
     def checkLimitUpload(self):
-        start = time.strftime("%Y-%m-%d 00:00:00")
-        end = time.strftime("%Y-%m-%d 23:59:59")
+        start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        end = start + timedelta(days=1)
         result = dbsession.query(ArticleLog).filter(ArticleLog.userid == session.get("userid"),
                                                     ArticleLog.createtime.between(start, end),
                                                     ArticleLog.type != "Modify article",
@@ -47,8 +46,8 @@ class ArticleLog(DBase):
 
     # Determine if the number of user modifications exceeds the daily limit
     def checkLimitModify(self):
-        start = time.strftime("%Y-%m-%d 00:00:00")
-        end = time.strftime("%Y-%m-%d 23:59:59")
+        start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        end = start + timedelta(days=1)
         result = dbsession.query(ArticleLog).filter(ArticleLog.userid == session.get("userid"),
                                                     ArticleLog.createtime.between(start, end),
                                                     ArticleLog.type == "修改文章").count()

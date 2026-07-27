@@ -1,314 +1,227 @@
-"""
-文件说明：
-
-主要对用户的信息进行了管理
-以及登录、登出、注册、找回密码、验证码等信息
-
-
-encoding: utf-8
-@author: Zhang Jiajun
-@contact: jz272381@gmail.com
-@software: Pycharm
-@time: 2022/1/12
-@gituhb: sanxiadaba/pythonBlog
-"""
-
 import hashlib
 import re
 import time
-import traceback
 
-from flask import Blueprint, make_response, session, request, url_for
+from flask import Blueprint, make_response, request, session, url_for
+from werkzeug.security import check_password_hash, generate_password_hash
 
-from common.myLog import ininUserDir, logDanger, listLogger, allLogger, dirInDir, avatarPath
+from common.auth import login_required, role_required
+from common.myLog import avatarPath, dirInDir, ininUserDir, listLogger, logDanger
 from common.utility import ImageCode, gen_email_code, send_email
-from common.utility import genearteMD5
-from constant import whetherDistinguishCapital, regGiveCredit, loginEvereDayCredit, timeoutOfEcode, md5Salt, \
-    emailAccount
+from constant import (
+    emailAccount,
+    loginEvereDayCredit,
+    md5Salt,
+    regGiveCredit,
+    timeoutOfEcode,
+    whetherDistinguishCapital,
+)
 from database.credit import Credit
 from database.logs import Log
 from database.users import Users
+from extensions import limiter
 
 instanceCredit = Credit()
 instanceLog = Log()
 instanceUser = Users()
-
 user = Blueprint("user", __name__)
-# Used to determine if the verification code exceeds the time limit
-timeStart = 0
+
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
-# Here the image captcha is generated and the content of the captcha is stored in the session
-@user.route("/vcode", methods=["GET"])
+def _valid_password(password):
+    return isinstance(password, str) and 8 <= len(password) <= 128
+
+
+def _email_code_valid(email, code):
+    issued_at = session.get("ecode_issued_at", 0)
+    return (
+        code
+        and code == session.get("ecode")
+        and email == session.get("ecode_email")
+        and time.time() - issued_at <= timeoutOfEcode
+    )
+
+
+def _password_matches(user_record, raw_password):
+    stored = user_record.password or ""
+    try:
+        if check_password_hash(stored, raw_password):
+            return True
+    except (ValueError, TypeError):
+        pass
+    legacy = hashlib.md5((raw_password + md5Salt).encode()).hexdigest()
+    if stored == legacy:
+        instanceUser.modifyUserPassword(user_record.userid, generate_password_hash(raw_password, method="scrypt"))
+        return True
+    return False
+
+
+@user.get("/vcode")
+@limiter.limit("30 per minute")
 @logDanger
 def vcode():
-    image = ImageCode()
-    code, bstring = image.get_code()
-    response = make_response(bstring)
-    response.headers['Content-Type'] = 'image/jpeg'
-    # Here is the case-insensitive handling of the CAPTCHA
-    if whetherDistinguishCapital is False:
-        session['vcode'] = code.lower()
-    else:
-        session['vcode'] = code
+    code, image = ImageCode().get_code()
+    session["vcode"] = code if whetherDistinguishCapital else code.lower()
+    response = make_response(image)
+    response.headers["Content-Type"] = "image/jpeg"
+    response.headers["Cache-Control"] = "no-store"
     return response
 
 
-# Generate email verification code here
-@user.route("/ecode", methods=["POST"])
+@user.post("/ecode")
+@limiter.limit("3 per 10 minutes")
 @logDanger
 def ecode():
-    global timeStart
-    timeStart = time.time()
-    email = request.form.get("email")
-    # Convert to numeric type
-    n = int(request.form.get("n"))
-    if not re.match(".+@.+\..+", email):
-        return "email-invailid"
-    code = gen_email_code()
+    email = (request.form.get("email") or "").strip().lower()
     try:
-        send_email(email, code, n)
-        session["ecode"] = code  # Save email verification code in session
-        session.permanent = True
-        return "send-pass"
-    except:
-        return "send fail"
+        purpose = int(request.form.get("n", "0"))
+    except ValueError:
+        return "email-invailid", 400
+    if not _EMAIL_RE.fullmatch(email):
+        return "email-invailid", 400
+    code = gen_email_code()
+    send_email(email, code, purpose)
+    session.update(ecode=code, ecode_email=email, ecode_issued_at=time.time())
+    session.permanent = True
+    return "send-pass"
 
 
-# Interface for user registration access
-@user.route("/user", methods=["POST"])
+@user.post("/user")
+@limiter.limit("5 per hour")
 @logDanger
 def register():
-    global timeStart
-    username = request.form.get("username").strip()
-    password = request.form.get("password").strip() + md5Salt
-    ecode = request.form.get("ecode").strip()
-    nickname = username.split("@")[0]
-    # Verify the correctness of the email address and the validity of the password
-    if not re.match(".+@.+\..+", username) or len(password) < 5:
-        return "up-invalid"
+    username = (request.form.get("username") or "").strip().lower()
+    raw_password = request.form.get("password") or ""
+    code = (request.form.get("ecode") or "").strip()
+    if not _EMAIL_RE.fullmatch(username) or not _valid_password(raw_password):
+        return "up-invalid", 400
+    if instanceUser.searchUserByUsername(username) is not None:
+        return "user-repeated", 409
+    if not _email_code_valid(username, code):
+        return "ecode-error", 400
 
-    if len(instanceUser.searchUserByUsername(username)) > 0:
-        return "user-repeated"
-
-    # Check if the email verification code is correct #or you can also set a universal verification code
-    if ecode != session.get("ecode"):
-        return "ecode-error"
-
-    else:
-        # Captcha will expire if the time exceeds
-        if time.time() - timeStart > timeoutOfEcode:
-            session["ecode"] = None
-            return "ecode-timeout"
-        # Implement the registration function to convert the password to md5 encryption under
-        password = genearteMD5(password)
-        try:
-            result = instanceUser.doRegister(username, password)
-        except:
-            return "reg-fail"
-        session["islogin"] = "true"
-        session["userid"] = result.userid
-        session["nickname"] = nickname
-        session["role"] = result.role
-        userid = session.get("userid")
-        # Update the points table Every new user is given points if they register
-        info = f"userid is {userid}, nickname is {nickname} user registration success"
-        instanceCredit.insertDetail(type="User Registration", target=0, credit=regGiveCredit, info=info, userid=userid)
-        listLogger(userid, info, [0])
-        dirInDir(f"myPic_{userid}", avatarPath)
-        ininUserDir()
-        return "reg-pass"
+    result = instanceUser.doRegister(username, generate_password_hash(raw_password, method="scrypt"))
+    session.clear()
+    session.update(islogin="true", userid=result.userid, nickname=result.nickname, role=result.role)
+    session.permanent = True
+    info = f"userid is {result.userid}, nickname is {result.nickname} user registration success"
+    instanceCredit.insertDetail(
+        type="User Registration", target=0, credit=regGiveCredit, info=info, userid=result.userid
+    )
+    dirInDir(f"myPic_{result.userid}", avatarPath)
+    ininUserDir(result.userid)
+    listLogger(result.userid, info, [0])
+    return "reg-pass"
 
 
-# Module for password retrieval
-@user.route("/resetUserPassword", methods=["POST"])
+@user.post("/resetUserPassword")
+@limiter.limit("5 per hour")
 @logDanger
 def resetUserPassword():
-    username = request.form.get("username").strip()
-    password = request.form.get("password").strip() + md5Salt
-    ecode = request.form.get("ecode").strip()
-    # First check whether the email account and password match the format
-    if not re.match(".+@.+\..+", username) or len(password) < 5:
-        return "up-invalid"
-
-    # Check if this user is available
-    if instanceUser.searchUserByUsername(username) is None:
-        return "no-user"
-
-    # Query userid according to play complete name
-    userid = instanceUser.findUseridByUsername(username)
-    userNickname = instanceUser.searchNicknameByUserid(userid)
-
-    # Verify that the email verification code is correct
-    if ecode != session.get("ecode"):
-        info = f"The user with userid {userid} and nickname {userNickname} tried to retrieve the password, but the email verification code was incorrectly entered."
-        instanceLog.insertDetail(userid=userid, type="Mailbox verification code error", credit=0, target=0)
-        listLogger(userid, info, [0])
-        return "ecode-error"
-
-    else:
-        # Set the expiration time of the verification code
-        if time.time() - timeStart > timeoutOfEcode:
-            session["ecode"] = None
-            info = f"The user with userid {userid} and nickname {userNickname} tried to retrieve the password, but the email verification code expired."
-            instanceLog.insertDetail(userid=userid, type="Captcha Expired", credit=0, target=0)
-            listLogger(userid, info, [0])
-            return "ecode-timeout"
-        userid = instanceUser.findUseridByUsername(username)
-        # Convert password to md5 encryption under
-        try:
-
-            instanceUser.modifyUserPassword(userid, password)
-            info = f"userid is {userid},nickname is {userNickname} reset password successfully by email verification code"
-            instanceLog.insertDetail(userid=userid, type="Reset password", credit=0, target=0)
-            listLogger(userid, info, [0])
-        except:
-            e = traceback.format_exc()
-            allLogger(0, e)
-            return "fi-fail"
-        return "fi-pass"
+    username = (request.form.get("username") or "").strip().lower()
+    raw_password = request.form.get("password") or ""
+    code = (request.form.get("ecode") or "").strip()
+    record = instanceUser.searchUserByUsername(username)
+    if not _EMAIL_RE.fullmatch(username) or not _valid_password(raw_password):
+        return "up-invalid", 400
+    if record is None:
+        return "no-user", 404
+    if not _email_code_valid(username, code):
+        return "ecode-error", 400
+    instanceUser.modifyUserPassword(record.userid, generate_password_hash(raw_password, method="scrypt"))
+    session.pop("ecode", None)
+    return "fi-pass"
 
 
-# Module to implement login
-@user.route("/login", methods=["POST"])
+@user.post("/login")
+@limiter.limit("10 per minute")
 @logDanger
 def login():
-    username = request.form.get("username").strip()
-    password = request.form.get("password").strip() + md5Salt
-    vcode = request.form.get("logincode").lower().strip()
-    # First determine if the account exists
-    userid = instanceUser.findUseridByUsername(username)
+    username = (request.form.get("username") or "").strip().lower()
+    raw_password = request.form.get("password") or ""
+    captcha = (request.form.get("logincode") or "").strip()
+    if not whetherDistinguishCapital:
+        captcha = captcha.lower()
+    record = instanceUser.searchUserByUsername(username)
+    if record is None:
+        return "login-fail", 401
+    if captcha != session.get("vcode"):
+        return "vcode-error", 400
+    if record.forbidLogin == 1:
+        return "forbid", 403
+    if not _password_matches(record, raw_password):
+        return "login-fail", 401
 
-    if userid is None:
-        allLogger(0, "User does not exist")
-        return "login-fail"
-    nickname = instanceUser.searchNicknameByUserid(userid)
-    # This is the time to judge the directory just in case
-    ininUserDir(userid=userid)
-    # Re-verify that the verification code is correct
-    #  Image Verification Code
-    if vcode != session.get("vcode"):
-        info = f"userid is {userid}, nickname is {nickname}, during the login process to check the image verification code input error"
-        instanceLog.insertDetail(userid=userid, type="Login image verification code error", credit=0, target=0,
-                                 info=info)
-        listLogger(userid, info, [0])
-        return "vcode-error"
-    else:
-        # Implementing the login function
-        password = hashlib.md5(password.encode()).hexdigest()
-        result = instanceUser.searchUserByUsername(username)
-        if len(result) == 1 and result[0].password == password:
-            if result[0].forbidUserLogin == 1:
-                return "forbid"
-            session["islogin"] = "true"
-            session["userid"] = result[0].userid
-            session["nickname"] = nickname
-            session["role"] = result[0].role
-            # Add a record to the log table
-            # If you have already received login credits
-            # Determine if you have already logged in today (only the first login of each day will send points)
-            whetherGetLoginCredit = instanceCredit.whetherFirstLoginThisDay(userid=userid)
-            if whetherGetLoginCredit is False:
-                response = make_response("login-pass")
-            else:
-                response = make_response("add-credit")
-            #   Adding a record Setting cookies by the way
-            response.set_cookie("username", username, max_age=30 * 24 * 3600)
-            response.set_cookie("password", password, max_age=30 * 24 * 3600)
-            if whetherGetLoginCredit is False:
-                # Cannot receive login bonus
-                info = f"userid is {userid}, nickname is {nickname}, but you have already received the daily login bonus"
-                instanceLog.insertDetail(userid=userid, type="Successful login", credit=0, target=0,
-                                         info=info)
-                listLogger(userid, info, [0])
-            else:
-                # Receive daily login bonus
-                info = f"userid is {userid}, nickname is {nickname} daily login plus points successfully"
-                instanceCredit.insertDetail(userid=userid, type="Daily login bonus points", credit=loginEvereDayCredit,
-                                            target=0,
-                                            info=info)
-                listLogger(userid, info, [0])
-            return response
-        else:
-            # Record the login failure as well.
-            info = f"userid is {userid}, nickname is {nickname} login failed, failure reason: login password error"
-            instanceLog.insertDetail(userid=userid, type="Password error", credit=0, target=0, info=info)
-            listLogger(userid, info, [0])
-            return "login-fail"
+    session.clear()
+    session.update(islogin="true", userid=record.userid, nickname=record.nickname, role=record.role)
+    session.permanent = True
+    ininUserDir(record.userid)
+    first_login = instanceCredit.whetherFirstLoginThisDay(userid=record.userid)
+    if first_login:
+        info = f"userid is {record.userid}, nickname is {record.nickname} daily login plus points successfully"
+        instanceCredit.insertDetail(
+            userid=record.userid,
+            type="Daily login bonus points",
+            credit=loginEvereDayCredit,
+            target=0,
+            info=info,
+        )
+        session["judgeLin"] = "1"
+        return "add-credit"
+    return "login-pass"
 
 
-# Logout settings
-@user.route("/logout", methods=["POST", "GET"])
+@user.post("/logout")
+@login_required
 @logDanger
 def logout():
-    # Empty session page jump
-    userid = session.get('userid')
-    info = f"The user whose userid is {userid} and whose nickname is {session.get('nickname')} is logged out of the account"
-    instanceLog.insertDetail(userid=userid, type="Logout page", credit=0, target=0, info=info)
-    listLogger(userid, info, [0])
     session.clear()
     response = make_response("Logout and redirect", 302)
     response.headers["Location"] = url_for("index.home")
     response.delete_cookie("username")
-    # Disable cookies
-    response.set_cookie("password", max_age=0)  # This is another way of writing
+    response.delete_cookie("password")
     return response
 
 
-# Return to the administrator's account
-@user.route("/adminMail", methods=["GET"])
-@logDanger
+@user.get("/adminMail")
 def adminMail():
     return str(emailAccount)
 
 
-# Set a user as editor
-@user.route("/becomeEditor", methods=["POST"])
+def _change_user(userid, action, description):
+    target = instanceUser.searchUserByUserid(userid)
+    if target is None:
+        return "0", 404
+    action(userid)
+    info = f"Administrator {description} userid {userid} ({target.nickname})"
+    instanceLog.insertDetail(type=description, target=userid, credit=0, info=info)
+    return "1"
+
+
+@user.post("/becomeEditor")
+@role_required("admin")
 @logDanger
 def becomeEditor():
-    userid = int(request.form.get("userid"))
-    nickname = instanceUser.searchNicknameByUserid(userid)
-    info = f"Set the user with userid {userid} and nickname {nickname} to edit"
-    instanceLog.insertDetail(userid=userid, type="set to editor", credit=0, target=userid, info=info)
-    listLogger(userid, info, [0])
-    instanceUser.becomeEditor(userid)
-    return "1"
+    return _change_user(int(request.form["userid"]), instanceUser.becomeEditor, "set to editor")
 
 
-# Set a user as user
-@user.route("/becomeUser", methods=["POST"])
+@user.post("/becomeUser")
+@role_required("admin")
 @logDanger
 def becomeUser():
-    userid = int(request.form.get("userid"))
-    nickname = instanceUser.searchNicknameByUserid(userid)
-    info = f"Set the user with userid {userid} and nickname {nickname} to user"
-    instanceLog.insertDetail(userid=userid, type="set to user", credit=0, target=userid, info=info)
-    listLogger(userid, info, [0])
-    instanceUser.becomeUser(userid)
-    return "1"
+    return _change_user(int(request.form["userid"]), instanceUser.becomeUser, "set to user")
 
 
-# Blocking a user's login
-@user.route("/forbidLogin", methods=["POST"])
+@user.post("/forbidLogin")
+@role_required("admin")
 @logDanger
 def forbidLogin():
-    userid = int(request.form.get("userid"))
-    nickname = instanceUser.searchNicknameByUserid(userid)
-    info = f"Block users with userid {userid} and nickname {nickname} from logging in"
-    instanceLog.insertDetail(userid=userid, type="Forbid Login", credit=0, target=userid, info=info)
-    listLogger(userid, info, [0])
-    instanceUser.forbidUserLogin(userid)
-    return "1"
+    return _change_user(int(request.form["userid"]), instanceUser.forbidUserLogin, "forbid login")
 
 
-# Unblock a user's login
-@user.route("/restoreLogin", methods=["POST"])
+@user.post("/restoreLogin")
+@role_required("admin")
 @logDanger
 def restoreLogin():
-    userid = int(request.form.get("userid"))
-    nickname = instanceUser.searchNicknameByUserid(userid)
-    info = f"unblock users with userid {userid} and nickname {nickname} from logging in"
-    instanceLog.insertDetail(userid=userid, type="Restore Login", credit=0, target=userid, info=info)
-    listLogger(userid, info, [0])
-    instanceUser.restoreLogin(userid)
-    return "1"
+    return _change_user(int(request.form["userid"]), instanceUser.restoreLogin, "restore login")

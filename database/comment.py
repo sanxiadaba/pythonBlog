@@ -1,7 +1,6 @@
-import time
+from datetime import datetime, timedelta
 
-from flask import session, request
-from sqlalchemy import Table
+from flask import request, session
 
 from common.connectDb import connectDb
 from common.utility import model_join_list
@@ -11,7 +10,7 @@ dbsession, md, DBase = connectDb()
 
 
 class Users(DBase):
-    __table__ = Table("users", md, autoload=True)
+    __table__ = md.tables["users"]
 
     # Check if you are an administrator
     def judgeAdminByUserid(self, userid):
@@ -31,20 +30,20 @@ class Users(DBase):
         return dbsession.query(Users.nickname).filter_by(userid=userid).first()[0]
 
 class Article(DBase):
-    __table__ = Table("article", md, autoload=True)
+    __table__ = md.tables["article"]
 
 instanceUser = Users()
 instanceArticle=Article()
 
 class Comment(DBase):
-    __table__ = Table("comment", md, autoload=True)
+    __table__ = md.tables["comment"]
 
     # Add an original comment
     def insertComment(self, articleid, content, info=None):
         if info is not None:
             info = info
         ipaddr = request.remote_addr
-        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now()
         comment = Comment(userid=session.get("userid"), articleid=articleid, content=content,
                           ipaddr=ipaddr, createtime=now, info=info)
         dbsession.add(comment)
@@ -58,8 +57,8 @@ class Comment(DBase):
     # Query by user number and date to see if the limit of a certain number of comments has been exceeded
     # (the number of comments per day is also limited)
     def whetherLimitEveryDayCommentNum(self):
-        start = time.strftime("%Y-%m-%d 00:00:00")
-        end = time.strftime("%Y-%m-%d 23:59:59")
+        start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        end = start + timedelta(days=1)
         result = dbsession.query(Comment).filter(Comment.userid == session.get("userid"),
                                                  Comment.createtime.between(start, end)).count()
         if result >= commentNum:
@@ -78,7 +77,7 @@ class Comment(DBase):
     def insertArticleComment(self, articleid, commentid, content, ipaddr, info=None):
         if info is not None:
             info = info
-        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now()
         comment = Comment(userid=session.get("userid"), articleid=articleid, content=content, ipaddr=ipaddr,
                           replyid=commentid, createtime=now, updatetime=now, info=info)
         dbsession.add(comment)
@@ -127,30 +126,36 @@ class Comment(DBase):
     # Cancel endorsement
     def cancleUpdateCommentAgree(self, commentid):
         row = dbsession.query(Comment).filter_by(commentid=int(commentid)).first()
-        row.agreecount -= 1
+        row.agreecount = max(0, row.agreecount - 1)
         dbsession.commit()
 
     # Cancel Objections
     def cancleUpdateCommentDisagree(self, commentid):
         row = dbsession.query(Comment).filter_by(commentid=int(commentid)).first()
-        row.opposecount -= 1
+        row.opposecount = max(0, row.opposecount - 1)
         dbsession.commit()
 
     # Query userid according to commentid
     def searchUseridByCommentid(self, commentid):
         return dbsession.query(Comment.userid).filter_by(commentid=commentid).one()[0]
 
+    def searchArticleidByCommentid(self, commentid):
+        return dbsession.query(Comment.articleid).filter_by(commentid=commentid).one()[0]
+
     # Make the specified commentid hidden
     def hideCommentByCommentid(self, commentid):
         data = dbsession.query(Comment).filter_by(commentid=commentid).first()
+        if data is None or data.hide == 1:
+            return False
         data.hide = 1
         dbsession.commit()
+        return True
 
     # My comments #Comment likes #Comment objections (for convenience, only information about the original comment is displayed here first)
     def searchAllMyComment(self):
         userid = session.get("userid")
         data = dbsession.query(Comment.content, Comment.agreecount, Comment.opposecount, Comment.articleid,
-                               Comment.commentid).filter_by(userid == userid).all()
+                               Comment.commentid).filter(Comment.userid == userid).all()
         return data  # Note that what is returned is a list, and each element of the list is an array containing these five elements
 
     def numOfALLMyComment(self, userid=None):

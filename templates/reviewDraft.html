@@ -24,7 +24,7 @@
                 color="red">{{ article.credit }}</font>
         </div>
         <div class="col-12 content_t" id="content_t">
-            {{ article.content | safe }}
+            {{ article.content | safe_html }}
         </div>
     </div>
 

@@ -1,171 +1,152 @@
 # pythonBlog
 
-#### Project Description
+这是一个 Flask 个人博客。原作者的目标是用一个完整但容易理解的项目演示用户、文章、审核、评论、收藏、积分、图片上传和后台管理。当前版本保留了原页面和主要交互，并完成了 Python 3.11+、Flask 3、SQLAlchemy 2 和 SQLite/MySQL 的现代化适配。
 
-This project is a personal blog project based on flask
+## 已完成的改造
 
-It is relatively simple, but very functional, and more importantly: it is very easy to build, and is perfect for newbies
-to learn
+- 应用工厂 `create_app()`，配置与扩展解耦。
+- 默认零配置 SQLite；可通过 `DATABASE_URL` 切换 MySQL。
+- `pyproject.toml` + `uv.lock` 管理和锁定依赖，自动创建项目内 `.venv`。
+- Alembic 数据库迁移、初始化与用户创建 CLI。
+- scrypt 密码哈希；旧 MD5 密码在成功登录后自动升级。
+- 管理员 RBAC、文章所有权、登录状态和封禁状态服务端校验。
+- 全站 CSRF、接口限流、安全响应头和生产密钥检查。
+- 文章 HTML 白名单清洗；付费正文未购买前不会下发到浏览器。
+- 图片真实格式、大小、像素数、随机文件名和重新编码校验。
+- SQLite/MySQL 时间类型和随机排序兼容。
+- pytest 回归测试和 Ruff 静态检查。
 
-#### running method
+## 环境要求
 
-1. Make sure you have a working MySql service
+- Python 3.11 或更高版本。`uv` 会选择可用解释器并管理虚拟环境。
+- [uv](https://docs.astral.sh/uv/)
+- MySQL 仅在使用 MySQL 部署时需要；本地开发不需要。
 
-2. Download the project locally, you can use the following command
+## 首次启动
 
-    ```git
-    git clone https://github.com/sanxiadaba/pythonBlog.git
-    ```
+在项目目录执行：
 
-3. Go to the ".env" file and configure the information about your server, where you need to fill in the database name,
-   MySql port, account, password, port to run on, etc (there are instructions in the file)
+```powershell
+Copy-Item .env.example .env
+uv sync --frozen
+uv run flask --app app init-db
+uv run flask --app app create-user --username admin@example.com --role admin --nickname admin
+uv run flask --app app run --debug
+```
 
-4. run the program (the program will automatically initialize the database)
+打开 <http://127.0.0.1:5000>。数据库默认位于 `instance/pythonblog.db`，虚拟环境位于 `.venv`。`uv run` 会自动使用该虚拟环境，不需要手动激活；需要激活时可执行：
 
-    ```
-    python3 app.py
-    ```
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
 
-#### extra functions
+也可以使用启动脚本：
 
-- In the .env file, you can create an administrator,editor and user account for the initial experience of the project (
-  the three users created by default have the following accounts and passwords)
+```powershell
+.\scripts\start.ps1 -Mode development -Port 5000
+```
 
-   ```
-   account: adminTest
-   password adminTest
-   
-   account: editorTest
-   password editorTest
-  
-   account: userTest
-   password userTest
-   ```
+## 配置
 
-- If you want to use the mailbox registration, login and other functions
+`.env.example` 包含可用配置。至少应在非开发环境设置一个随机 `SECRET_KEY`：
 
-    1. first select "USE_GMAIL_OR_QQMAIL" in the .env file (currently only QQMAIL and GMAIL are supported)
+```powershell
+uv run python -c "import secrets; print(secrets.token_urlsafe(48))"
+```
 
-    2. "EMAIL_ACCOUNT" Fill in the corresponding mailbox account
+关键变量：
 
-    3. Note that "EMAIL_PASSWORD" is not the password of your mailbox, but the authorization code of the corresponding
-       mailbox
+| 变量 | 默认值 | 说明 |
+| --- | --- | --- |
+| `SECRET_KEY` | 仅开发占位值 | 会话与 CSRF 签名密钥，生产环境必须修改 |
+| `DATABASE_URL` | 空 | 空值使用 SQLite；支持 SQLAlchemy 数据库 URL |
+| `AUTO_INIT_DB` | `True` | 启动时补建缺失表；迁移管理的生产环境建议设为 `False` |
+| `DEBUG_MODE` | `True` | 生产环境必须关闭 |
+| `SESSION_COOKIE_SECURE` | `False` | HTTPS 部署时设为 `True` |
+| `MAX_CONTENT_LENGTH_MB` | `8` | 单次请求上限 |
+| `ALLOW_REMOTE_IMAGES` | `False` | 是否允许抓取公网文章图片，默认关闭以规避 SSRF |
+| `RATELIMIT_STORAGE_URI` | `memory://` | 单进程限流存储；多实例部署应改为共享存储 |
 
-    - If you are QQ mailbox, go to Settings-->Account and open SMTP service, then generate authorization code
-    - If you are a Google mailbox, then open the "Security" option in your Google account, turn on the two-step
-      verification first, and then generate the application-specific password
+邮件注册和找回密码需要设置 `EMAIL_ACCOUNT`、`EMAIL_PASSWORD` 和 `USE_GMAIL_OR_QQMAIL`。`EMAIL_PASSWORD` 应填写邮箱服务商生成的应用授权码，而不是登录密码。
 
-#### Project screenshot
+## 数据库
 
-| Index Page                       | Article Page                       | Post Article                       |
-| -------------------------------- | ---------------------------------- | ---------------------------------- |
-| <img src="./.img/indexPage.png"> | <img src="./.img/articlePage.png"> | <img src="./.img/postArticle.png"> |
+本地开发直接使用 SQLite。使用 MySQL 时，先创建空数据库和低权限应用账号，再配置：
 
-| Manage Page                       | Login Panel                     |
-| -------------------------------- | ----------------------------------|
-| <img src="./.img/manage.png"> | <img src="./.img/loginPanel.png">|
+```dotenv
+DATABASE_URL=mysql+pymysql://blog_user:password@127.0.0.1:3306/python_blog?charset=utf8mb4
+```
 
-#### project structure diagram
+新生产数据库建议使用迁移创建：
 
-````
-.
-├── . /.img 					# Store the image displayed by the readme
-├─ . /common 					# Functions for some common functions
-│ ├── . /connectDb.py 			        # Connect to the database
-│ ├── . /myLog.py 				# Configure logs
-│ ...
-│
-├─ . /controler 				# Controller for different pages
-| ├── . /article.py 			        # The corresponding control for the article page
-| ...
-| /controler
-├─ . /static 					# Store static resources
-| ├── . /img 					# Save images such as avatars, post thumbnails, etc.
-| ...
-| ...
-├─ . /database 					# Specify database operations
-| ├── . /credit.py 				# Operate on the credit table
-| ...
-| ...
-├─ . /logs 					# Store the logs
-├─ . /.env 					# Environment configuration
-├── . /constant.py 				# Page related parameter settings
-├─ . /requirements.txt 			        # Packages to be installed for the project
-├─ . /README.md
-├─ . /LICENCE	
-├─ . /gitignore		
-├─ . /myBlog.sql 				# The sql file needed to initialize the database
-├─ . /app.py 					# The entry program for the project
-````
+```powershell
+$env:AUTO_INIT_DB="False"
+uv run flask --app app db upgrade
+```
 
-#### Required packages
+修改 `common/schema.py` 后生成迁移并检查内容：
 
-You can install the required dependencies for this project directly using the following command
+```powershell
+uv run flask --app app db migrate -m "describe change"
+uv run flask --app app db upgrade
+uv run flask --app app db check
+```
 
-````python
-pip3 install -r requirements.txt
-````
+接入已有数据库前必须先备份。若现有表结构已经与初始迁移完全一致，应审查后使用 `flask db stamp head` 建立版本标记，不要直接重复建表。
 
-#### project features
+## 生产启动
 
-1. very friendly to newcomers, almost every part of the code has detailed comments, and the use of many technologies (
-   such as bootstrap, sqlalchemy), part of the project (the sidebar of the home page and the article comments) using
-   front and back-end separation technology, suitable for learning
-2. a more complete blog system, the project interface is not beautiful, but can be said to be "small, but all the guts",
-   to achieve a blog most of the functions. For example: collect articles, reply comments, article recommendation,
-   article submission, article upload local pictures, modify avatar, draft save, email registration, retrieve password,
-   background management, etc.
-3. perfect logging system, in fact, logging I spent a lot of effort. The log log of this project can track almost all
-   the actions of users, authors, administrators, to facilitate your data analysis related work later (log function
-   based on loguru)
-4. highly customizable, you can set a lot of features in constant.py file, such as: how many points you get for logging
-   in every day, the maximum number of comments per person per day, whether to rotate the image, where to click on the
-   rotating image, how many articles per page, etc.
-5. stable update rate, this project will be updated and maintained in recent time, in fact, I would like to add many
-   other new features, you are welcome to raise issues or pr to make the project better. My email is jz272381@gmail.com
-   If you have any questions, please contact me, I will reply as soon as possible, of course, you are welcome to
-   participate in the development.
+`.env` 中设置强随机 `SECRET_KEY`、`DEBUG_MODE=False`，并在 HTTPS 下设置 `SESSION_COOKIE_SECURE=True`。Windows 可使用 Waitress：
 
-#### may report errors
+```powershell
+.\scripts\start.ps1 -Mode production -Port 8000
+```
 
-1. urllib version is too high, suggest lowering the version pip install urllib3==1.25.11
-2. If you use pycharm to run the project, it's best not to configure a flask server for it, just run the main function under app.py (for some reason, pycharm's falsk has some very strange problems))
-#### version update
+脚本只监听 `127.0.0.1`。对外服务应在前面配置 IIS、Nginx 或 Caddy，负责 HTTPS、访问日志和静态资源缓存。生产脚本使用 `uv sync --no-dev`，不会安装测试工具。
 
-- 21-12-8
-    - The project is basically working, but there are still many flaws
-- 21-1-15
-    - Project is basically running
-    - All the comments of the files are added
-    - Comments for each field of the database are added
-    - The main page of user background is written.
-    - Implemented daily auto-detection of login and points collection function
-- 21-1-24
-    - Fixed the bug that you can favorite articles and reply comments when you are not logged in.
-    - The database can be initialized automatically in the background.
-- 21-2-8
-    - Solve the problem of circular references that may occur in databases
-    - "Salt" the database to make it more secure
-- 22-9-11
-    - Fixed some bugs that caused startup failures
-    - Now it can run directly and perform perfectly
+## 包管理
 
-#### Related links
+`pyproject.toml` 是直接依赖和工具配置的来源，`uv.lock` 是可复现安装的唯一锁文件，二者都应提交。常用命令：
 
-- [bootstrap](https://getbootstrap.com/)
-- [flask](https://flask.palletsprojects.com/en/2.0.x/)
-- [sqlalchemy](https://docs.sqlalchemy.org/en/13/dialects/mysql.html)
-- [loguru](https://github.com/Delgan/loguru)
+```powershell
+uv add package-name
+uv add --dev package-name
+uv lock --upgrade
+uv sync --frozen
+```
 
-#### Features to be developed
+`requirements.txt` 仅用于不支持 uv 的兼容环境，由锁文件生成，不应手工改版本：
 
-- Test Interface
+```powershell
+uv export --frozen --no-dev --no-hashes --no-emit-project --output-file requirements.txt
+```
 
-- Administrator's user management page
-- github third party login function
-- redis caching technology
-- flask-limiter limit
-- flask backend monitoring
-- markdown editor support
-- Chinese and English dual mode
+## 质量检查
 
+```powershell
+uv run pytest
+uv run ruff check .
+uv run flask --app app routes
+```
+
+当前测试覆盖应用启动、首页、权限与角色、文章所有权、审核状态、HTML 清洗、CSRF 和旧密码迁移。
+
+## 目录
+
+```text
+app.py                 应用工厂、扩展注册、错误处理和 CLI
+common/                配置无关的安全、认证、日志与工具函数
+controler/             兼容原项目命名的路由控制器
+database/              兼容原业务调用的数据访问层
+migrations/            Alembic 数据库迁移
+templates/             Jinja 页面模板
+static/                前端资源与运行时上传目录
+tests/                 回归测试
+scripts/start.ps1      开发/生产启动脚本
+pyproject.toml         直接依赖与工具配置
+uv.lock                完整锁定依赖
+```
+
+## 仍需注意
+
+前端仍使用较旧的 Bootstrap、jQuery 和 UEditor，已经在服务端补上安全边界，但后续若重做界面，优先替换 UEditor 和旧前端依赖。邮件发送与部分日志写入仍是同步操作，高流量部署应迁移到任务队列和结构化集中日志。多实例部署不能继续使用内存限流存储。

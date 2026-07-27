@@ -9,11 +9,21 @@ Mainly operate the article table in the database
 import math
 import traceback
 
+from flask import Blueprint, abort, render_template, request, session
+
+from common.auth import article_owner_or_admin, login_required
 from common.myLog import allLogger, listLogger, logDanger
-from common.utility import generate_thumb, parser_image_url
-from constant import (blogLanguage, howCommentInArticle, maxModifyArticleNum,
-                      maxUserPostArticleNum, maxUserPostArticleNumOfEditor,
-                      postArticleCredit)
+from common.utility import generate_thumb, parser_image_url, sanitize_article_html, sanitize_plain_text
+from constant import (
+    blogLanguage,
+    classification,
+    creditListForReleaseArticle,
+    howCommentInArticle,
+    maxModifyArticleNum,
+    maxUserPostArticleNum,
+    maxUserPostArticleNumOfEditor,
+    postArticleCredit,
+)
 from database.article import Article
 from database.articleLog import ArticleLog
 from database.comment import Comment
@@ -22,7 +32,6 @@ from database.favorite import Favorite
 from database.logs import Log
 from database.upload import Upload
 from database.users import Users
-from flask import Blueprint, abort, render_template, request, session
 
 instanceArticle = Article()
 instanceArticleLog = ArticleLog()
@@ -44,12 +53,9 @@ def read(articleid):
     restOfCredit = instanceUser.findRestCredit()
     # Query the article, if you can't find the article, throw a 404 error, if other errors occur, throw a 500 error
     # Then the error page will redirect to the home page
-    try:
-        result = instanceArticle.searchArticleByArticleid(articleid)
-        if result is None:
-            abort(404)
-    except:
-        abort(500)
+    result = instanceArticle.searchArticleByArticleid(articleid)
+    if result is None:
+        abort(404)
 
     # The dic dictionary is used to store the data to be returned
     dict = {}
@@ -67,6 +73,9 @@ def read(articleid):
             dict["paid"] = "false"
     else:
         dict["paid"] = "false"
+    if dict["credit"] > 0 and dict["paid"] != "true":
+        preview = sanitize_plain_text(dict["content"])
+        dict["content"] = preview[:500] + ("..." if len(preview) > 500 else "")
     # Determine if the article is in your collection
     if session.get("islogin") == "true":
         is_favorite = instanceFavorite.checkFavorite(articleid)
@@ -109,16 +118,24 @@ def islogin():
 
 # Article to expand all, read more
 @article.route("/readAll", methods=["POST"])
+@login_required
 @logDanger
 def readAll():
-    # The determination of whether there are enough points here has already been done in the front-end
-    articleid = request.form.get("articleid")
+    articleid = request.form.get("articleid", type=int)
+    if articleid is None:
+        abort(400)
     result = instanceArticle.searchArticleByArticleid(articleid)
-    userid = session.get("userid")
+    if result is None:
+        abort(404)
+    userid = int(session["userid"])
     authorid = int(instanceArticle.searchUseridByArticleid(articleid))
+    if userid == authorid or instanceCredit.whetherPaidForArticle(articleid):
+        return "1"
     authorNickname = instanceUser.searchNicknameByUserid(authorid)
     # Points spent by readers
     readerPaidCredit = result[0].credit
+    if readerPaidCredit > instanceUser.findRestCredit(userid):
+        return "insufficient-credit", 409
     """
     If the points charged for the article are not 0
     """
@@ -146,6 +163,7 @@ def readAll():
 
 # Load ueditor write article page
 @article.route("/prepost")
+@login_required
 @logDanger
 def pre_post():
     whetherHide = False
@@ -171,6 +189,7 @@ def pre_post():
         session["articleidModify"] = "0"
         articleContent = ""
     else:
+        article_owner_or_admin(articleidModify)
         whetherHide = instanceArticle.searchWhetherHide(articleidModify)
         articleContent = instanceArticle.searchHeadlineAndContentByArticleid(
             articleidModify)["content"]
@@ -186,25 +205,35 @@ def pre_post():
 
 # Button for posting articles
 @article.route("/article", methods=["POST"])
+@login_required
 @logDanger
 def addArticle():
     # Here the code is written in a very messy way and unknowingly becomes a mountain of shit
-    headline = request.form.get("headline")
-    content = request.form.get("content")
+    headline = sanitize_plain_text(request.form.get("headline"))
+    content = sanitize_article_html(request.form.get("content"))
+    plain_content = sanitize_plain_text(content)
     # The title of the article cannot be less than five and the content is not less than 100
-    if (len(headline) < 5 or len(content) < 100):
+    if len(headline) < 5 or len(headline) > 255 or len(plain_content) < 100:
         return "invalided"
-    type = int(request.form.get("type"))
-    typeArticle = type
-    credit = int(request.form.get("credit"))
-    credit = 0 if credit is None else credit
-    credit = int(credit)
-    drafted = int(request.form.get("drafted"))
-    checked = int(request.form.get("checked"))
-    articleid = int(request.form.get("articleid"))
-    userid = session.get("userid")
+    typeArticle = request.form.get("type", type=int)
+    credit = request.form.get("credit", default=0, type=int)
+    articleid = request.form.get("articleid", default=0, type=int)
+    judgeType = request.form.get("judgeType", type=int)
+    if typeArticle not in range(1, len(classification) + 1):
+        abort(400)
+    if credit not in {0, *creditListForReleaseArticle} or judgeType not in {1, 2, 3, 4}:
+        abort(400)
+    userid = int(session["userid"])
+    user = instanceUser.searchUserByUserid(userid)
+    if user is None:
+        abort(401)
+    if judgeType == 2 and user.role not in {"editor", "admin"}:
+        abort(403)
+    if judgeType == 3 and user.role != "user":
+        abort(403)
+    drafted = 1 if judgeType == 1 else 0
+    checked = 1 if judgeType == 2 or (judgeType == 4 and user.role in {"editor", "admin"}) else 0
     # Used to determine what operation the front-end is performing #1. save draft 2. publish article 3. drop article 4. modify article
-    judgeType = int(request.form.get("judgeType"))
     info = ""
 
     # And then determine whether today exceeded the limit of the submission (judged by 1, 2, 3 not judged by the number of revisions)
@@ -241,11 +270,13 @@ def addArticle():
     # If the article has images, then generate thumbnails for the article according to certain rules, otherwise assign a thumbnail with the corresponding serial number to it
     if len(url_list) > 0:
         thumbname = generate_thumb(url_list, userid)
-        instanceUpload.insertDetail(imgname=thumbname,
-                                    info="Upload thumbnails")
+        if thumbname:
+            instanceUpload.insertDetail(imgname=thumbname, info="Upload thumbnails")
+        else:
+            thumbname = f"default/{typeArticle}.jpg"
     else:
         # If there is no image in the article, then specify one based on the article type
-        thumbname = "default/" + "%d.jpg" % (int(type))
+        thumbname = f"default/{typeArticle}.jpg"
     if judgeType != 4:  # Direct insert database operations
         try:
             # Returns the id of the newly inserted article
@@ -289,13 +320,14 @@ def addArticle():
                 listLogger(userid, info, [3, 5])
             instanceArticleLog.insertDetail(articleid=id, type=type, info=info)
             return str(id)
-        except:
+        except Exception:
             e = traceback.format_exc()
             allLogger(0, e)
             return "post-fail"
     else:
         # If it is an article that has already been added, only modify the operation
         try:
+            article_owner_or_admin(articleid)
             whetherDrafted = instanceArticle.searchWhetherDrafted(articleid)
             if whetherDrafted is True:
                 drafted = 1
@@ -333,7 +365,7 @@ def addArticle():
                 listLogger(userid, info, [3])
                 # A status code to determine modifications
                 return "xiu"
-        except:
+        except Exception:
             e = traceback.format_exc()
             allLogger(0, e)
             return "post-fail"
@@ -341,8 +373,10 @@ def addArticle():
 
 # Modify the port accessed during the article
 @article.route("/modifyArticle/<int:articleid>", methods=["GET"])
+@login_required
 @logDanger
 def modifyArticle(articleid):
+    article_owner_or_admin(articleid)
     result = instanceArticle.searchHeadlineAndContentByArticleid(articleid)
     return result
 
@@ -352,14 +386,20 @@ def modifyArticle(articleid):
 @article.route('/centerVar', methods=[
     'GET', 'POST'
 ])  # Set the route to allow both GET and POST methods to be accessible
+@login_required
 @logDanger
 def centerVar():
     if request.method == 'GET':
         articleidModify = session.get("articleidModify")
-        if articleidModify is not None or articleidModify != "0":
+        if articleidModify is not None and articleidModify != "0":
+            article_owner_or_admin(articleidModify)
             return str(articleidModify)
         else:
             return "0"
     elif request.method == 'POST':
-        session["articleidModify"] = str(request.form.get("articleid"))
+        articleid = request.form.get("articleid", type=int)
+        if articleid is None:
+            abort(400)
+        article_owner_or_admin(articleid)
+        session["articleidModify"] = str(articleid)
         return "1"

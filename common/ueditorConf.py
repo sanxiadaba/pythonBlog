@@ -60,6 +60,6 @@ def returnUeConf(userid):
             jsonStr = json.load(f)
             doChange(dic)
             return json.dumps(jsonStr)
-    except:
+    except (OSError, ValueError, json.JSONDecodeError):
         e = traceback.format_exc()
         allLogger(0, e)

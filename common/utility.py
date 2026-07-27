@@ -12,8 +12,10 @@ encoding: utf-8
 @gituhb: sanxiadaba/pythonBlog
 """
 
+import ipaddress
 import random
 import smtplib
+import socket
 import string
 import time
 from datetime import datetime
@@ -21,16 +23,17 @@ from email.header import Header
 from email.mime.text import MIMEText
 from hashlib import md5
 from io import BytesIO
+from pathlib import Path
 from smtplib import SMTP_SSL
+from urllib.parse import urlparse
 
-from PIL import Image, ImageFont, ImageDraw
-from flask import request, session
+import bleach
+import requests
+from flask import current_app, request
+from PIL import Image, ImageDraw, ImageFont, ImageOps, UnidentifiedImageError
 
-from common.myLog import listLogger
-from common.myLog import logDanger
-from common.myLog import rootDir, dirInDir
-from constant import emailAdmit, emailAccount, portNum
-from constant import emailType
+from common.myLog import dirInDir, logDanger, rootDir
+from constant import emailAccount, emailAdmit, emailType
 
 
 # Generate verification code (with jamming line)
@@ -49,11 +52,11 @@ class ImageCode:
 
     # Draw interference lines
     def draw_line(self, draw, num, width, height):
-        for num in range(num):
-            x1 = random.randint(0, width / 2)
-            y1 = random.randint(0, height / 2)
+        for _ in range(num):
+            x1 = random.randint(0, width // 2)
+            y1 = random.randint(0, height // 2)
             x2 = random.randint(0, width)
-            y2 = random.randint(height / 2, height)
+            y2 = random.randint(height // 2, height)
             draw.line(((x1, y1), (x2, y2)), fill="black", width=2)
 
     # Drawing captcha images
@@ -126,12 +129,12 @@ def model_join_list(result):
         dict = {}
         for k1, v1 in obj1.__dict__.items():
             if not k1.startswith("_sa_instance_state"):
-                if not k1 in dict:
+                if k1 not in dict:
                     dict[k1] = v1
 
         for k2, v2 in obj2.__dict__.items():
             if not k2.startswith("_sa_instance_state"):
-                if not k2 in dict:
+                if k2 not in dict:
                     dict[k2] = v2
         list.append(dict)
     return list
@@ -151,18 +154,67 @@ def model_list(result):
 
 # Compress images Save the files in the specified path to another folder with a certain compression rate
 def compress_image(source, dest, width):
-    from PIL import Image
-    im = Image.open(source)
-    im = im.convert('RGB')
-    x, y = im.size
-    if x > width:
-        ys = int(y * width / x)
-        xs = width
-        temp = im.resize((xs, ys), Image.ANTIALIAS)
-        # 80 percent compression rate
-        temp.save(dest, quality=80)
-    else:
-        im.save(dest, quality=80)
+    Path(dest).parent.mkdir(parents=True, exist_ok=True)
+    with Image.open(source) as image:
+        image.verify()
+    with Image.open(source) as image:
+        image = image.convert("RGB")
+        if image.width > width:
+            height = int(image.height * width / image.width)
+            image = image.resize((width, height), Image.Resampling.LANCZOS)
+        image.save(dest, format="JPEG", quality=82, optimize=True)
+
+
+def save_image_bytes(data, dest, max_bytes=5 * 1024 * 1024, max_width=1200):
+    """Validate and re-encode untrusted image bytes as a safe JPEG."""
+    if not data or len(data) > max_bytes:
+        raise ValueError("Image is empty or exceeds the size limit")
+    try:
+        with Image.open(BytesIO(data)) as image:
+            image.verify()
+        with Image.open(BytesIO(data)) as image:
+            image = ImageOps.exif_transpose(image)
+            if image.width < 1 or image.height < 1 or image.width * image.height > 40_000_000:
+                raise ValueError("Image dimensions are invalid")
+            image = image.convert("RGB")
+            if image.width > max_width:
+                height = max(1, int(image.height * max_width / image.width))
+                image = image.resize((max_width, height), Image.Resampling.LANCZOS)
+            destination = Path(dest)
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            image.save(destination, format="JPEG", quality=82, optimize=True)
+    except (Image.DecompressionBombError, UnidentifiedImageError, OSError) as exc:
+        raise ValueError("Uploaded file is not a valid image") from exc
+
+
+_ARTICLE_TAGS = {
+    "a", "abbr", "blockquote", "br", "code", "del", "div", "em", "figcaption", "figure",
+    "h1", "h2", "h3", "h4", "h5", "h6", "hr", "i", "img", "li", "ol", "p", "pre",
+    "span", "strong", "sub", "sup", "table", "tbody", "td", "th", "thead", "tr", "u", "ul",
+}
+_ARTICLE_ATTRIBUTES = {
+    "a": ["href", "title", "target", "rel"],
+    "img": ["src", "alt", "title", "width", "height"],
+    "td": ["colspan", "rowspan"],
+    "th": ["colspan", "rowspan"],
+    "*": ["class"],
+}
+
+
+def sanitize_article_html(content):
+    return bleach.clean(
+        content or "",
+        tags=_ARTICLE_TAGS,
+        attributes=_ARTICLE_ATTRIBUTES,
+        protocols={"http", "https", "mailto"},
+        strip=True,
+        strip_comments=True,
+    )
+
+
+def sanitize_plain_text(content):
+    """Remove markup from user-supplied text while preserving readable content."""
+    return bleach.clean(content or "", tags=set(), attributes={}, strip=True, strip_comments=True).strip()
 
 
 # Parse the image download address in the article
@@ -179,11 +231,30 @@ def parser_image_url(content):
 
 
 # Download remote images to the specified directory
-def download_image(url, dest):
-    import requests
-    response = requests.get(url)
-    with open(file=dest, mode="wb") as file:
-        file.write(response.content)
+def _validate_public_http_url(url):
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        raise ValueError("Only public HTTP(S) image URLs are allowed")
+    for address in socket.getaddrinfo(parsed.hostname, parsed.port or 443, type=socket.SOCK_STREAM):
+        ip = ipaddress.ip_address(address[4][0])
+        if not ip.is_global:
+            raise ValueError("Private or reserved image hosts are not allowed")
+    return parsed
+
+
+def download_image(url, dest, max_bytes=5 * 1024 * 1024):
+    _validate_public_http_url(url)
+    with requests.get(url, stream=True, timeout=(3.05, 10), allow_redirects=False) as response:
+        response.raise_for_status()
+        if not response.headers.get("Content-Type", "").lower().startswith("image/"):
+            raise ValueError("Remote resource is not an image")
+        total = 0
+        with open(dest, "wb") as output:
+            for chunk in response.iter_content(64 * 1024):
+                total += len(chunk)
+                if total > max_bytes:
+                    raise ValueError("Remote image exceeds size limit")
+                output.write(chunk)
 
 
 # Parse the image url in the list and generate thumbnails
@@ -193,29 +264,31 @@ def generate_thumb(url_list, userid):
     # First, make sure this folder exists
     dirInDir(myPictureName, savePath)
     for url in url_list:
-        if url.startswith(f"http://127.0.0.1:{portNum}/static/img/upload/{myPictureName}"):
-            filename = url.split("/")[-1]
-            picPathOld = f"{rootDir}\\static\\img\\upload\\{myPictureName}\\" + filename
-            picPathNew = savePath + "\\" + myPictureName + "\\" + filename
+        parsed = urlparse(url)
+        local_prefix = f"/static/img/upload/{myPictureName}/"
+        if parsed.path.startswith(local_prefix):
+            filename = Path(parsed.path).name
+            picPathOld = str(Path(rootDir) / "static" / "img" / "upload" / myPictureName / filename)
+            picPathNew = str(Path(savePath) / myPictureName / filename)
+            if not Path(picPathOld).is_file():
+                continue
             compress_image(picPathOld, picPathNew, 400)
             return myPictureName + "/" + filename
-    # If no local image is found in the content, you need to download the network image to local and process it again
-    # Directly use the first image as a thumbnail and generate a standard file name based on the timestamp
-    savePath = rootDir + "\\static\\img\\download"
-    dirInDir(myPictureName, savePath)
-    url = url_list[0]
-    thumbname = time.strftime("%Y%m%d_%H%M%S." + "jpg")
-    download_image(url, savePath + "\\" + myPictureName + "\\" + thumbname)
-    compress_image(savePath + "\\" + myPictureName + "\\" + thumbname,
-                   rootDir + "\\" + "static\\img\\thumb\\" + myPictureName + "\\" + thumbname, 400)
-    userid = session.get('userid')
-    info = f"userid is {userid}, download the {url} picture, and thumbnail it and save it as thumb/{myPictureName}/{thumbname}"
-    from database.logs import Log
-    instanceLog = Log()
-    instanceLog.insertDetail(userid=userid, target=0, credit=0, info=info,
-                             type="Download and save thumbnails successfully")
-    listLogger(userid, info, [8])
-    return myPictureName + "/" + thumbname
+
+    if not current_app.config.get("ALLOW_REMOTE_IMAGES") or not url_list:
+        return None
+    download_dir = Path(rootDir) / "static" / "img" / "download" / myPictureName
+    download_dir.mkdir(parents=True, exist_ok=True)
+    thumbname = f"{time.strftime('%Y%m%d_%H%M%S')}.jpg"
+    downloaded = download_dir / thumbname
+    try:
+        download_image(url_list[0], downloaded)
+        target = Path(rootDir) / "static" / "img" / "thumb" / myPictureName / thumbname
+        compress_image(downloaded, target, 400)
+        return f"{myPictureName}/{thumbname}"
+    except (OSError, ValueError, requests.RequestException):
+        downloaded.unlink(missing_ok=True)
+        return None
 
 
 # Set the acquisition time

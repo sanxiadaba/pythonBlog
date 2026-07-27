@@ -1,19 +1,18 @@
 import math
-import time
 import traceback
+from datetime import datetime, timedelta
 
-from flask import session, request
-from sqlalchemy import Table
+from flask import request, session
 
 from common.connectDb import connectDb
-from common.myLog import listLogger, allLogger
+from common.myLog import allLogger, listLogger
 from constant import rateCreditForArticle
 
 dbsession, md, DBase = connectDb()
 
 
 class Users(DBase):
-    __table__ = Table("users", md, autoload=True)
+    __table__ = md.tables["users"]
 
     # Modify user points
     def updateCredit(self, credit, userid):
@@ -27,7 +26,7 @@ class Users(DBase):
 
 
 class Article(DBase):
-    __table__ = Table("article", md, autoload=True)
+    __table__ = md.tables["article"]
 
     # Search author id by article id
     def searchUseridByArticleid(self, articleid):
@@ -43,12 +42,12 @@ class Article(DBase):
         try:
             result = dbsession.query(Article.hide).filter_by(articleid=articleid).first()[0]
             return True if result == 1 else False
-        except Exception as e:
+        except Exception:
             return True
 
 
 class Log(DBase):
-    __table__ = Table("log", md, autoload=True)
+    __table__ = md.tables["log"]
 
     # Insert log table
     def insertDetail(self, type, target, credit, userid=None, info=None):
@@ -56,7 +55,7 @@ class Log(DBase):
             userid = session.get("userid")
         if info is not None and type != "Start the server":
             info = info + f" The ip address is{request.remote_addr}"
-        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now()
         if type == "Start the server":
             ipaddr = None
         else:
@@ -73,14 +72,14 @@ instanceUser = Users()
 
 
 class Credit(DBase):
-    __table__ = Table("credit", md, autoload=True)
+    __table__ = md.tables["credit"]
 
     # Insert credit table data # then insert the same data into the log table
     def insertDetail(self, type, target, credit, userid=None, info=None):
         # userid determines the user directory to write to. If you don't enter a userid, it defaults to the current user.
         userid = session.get("userid") if userid is None else userid
         # set time
-        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now()
         # View the current visitor's ip interface
         ipaddr = request.remote_addr
 
@@ -141,7 +140,7 @@ class Credit(DBase):
                                   ipaddr=ipaddr, info=authorInfo)
                 dbsession.add(creditP2)
 
-        except:
+        except Exception:
             e = traceback.format_exc()
             allLogger(0, e)
         finally:
@@ -151,7 +150,9 @@ class Credit(DBase):
 
     # Determine whether the user has already purchased the article, if already purchased, it will not show again to let them buy
     def whetherPaidForArticle(self, articleid):
-        result = dbsession.query(Credit).filter_by(userid=session.get("userid"), target=articleid).all()
+        result = dbsession.query(Credit).filter_by(
+            userid=session.get("userid"), target=articleid, category="Buy Article"
+        ).all()
         if len(result) > 0:
             return True
         else:
@@ -159,8 +160,8 @@ class Credit(DBase):
 
     # Login every day plus one point
     def whetherFirstLoginThisDay(self, userid):
-        start = time.strftime("%Y-%m-%d 00:00:00")
-        end = time.strftime("%Y-%m-%d 23:59:59")
+        start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        end = start + timedelta(days=1)
         result = dbsession.query(Credit).filter(Credit.userid == userid,
                                                 Credit.createtime.between(start, end)).count()
         if result == 0:

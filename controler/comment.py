@@ -15,11 +15,12 @@ encoding: utf-8
 
 import traceback
 
-from flask import Blueprint, request, session, jsonify
+from flask import Blueprint, abort, jsonify, request, session
 
+from common.auth import login_required
 from common.myLog import allLogger, ininUserDir, listLogger, logDanger
-from constant import howCommentInArticle
-from constant import replyAndAddCommentCredit
+from common.utility import sanitize_plain_text
+from constant import howCommentInArticle, replyAndAddCommentCredit
 from database.article import Article
 from database.articleLog import ArticleLog
 from database.comment import Comment
@@ -39,11 +40,12 @@ comment = Blueprint("comment", __name__)
 
 # 添加原始评论
 @comment.route("/comment", methods=["POST"])
+@login_required
 @logDanger
 def addOriginComment():
     if session.get("islogin") == "true":
         articleid = request.form.get("articleid")
-        content = request.form.get("content").strip()
+        content = sanitize_plain_text(request.form.get("content"))
         userid = session.get("userid")
         authorid = int(instanceArticle.searchUseridByArticleid(articleid))
         # Verify the content of the comment
@@ -64,7 +66,7 @@ def addOriginComment():
                 # Next is the logbook corresponding to the person being commented on
                 listLogger(authorid, info, [6, 7])
                 return "add-pass"
-            except:
+            except Exception:
                 e = traceback.format_exc()
                 allLogger(0, e)
                 return "add-fail"
@@ -80,15 +82,18 @@ def addOriginComment():
 
 # Reply to the original comment (reply to other people's comments, up to "nesting" to this, that is, reply to the original comment comments can not be commented)
 @comment.route("/reply", methods=["POST"])
+@login_required
 @logDanger
 def reply():
     articleid = request.form.get("articleid")
     commentid = request.form.get("commentid")
-    content = request.form.get("content").strip()
+    content = sanitize_plain_text(request.form.get("content"))
     ipaddr = request.remote_addr
     userid = session.get("userid")
     # Get the original author id by commentid
     authorid = instanceComment.searchUseridByCommentid(commentid)
+    if int(instanceComment.searchArticleidByCommentid(commentid)) != int(articleid):
+        abort(400)
     # Get the author's nickname by userid for writing logs later
     authorNickname = instanceUser.searchNicknameByUserid(authorid)
     if len(content) < 5 or len(content) > 1000:
@@ -109,7 +114,7 @@ def reply():
             # Next is the logbook corresponding to the person being commented on
             listLogger(authorid, info, [6, 10])
             return "reply-pass"
-        except:
+        except Exception:
             e = traceback.format_exc()
             allLogger(0, e)
             return "reply-fail"
@@ -140,10 +145,12 @@ The following four functions mainly perform operations to approve and disapprove
 
 # For endorsement plus one
 @comment.route("/agreeComment", methods=["POST"])
+@login_required
 @logDanger
 def agreeComment():
     commentid = request.form.get("commentid")
-    instanceLog.whetherAgreeOrDisInThisComment(commentid)
+    if instanceLog.whetherAgreeOrDisInThisComment(commentid) != 0:
+        return "0"
     authorId = instanceComment.searchUseridByCommentid(commentid)
     userid = session.get("userid")
     nickname = session.get("nickname")
@@ -154,12 +161,12 @@ def agreeComment():
         info = f"User id is {userid} Nickname is {nickname} Endorsed the comment with id number {commentid} from user id {authorId} Nickname is {authorNickname} "
         instanceLog.insertDetail(type="Agree with the comments", target=commentid, credit=0,
                                  info=info)
-        instanceLog.insertDetail(type="Comments are agreed upon", target=commentid, credit=0,
+        instanceLog.insertDetail(userid=authorId, type="Comments are agreed upon", target=commentid, credit=0,
                                  info=info)
         listLogger(userid, info, [9])
         listLogger(authorId, info, [10])
         return "1"
-    except:
+    except Exception:
         e = traceback.format_exc()
         allLogger(0, e)
         return "0"
@@ -167,25 +174,28 @@ def agreeComment():
 
 # Against plus one
 @comment.route("/disagreeComment", methods=["POST"])
+@login_required
 @logDanger
 def disagreeComment():
     commentid = request.form.get("commentid")
+    if instanceLog.whetherAgreeOrDisInThisComment(commentid) != 0:
+        return "0"
     authorId = instanceComment.searchUseridByCommentid(commentid)
     userid = session.get("userid")
     nickname = session.get("nickname")
     authorNickname = instanceUser.searchNicknameByUserid(authorId)
     ininUserDir(userid=authorId)
     try:
-        instanceComment.updataCommentAgree(commentid)
+        instanceComment.updateCommentDisagree(commentid)
         info = f"User id {userid} Nickname {nickname} objected to a comment with id {commentid} from user id {authorId} Nickname {authorNickname} "
         instanceLog.insertDetail(type="Opposing Comments", target=commentid, credit=0,
                                  info=info)
-        instanceLog.insertDetail(type="Comments are opposed", target=commentid, credit=0,
+        instanceLog.insertDetail(userid=authorId, type="Comments are opposed", target=commentid, credit=0,
                                  info=info)
         listLogger(userid, info, [9])
         listLogger(authorId, info, [10])
         return "1"
-    except:
+    except Exception:
         e = traceback.format_exc()
         allLogger(0, e)
         return "0"
@@ -193,50 +203,56 @@ def disagreeComment():
 
 # For approval or disapproval minus 1
 @comment.route("/cancle_agreeComment", methods=["POST"])
+@login_required
 @logDanger
 def cancle_agreeComment():
     commentid = request.form.get("commentid")
+    if instanceLog.whetherAgreeOrDisInThisComment(commentid) != 1:
+        return "0"
     authorId = instanceComment.searchUseridByCommentid(commentid)
     userid = session.get("userid")
     nickname = session.get("nickname")
     authorNickname = instanceUser.searchNicknameByUserid(authorId)
     ininUserDir(userid=authorId)
     try:
-        instanceComment.updataCommentAgree(commentid)
+        instanceComment.cancleUpdateCommentAgree(commentid)
         info = f"User id is {userid} Nickname is {nickname} Disapproved the comment with id number {commentid} from user id {authorId} Nickname is {authorNickname} "
         instanceLog.insertDetail(type="Cancel favorable comments", target=commentid, credit=0,
                                  info=info)
-        instanceLog.insertDetail(type="Comments Disapproved", target=commentid, credit=0,
+        instanceLog.insertDetail(userid=authorId, type="Comments Disapproved", target=commentid, credit=0,
                                  info=info)
         listLogger(userid, info, [9])
         listLogger(authorId, info, [10])
         return "1"
-    except:
+    except Exception:
         e = traceback.format_exc()
         allLogger(0, e)
         return "0"
 
 
 @comment.route("/cancle_disagreeComment", methods=["POST"])
+@login_required
 @logDanger
 def cancle_disagreeComment():
     commentid = request.form.get("commentid")
+    if instanceLog.whetherAgreeOrDisInThisComment(commentid) != -1:
+        return "0"
     authorId = instanceComment.searchUseridByCommentid(commentid)
     userid = session.get("userid")
     nickname = session.get("nickname")
     authorNickname = instanceUser.searchNicknameByUserid(authorId)
     ininUserDir(userid=authorId)
     try:
-        instanceComment.updataCommentAgree(commentid)
+        instanceComment.cancleUpdateCommentDisagree(commentid)
         info = f"User id is {userid} Nickname is {nickname} Unopposed comment id number {commentid} with user id is {authorId} Nickname is {authorNickname} "
         instanceLog.insertDetail(type="Cancel opposing comments", target=commentid, credit=0,
                                  info=info)
-        instanceLog.insertDetail(type="Comments are cancelled against", target=commentid, credit=0,
+        instanceLog.insertDetail(userid=authorId, type="Comments are cancelled against", target=commentid, credit=0,
                                  info=info)
         listLogger(userid, info, [9])
         listLogger(authorId, info, [10])
         return "1"
-    except:
+    except Exception:
         e = traceback.format_exc()
         allLogger(0, e)
         return "0"
@@ -244,27 +260,33 @@ def cancle_disagreeComment():
 
 #   Hide comments Change the hide value of the original comment to 1
 @comment.route("/hideComment", methods=["POST"])
+@login_required
+@logDanger
 def hideComment():
     commentid = request.form.get("commentid")
     authorId = instanceComment.searchUseridByCommentid(commentid)
-    userid = session.get("userid")
+    articleid = instanceComment.searchArticleidByCommentid(commentid)
+    userid = int(session.get("userid"))
+    if userid != int(authorId) and instanceUser.judgeAdminByUserid(userid) is not True:
+        abort(403)
     nickname = session.get("nickname")
     authorNickname = instanceUser.searchNicknameByUserid(authorId)
     try:
 
-        instanceComment.hideCommentByCommentid(commentid)
+        if not instanceComment.hideCommentByCommentid(commentid):
+            return "0"
         # After hiding comments, the number of replies to this post is subtracted by one
-        instanceArticle.subtractReplycount(articleid=authorId)
+        instanceArticle.subtractReplycount(articleid=articleid)
         info = f"User id is {userid} Nickname is {nickname} Deleted comment id number {commentid} with user id is {authorId} Nickname is {authorNickname} "
         instanceLog.insertDetail(type="Delete Comments", target=commentid, credit=0,
                                  info=info)
         if instanceUser.judgeAdminByUserid(userid) is True:
-            instanceArticleLog.insertDetail(articleid=Article, type="Delete Comments", info=info)
+            instanceArticleLog.insertDetail(articleid=articleid, type="Delete Comments", info=info)
         listLogger(userid, info, [9])
         if userid != authorId:
             listLogger(authorId, info, [10])
         return "1"
-    except:
+    except Exception:
         e = traceback.format_exc()
         allLogger(0, e)
         return "0"

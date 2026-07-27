@@ -1,7 +1,6 @@
-import time
+from datetime import datetime
 
 from flask import session
-from sqlalchemy import Table
 
 from common.connectDb import connectDb
 
@@ -9,7 +8,7 @@ dbsession, md, DBase = connectDb()
 
 
 class Article(DBase):
-    __table__ = Table("article", md, autoload=True)
+    __table__ = md.tables["article"]
 
     # Check the title according to the article id
     def searchHeadlineByArticleId(self, articleid):
@@ -21,7 +20,7 @@ instanceArticle = Article()
 
 
 class Favorite(DBase):
-    __table__ = Table("favorite", md, autoload=True)
+    __table__ = md.tables["favorite"]
 
     # 新增一条收藏数据
     def insertFavorite(self, articleid):
@@ -29,14 +28,14 @@ class Favorite(DBase):
         if row is not None:
             row.canceled = 0
         else:
-            now = time.strftime("%Y-%m-%d %H:%M:%S")
+            now = datetime.now()
             favorite = Favorite(articleid=articleid, userid=session.get("userid"), canceled=0, createtime=now)
             dbsession.add(favorite)
         dbsession.commit()
 
     # Cancel Favorite Articles
     def cancelFavorite(self, articleid):
-        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now()
         row = dbsession.query(Favorite).filter_by(articleid=articleid, userid=session.get("userid")).first()
         row.canceled = 1
         row.updatetime = now
@@ -44,7 +43,7 @@ class Favorite(DBase):
 
     # Restore Collection
     def replyFavorite(self, articleid):
-        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now()
         row = dbsession.query(Favorite).filter_by(articleid=articleid, userid=session.get("userid")).first()
         row.canceled = 0
         row.updatetime = now

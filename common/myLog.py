@@ -16,16 +16,20 @@ encoding: utf-8
 
 # Used for some basic settings of the project log
 import os
+
 # Import the library that traces where the function went wrong, so that the printed log is more detailed
 import traceback
+
 # This package is imported to eliminate the "undesirable effects" of the decorator
 from functools import wraps
 
-from flask import session, request, abort
+from flask import abort, request, session
+
 # The logging system used in this project is based on the loguru package
 from loguru import logger
+from werkzeug.exceptions import HTTPException
 
-from constant import compressedFormat, clearLogTime, logSize, whetherLogPrintInConsole
+from constant import clearLogTime, compressedFormat, logSize, whetherLogPrintInConsole
 
 # Controls whether the output is on the console
 if whetherLogPrintInConsole is True:
@@ -201,10 +205,12 @@ def logDanger(func):
     def logDannerFun(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except:
+        except HTTPException:
+            raise
+        except Exception:
             e = traceback.format_exc()
             # Print error log and throw exceptions
             allLogger(0, e)
-            return abort(404)
+            return abort(500)
 
     return logDannerFun

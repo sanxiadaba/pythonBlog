@@ -13,21 +13,30 @@ encoding: utf-8
 """
 
 import os
-import time
+import secrets
 
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, jsonify, request, session
+from flask_wtf.csrf import ValidationError, validate_csrf
 
-from common.myLog import rootDir, dirInDir, logDanger, listLogger
+from common.auth import login_required
+from common.myLog import dirInDir, listLogger, logDanger, rootDir
 from common.ueditorConf import returnUeConf
-from common.utility import compress_image
+from common.utility import save_image_bytes
 from constant import blogLanguage
 from database.logs import Log
 from database.upload import Upload
+from extensions import csrf
 
 instanceUpload = Upload()
 instanceLog = Log()
 
 ueditor = Blueprint("ueditor", __name__)
+
+
+@ueditor.before_request
+@login_required
+def require_login():
+    """Uploaded media is always scoped to an authenticated user."""
 
 # Path to the uploaded file
 imgSavePath = rootDir + "\\static\\img\\upload"
@@ -35,8 +44,14 @@ imgSavePath = rootDir + "\\static\\img\\upload"
 
 # Interface for specific access
 @ueditor.route("/uedit", methods=["GET", "POST"])
+@csrf.exempt
 @logDanger
 def uedit():
+    if request.method == "POST":
+        try:
+            validate_csrf(request.args.get("csrf_token"))
+        except ValidationError:
+            return jsonify(state="Invalid CSRF token"), 400
     param = request.args.get("action")
     if request.method == "GET" and param == "config":
         # return render_template("uecConfig.json")
@@ -60,16 +75,17 @@ def uedit():
                 listLogger(userid, info, 8)
                 return jsonify(result)
             else:
-                f = request.files["upfile"]  # Get data from front-end image files
+                f = request.files.get("upfile")
+                if f is None:
+                    return jsonify(state="Missing upload"), 400
                 filename = f.filename
-                suffix = filename.split(".")[-1]  # Get the article's suffix name (not including .)
-                newname = time.strftime("%Y%m%d_%H%M%S." + suffix)
+                newname = f"{secrets.token_hex(16)}.jpg"
                 dirInDir(myPictureName, imgSavePath)
-                f.save(myPicturePath + "\\" + newname)  # Save image
-                # Compress the image and overwrite the original file
-                source = dest = myPicturePath + "\\" + newname
-                #  Compressed images
-                compress_image(source, dest, 1200)
+                source = myPicturePath + "\\" + newname
+                try:
+                    save_image_bytes(f.stream.read(5 * 1024 * 1024 + 1), source)
+                except ValueError as exc:
+                    return jsonify(state=str(exc)), 400
                 instanceUpload.insertDetail(imgname=source)
                 info = f"The user with userid {userid} has uploaded the image with path " + source + ""
                 instanceLog.insertDetail(credit=0, target=0, type="Upload images", info=info)
@@ -83,6 +99,7 @@ def uedit():
                 return jsonify(result)
 
         elif request.method == "GET" and param == "listimage":
+            dirInDir(myPictureName, imgSavePath)
             list = []
             filelist = os.listdir(myPicturePath)
             for filename in filelist:

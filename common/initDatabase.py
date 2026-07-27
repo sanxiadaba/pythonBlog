@@ -1,127 +1,44 @@
-"""
-File description:
+from sqlalchemy import select, text
+from werkzeug.security import generate_password_hash
 
-This file is used to initialize the mysql database
-"""
-import time
-import traceback
+from extensions import db
 
-import pymysql
-from constant import (adminLogin, adminPassword, databaseName, editorLogin,
-                      editorPassword, md5Salt, mysqlPassword, mysqlPort,
-                      mysqlUrl, mysqlUserName, postArticleCredit, userLogin,
-                      userPassword)
 
-from common.myLog import allLogger, rootDir
-from common.utility import genearteMD5
-
-adminPassword = genearteMD5(adminPassword + md5Salt)
-editorPassword = genearteMD5(editorPassword + md5Salt)
-userPassword = genearteMD5(userPassword + md5Salt)
+def initialize_database():
+    """Create missing tables without destroying existing data."""
+    db.create_all()
 
 
 def ininDatabase():
-    # Database connection
-    con = pymysql.connect(host=mysqlUrl,
-                          user=mysqlUserName,
-                          password=mysqlPassword,
-                          database="mysql",
-                          port=mysqlPort,
-                          charset='utf8mb4')
-    # Creating Cursor Objects
-    cur = con.cursor()
-
-    # View Database
-    sql = """
-        show databases;
-    """
-    try:
-        cur.execute(sql)
-        # (('information_schema',), ('my_blog_py',), ('mysql',), ('performance_schema',),)
-        allDatabases = cur.fetchall()
-        databaseList = []
-        for database in allDatabases:
-            databaseList.append(database[0])
-        # If there is no databasename in the original database
-        # Then create it
-        if databaseName not in databaseList:
-            sql = f"""
-            CREATE DATABASE IF NOT EXISTS {databaseName};
-            """
-            cur.execute(sql)
-            sql = f"use {databaseName};"
-            cur.execute(sql)
-            with open(f"{rootDir}\\myBlog.sql") as f:
-                sqls = f.read().split(";")
-            print("Initializing database, please wait...")
-            for sql in sqls[0:-1]:
-                sql += ";"
-                cur.execute(sql)
-            with open(f"{rootDir}\\templates\\exampleArticle.html") as e:
-                exampleArticle = e.read()
-            now = time.strftime("%Y-%m-%d %H:%M:%S")
-            # Add three accounts with different permissions
-            sql = "insert into users (username,password,nickname,avatar,role,credit,createtime,apply) values (%s, %s, %s,%s,%s,%s,%s,%s)"
-            cur.execute(sql, (adminLogin, adminPassword, "admin",
-                              "default/1.png", "admin", 1000, now, 0))
-            cur.execute(sql, (editorLogin, editorPassword, "editor",
-                              "default/2.png", "editor", 1000, now, 0))
-            cur.execute(sql, (userLogin, userPassword, "user", "default/3.png",
-                              "user", 1000, now, 1))
-            sql = "insert into article (userid,type,headline,content,thumbnail,readcount,replycount,createtime,updatetime,recommended) values (%s, %s, %s,%s,%s,%s,%s,%s,%s,%s)"
-            cur.execute(sql, (2, 1, "example", exampleArticle, "default/1.jpg",
-                              0, 1, now, now, 1))
-            sql = "insert into comment (userid,articleid,content,ipaddr,agreecount,opposecount,createtime) values (%s, %s, %s,%s,%s,%s,%s)"
-            cur.execute(
-                sql,
-                (2, 1, "this is a example comment", f"{mysqlUrl}", 0, 0, now))
-            sql = "insert into articleLog (userid,articleid,type,ipaddr,info,createtime) values (%s,%s,%s,%s,%s,%s)"
-            cur.execute(sql, (2, 1, "Post Article", "localhost",
-                              "This is my first article", now))
-            sql = "insert into credit (userid,category,target,createtime,ipaddr,info,credit) values (%s,%s,%s,%s,%s,%s,%s)"
-            cur.execute(sql, (2, "Post Article", 1, now, "localhost",
-                              "post article successfully", postArticleCredit))
-            allLogger(1, "Database initialization successful")
-            print("Database initialization successful")
-            print("Start the flask server...")
-        else:
-            pass
-
-    except:
-        e = traceback.format_exc()
-        allLogger(0, e)
-    finally:
-        # Close cursor connections
-        con.commit()
-        cur.close()
-        # Close the database connection
-        con.close()
+    """Backward-compatible alias for the original misspelled function."""
+    initialize_database()
 
 
-#  watch the version od MySql
+def create_user(username, password, role="user", nickname=None):
+    users = db.metadata.tables["users"]
+    existing = db.session.execute(select(users.c.userid).where(users.c.username == username)).first()
+    if existing:
+        raise ValueError(f"User already exists: {username}")
+    result = db.session.execute(
+        users.insert().values(
+            username=username,
+            password=generate_password_hash(password, method="scrypt"),
+            nickname=nickname or username.split("@", 1)[0],
+            avatar="default/1.png",
+            role=role,
+            credit=50,
+            apply=0,
+            agreeEditor=1 if role in {"admin", "editor"} else 0,
+            forbidLogin=0,
+        )
+    )
+    db.session.commit()
+    return result.inserted_primary_key[0]
+
+
 def watchVersionOfMysql():
-    con = pymysql.connect(host=mysqlUrl,
-                          user=mysqlUserName,
-                          password=mysqlPassword,
-                          database="mysql",
-                          port=mysqlPort,
-                          charset='utf8mb4')
-    cur = con.cursor()
-    sql = """
-            select version();
-        """
     try:
-        cur.execute(sql)
-        version = cur.fetchall()[0][0]
-        return version
-    except:
-        e = traceback.format_exc()
-        allLogger(0, e)
-        return 0
-    finally:
-
-        # Close cursor connections
-        con.commit()
-        cur.close()
-        # Close the database connection
-        con.close()
+        return str(db.session.execute(text("select version()")).scalar_one())
+    except Exception:
+        db.session.rollback()
+        return "unavailable"

@@ -11,16 +11,18 @@ encoding: utf-8
 @gituhb: sanxiadaba/pythonBlog
 """
 import base64
+import binascii
 import os
-import time
+import secrets
 import traceback
 from math import ceil
 
-from flask import Blueprint, session, jsonify, render_template, request
+from flask import Blueprint, jsonify, render_template, request, session
 
-from common.myLog import logDanger, dirInDir, avatarPath, listLogger, allLogger
-from common.utility import compress_image
-from constant import everyPageInHou, emailAccount
+from common.auth import article_owner_or_admin, login_required
+from common.myLog import allLogger, avatarPath, dirInDir, listLogger, logDanger
+from common.utility import sanitize_plain_text, save_image_bytes
+from constant import emailAccount, everyPageInHou
 from database.article import Article
 from database.comment import Comment
 from database.credit import Credit
@@ -36,6 +38,12 @@ instanceLog = Log()
 instanceUser = Users()
 
 userManage = Blueprint("userManage", __name__)
+
+
+@userManage.before_request
+@login_required
+def require_login():
+    """Personal management endpoints must not accept anonymous requests."""
 
 
 @userManage.route("/userManage", methods=["GET"])
@@ -131,14 +139,16 @@ def userInfo():
 @logDanger
 def modifyNickname():
     userid = session.get('userid')
-    newNickname = request.form.get("newNickname")
+    newNickname = sanitize_plain_text(request.form.get("newNickname"))
+    if not newNickname or len(newNickname) > 50:
+        return "0", 400
     try:
         instanceUser.modifyUserNickname(newNickname)
         info = f"The user with userid {userid} modifies the nickname to {newNickname}"
         listLogger(userid, info, [0])
         instanceLog.insertDetail(type="Change nickname", target=userid, credit=0, info=info)
         return "1"
-    except:
+    except Exception:
         e = traceback.format_exc()
         allLogger(0, e)
         return "0"
@@ -148,7 +158,9 @@ def modifyNickname():
 @userManage.route("/modifyQQ", methods=["POST"])
 @logDanger
 def modifyQQ():
-    newQQ = request.form.get("newQQ")
+    newQQ = sanitize_plain_text(request.form.get("newQQ"))
+    if len(newQQ) > 20 or (newQQ and not newQQ.isdigit()):
+        return "0", 400
     userid = session.get("userid")
     try:
         instanceUser.modifyUserQQnum(newQQ)
@@ -156,7 +168,7 @@ def modifyQQ():
         listLogger(userid, info, [0])
         instanceLog.insertDetail(type="Modify QQ", target=userid, credit=0, info=info)
         return "1"
-    except:
+    except Exception:
         e = traceback.format_exc()
         allLogger(0, e)
         return "0"
@@ -173,7 +185,7 @@ def applyEditor():
         listLogger(userid, info, [0])
         instanceLog.insertDetail(type="Apply to become an editor", target=userid, credit=0, info=info)
         return "1"
-    except:
+    except Exception:
         e = traceback.format_exc()
         allLogger(0, e)
         return "0"
@@ -190,7 +202,7 @@ def cancleApplyEditor():
         listLogger(userid, info, [0])
         instanceLog.insertDetail(type="cancle Apply to become an editor", target=userid, credit=0, info=info)
         return "1"
-    except:
+    except Exception:
         e = traceback.format_exc()
         allLogger(0, e)
         return "0"
@@ -203,6 +215,7 @@ def cancleApplyEditor():
 def deleteArticle():
     userid = session.get("userid")
     articleid = request.form.get('articleid')
+    article_owner_or_admin(articleid)
     try:
         instanceArticle.deleteArticle(articleid)
         info = f"The user with userid {userid} has deleted the article with articleid {articleid}"
@@ -213,7 +226,7 @@ def deleteArticle():
         # Set the favorite articles to un-favorite as well
         instanceFavorite.hideFavoByArticleid(articleid)
         return "1"
-    except:
+    except Exception:
         e = traceback.format_exc()
         allLogger(0, e)
         return "0"
@@ -228,7 +241,7 @@ def uploadUserAvatar():
 
 
 # 对头像图片上传进行响应
-@userManage.route('/uploadImg', methods=['POST', 'OPTIONS'])
+@userManage.route('/uploadImg', methods=['POST'])
 @logDanger
 def upload():
     userid = session.get("userid")
@@ -236,24 +249,24 @@ def upload():
     dirInDir(f"myPic_{userid}", avatarPath)
     if request.form.get("action") == "add":
         data = request.form.get("picStr")
-        imgdata = base64.b64decode(data)
-        thumbname = time.strftime("%Y%m%d_%H%M%S." + "jpg")
-        now = thumbname.split(".")
-        imgfile = os.path.join(myAvatarPath, "test.jpg")
-        file = open(imgfile, 'wb')
-        file.write(imgdata)
-        file.close()
-        oldpicPath = myAvatarPath + "\\" + "test.jpg"
-        newPicPath = myAvatarPath + "\\" + thumbname
-        compress_image(oldpicPath, newPicPath, 400)
+        if not data or len(data) > 8 * 1024 * 1024:
+            return "0", 400
+        try:
+            imgdata = base64.b64decode(data, validate=True)
+        except (ValueError, binascii.Error):
+            return "0", 400
+        thumbname = f"{secrets.token_hex(16)}.jpg"
+        avatar_file = os.path.join(myAvatarPath, thumbname)
+        try:
+            save_image_bytes(imgdata, avatar_file, max_bytes=5 * 1024 * 1024, max_width=400)
+        except ValueError:
+            return "0", 400
         newPicPath = f"myPic_{userid}" + "/" + thumbname
         instanceUser.modifyUserThumbnail(newPicPath)
-        os.remove(oldpicPath)
         allPathPic = [lists for lists in os.listdir(myAvatarPath) if os.path.isfile(os.path.join(myAvatarPath, lists))]
-        for i in allPathPic:
-            biJiao = i.split(".")
-            if biJiao < now:
-                os.remove(myAvatarPath + "\\" + i)
+        for old_name in allPathPic:
+            if old_name != thumbname:
+                os.remove(os.path.join(myAvatarPath, old_name))
         info = f"Users whose userid is {userid} change their avatar to {newPicPath}"
         listLogger(userid, info, [0])
         instanceLog.insertDetail(type="Change avatar", target=userid, credit=0, info=info)

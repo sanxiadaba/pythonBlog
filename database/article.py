@@ -1,7 +1,7 @@
-import time
+from datetime import datetime
 
 from flask import session
-from sqlalchemy import Table, func
+from sqlalchemy import func
 
 from common.connectDb import connectDb
 from constant import recommendedNumOfSide
@@ -10,7 +10,7 @@ dbsession, md, DBase = connectDb()
 
 
 class Users(DBase):
-    __table__ = Table("users", md, autoload=True)
+    __table__ = md.tables["users"]
 
     # Query username by userid
     def searchUsernameByUserd(self, userid):
@@ -26,7 +26,7 @@ instanceUser = Users()
 
 
 class Article(DBase):
-    __table__ = Table("article", md, autoload=True)
+    __table__ = md.tables["article"]
 
     # Search articles by id
     def searchArticleByArticleid(self, articleid):
@@ -92,10 +92,11 @@ class Article(DBase):
 
     # Special recommendation If the search results exceed the column capacity can be displayed randomly by rand
     def searchRecommendedByAdmin(self):
+        random_order = func.rand() if dbsession.get_bind().dialect.name == "mysql" else func.random()
         result = dbsession.query(Article.articleid, Article.headline).filter(Article.hide == 0, Article.drafted == 0,
                                                                              Article.checked == 1,
                                                                              Article.recommended == 1) \
-            .order_by(func.rand()).limit(recommendedNumOfSide[2]).all()
+            .order_by(random_order).limit(recommendedNumOfSide[2]).all()
         return result
 
     # Return three recommendations at once (encapsulated)
@@ -140,7 +141,7 @@ class Article(DBase):
             next_id = articleid
         else:
             next_id = row.articleid
-        dict["next_id"] = prev_id
+        dict["next_id"] = next_id
         dict["next_headline"] = self.searchHeadlineByArticleId(next_id)
 
         return dict
@@ -154,12 +155,12 @@ class Article(DBase):
     # Note that the hidden comment is the number of replies to the comment to be subtracted by one
     def subtractReplycount(self, articleid):
         row = dbsession.query(Article).filter_by(articleid=articleid).first()
-        row.replycount -= 1
+        row.replycount = max(0, row.replycount - 1)
         dbsession.commit()
 
     # Insert a new article
     def insertArticle(self, type, headline, content, thumbnail, credit, drafted=0, checked=1):
-        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now()
         userid = int(session.get("userid"))
         # Other fields are already set in the database and do not need to be inserted automatically
         articleP = Article(userid=userid, type=type, headline=headline, \
@@ -171,7 +172,7 @@ class Article(DBase):
 
     # Update content by article number for article editing or draft revision and draft posting
     def updateArticle(self, articleid, type, headline, content, thumbnail, credit, drafted=0, checked=1):
-        now = time.strftime("%Y-%m-%d %H:%M:%S")
+        now = datetime.now()
         row = dbsession.query(Article).filter_by(articleid=articleid).first()
         row.type = type
         row.headline = headline
@@ -180,13 +181,15 @@ class Article(DBase):
         row.credit = credit
         row.drafted = drafted
         row.checked = checked
+        row.reject = 0
         row.updatetime = now
         dbsession.commit()
         return articleid
 
     # Search author id by article id
     def searchUseridByArticleid(self, articleid):
-        return dbsession.query(Article.userid).filter_by(articleid=articleid).first()[0]
+        row = dbsession.query(Article.userid).filter_by(articleid=articleid).first()
+        return row[0] if row else None
 
     # Search the title and content of an article by its id
     def searchHeadlineAndContentByArticleid(self, articleid):
@@ -258,7 +261,7 @@ class Article(DBase):
 
     #  Check the number of articles you have deleted
     def searchDeleteArticleCount(self, userid=None):
-        userid = session.get("userid") if userid == None else userid
+        userid = session.get("userid") if userid is None else userid
         return dbsession.query(Article).filter_by(userid=userid, delete=1).count()
 
     # Number of all articles by the author
@@ -267,7 +270,7 @@ class Article(DBase):
 
     # Number of all articles by the author
     def searchAllArticleNumByUserid(self, userid=None):
-        userid = session.get("userid") if userid == None else userid
+        userid = session.get("userid") if userid is None else userid
         return dbsession.query(Article).filter_by(userid=userid).count()
 
     # The number of articles the author has deleted in addition to
@@ -312,17 +315,17 @@ class Article(DBase):
         try:
             result = dbsession.query(Article.hide).filter_by(articleid=articleid).first()[0]
             return True if result == 1 else False
-        except:
+        except (TypeError, IndexError):
             return True
 
     # Query the number of articles to be reviewed
     def searchNumOfDraft(self):
-        result = dbsession.query(Article).filter_by(checked=0).count()
+        result = dbsession.query(Article).filter_by(checked=0, drafted=0, reject=0).count()
         return result
 
     # Search for articles to be reviewed
     def searchDraft(self):
-        result = dbsession.query(Article).filter_by(checked=0).all()
+        result = dbsession.query(Article).filter_by(checked=0, drafted=0, reject=0).all()
         result.sort(key=lambda x: x.userid)
         ex = []
         for draft in result:
@@ -337,12 +340,16 @@ class Article(DBase):
     def passDraft(self, articleid):
         row = dbsession.query(Article).filter_by(articleid=articleid).first()
         row.checked = 1
+        row.drafted = 0
+        row.reject = 0
         dbsession.commit()
 
     # Rejecting articles from review
     def rejectDraft(self, articleid):
-        row = dbsession.query(Article).filter_by(articleid=articleid).first()[0]
+        row = dbsession.query(Article).filter_by(articleid=articleid).first()
         row.reject = 1
+        row.checked = 0
+        row.drafted = 0
         dbsession.commit()
 
     # View Draft Articles

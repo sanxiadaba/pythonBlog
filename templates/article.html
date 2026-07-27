@@ -34,13 +34,7 @@
                     var parm = "articleid={{article.articleid}}"
                     $.post("/readAll", parm, function (data) {
                         if (data === "1") {
-                            if (total_height > show_height) {
-                                btn.style.display = 'block';
-                                obj.style.height = total_height + 'px';
-                                btn.style.display = 'none';
-                            }
-                            qingti("You also currently have" + (restOdCredit - xiaohao) + "Points")
-                            return false
+                            window.location.reload();
                         }
                     })
                 } else {
@@ -157,7 +151,7 @@
                     color="red">{{ article.credit }}</font>
             </div>
             <div class="col-12 content_t" id="content_t">
-                {{ article.content | safe }}
+                {{ article.content | safe_html }}
                 {% if session.get("userid")==articleOfUserid %}
                     <button class="form-control btn-primary col-2" onclick="modifyArticle({{ articleid }})">Modify
                         article
@@ -178,7 +172,7 @@
                         </button>
                     </div>
 
-                {% else %}}
+                {% else %}
                     <div href="#" onclick="showLogin()">
                         <button class="col-sm-10 col-12 get_ct_more_2" id="get_ct_more_2" style="display:block;">
                             <span class="oi oi-data-transfer-download" aria-hidden="true"></span> Login to view full text

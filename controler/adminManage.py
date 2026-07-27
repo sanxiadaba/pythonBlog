@@ -17,12 +17,27 @@ import time
 
 from flask import Blueprint, render_template, request, session
 
+from common.auth import role_required
 from common.initDatabase import watchVersionOfMysql
-from common.myLog import logDanger, adminLog, listLogger
-from constant import classification, commentNum, regGiveCredit, loginEvereDayCredit, postArticleCredit, \
-    replyAndAddCommentCredit, rateCreditForArticle, creditListForReleaseArticle, howArticleInWeb, howCommentInArticle, \
-    maxUserPostArticleNum, maxUserPostArticleNumOfEditor, maxModifyArticleNum, maxUploadPicNum, blogLanguage, \
-    recommendedNumOfSide
+from common.myLog import adminLog, listLogger, logDanger
+from constant import (
+    blogLanguage,
+    classification,
+    commentNum,
+    creditListForReleaseArticle,
+    howArticleInWeb,
+    howCommentInArticle,
+    loginEvereDayCredit,
+    maxModifyArticleNum,
+    maxUploadPicNum,
+    maxUserPostArticleNum,
+    maxUserPostArticleNumOfEditor,
+    postArticleCredit,
+    rateCreditForArticle,
+    recommendedNumOfSide,
+    regGiveCredit,
+    replyAndAddCommentCredit,
+)
 from database.article import Article
 from database.comment import Comment
 from database.logs import Log
@@ -34,6 +49,12 @@ instanceArticle = Article()
 instanceUser = Users()
 instanceLog = Log()
 instanceComment = Comment()
+
+
+@adminManage.before_request
+@role_required("admin")
+def require_admin():
+    """Protect every administration endpoint, including future additions."""
 
 
 @adminManage.route("/adminManage", methods=["GET"])
@@ -141,7 +162,7 @@ def rejectDraft():
     authorNickname = instanceUser.searchNicknameByUserid(authorUserid)
     info = f"userid is {authorUserid},nickname is {authorUsername},nickname is {authorNickname} Administrators reject articleid is {articleid},headline is {headline} draft"
     listLogger(authorUserid, info, [3])
-    instanceArticle.passDraft(articleid)
+    instanceArticle.rejectDraft(articleid)
     return "1"
 
 
