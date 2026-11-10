@@ -27,6 +27,7 @@ from database.comment import Comment
 from database.credit import Credit
 from database.logs import Log
 from database.users import Users
+from extensions import limiter
 
 instanceArticle = Article()
 instanceComment = Comment()
@@ -40,6 +41,7 @@ comment = Blueprint("comment", __name__)
 
 # 添加原始评论
 @comment.route("/comment", methods=["POST"])
+@limiter.limit("30 per hour")
 @login_required
 @logDanger
 def addOriginComment():
@@ -82,6 +84,7 @@ def addOriginComment():
 
 # Reply to the original comment (reply to other people's comments, up to "nesting" to this, that is, reply to the original comment comments can not be commented)
 @comment.route("/reply", methods=["POST"])
+@limiter.limit("60 per hour")
 @login_required
 @logDanger
 def reply():

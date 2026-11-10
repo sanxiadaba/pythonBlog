@@ -15,13 +15,14 @@ import json
 import traceback
 
 from common.myLog import allLogger, rootDir
-from constant import portNum
 
 
 # The core function is to read the specified json file and change some fields, such as the port number, the storage directory
 def returnUeConf(userid):
     myDirName = "myPic_" + str(userid)
-    urlPort = f"http://127.0.0.1:{portNum}/"
+    # Relative prefixes: the editor must not bake this machine's host and port into
+    # every article body, otherwise images break on any other origin.
+    urlPort = ""
     ueFormat = "../library/ueditor/jsp/upload/image" + f"/{myDirName}/" + "/{yyyy}{mm}{dd}/{time}{rand:6}"
     filename = "uecConfig" + '.json'
     directory = f"{rootDir}\\static\\ue"  # The path to the directory where the json file is located

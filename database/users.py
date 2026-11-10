@@ -110,6 +110,12 @@ class Users(DBase):
         user.password = newPassword
         dbsession.commit()
 
+    # Invalidate every existing session of this user (used after a password reset)
+    def bumpSessionVersion(self, userid):
+        user = dbsession.query(Users).filter_by(userid=userid).first()
+        user.session_version = (user.session_version or 0) + 1
+        dbsession.commit()
+
     # Change nickname
     def modifyUserNickname(self, nickname):
         userid = session.get("userid")

@@ -327,8 +327,8 @@
                                         <div class="col-5 reply">
                                             {#                                        The administrator or the author can choose to delete the comment if the comment#}
                                             {% if article.userid==session.get("userid") or session.get("role")=="admin" or
-                            comment.userid==session.get("userid") %}
-                                                <label onclick="hideComment(this,'{{ comment.commentid }}',2,{{ thisIndex }},{{ thatIndex }})">
+                            reply.userid==session.get("userid") %}
+                                                <label onclick="hideComment(this,'{{ reply.commentid }}',2,{{ thisIndex }},{{ thatIndex }})">
                                                     <span class="oi oi-delete" aria-hidden="true"></span>Delete Comments
                                                 </label>
                                             {% else %}
@@ -390,7 +390,7 @@
             {% if total>1 %}
                 <div class="col-12 paginate">
                     <label onclick="gotoPage('{{ article.articleid }}','prev')">Previous page</label>&nbsp;&nbsp;
-                    {% for i in range(1,total) %}
+                    {% for i in range(1,total+1) %}
                         <label onclick="gotoPage('{{ article.articleid }}','{{ loop.index }}')">{{ loop.index }}</label>
                         &nbsp;&nbsp;
                         {#                        {{ i+1}}#}

@@ -32,6 +32,7 @@ from database.favorite import Favorite
 from database.logs import Log
 from database.upload import Upload
 from database.users import Users
+from extensions import limiter
 
 instanceArticle = Article()
 instanceArticleLog = ArticleLog()
@@ -118,6 +119,7 @@ def islogin():
 
 # Article to expand all, read more
 @article.route("/readAll", methods=["POST"])
+@limiter.limit("60 per hour")
 @login_required
 @logDanger
 def readAll():
@@ -205,6 +207,7 @@ def pre_post():
 
 # Button for posting articles
 @article.route("/article", methods=["POST"])
+@limiter.limit("30 per hour")
 @login_required
 @logDanger
 def addArticle():

@@ -29,6 +29,7 @@ from database.credit import Credit
 from database.favorite import Favorite
 from database.logs import Log
 from database.users import Users
+from extensions import limiter
 
 instanceArticle = Article()
 instanceComment = Comment()
@@ -234,6 +235,7 @@ def deleteArticle():
 
 # Modify avatar
 @userManage.route("/uploadUserAvatar", methods=["POST", "GET"])
+@limiter.limit("40 per hour")
 @logDanger
 def uploadUserAvatar():
     if request.method == "GET":
@@ -242,6 +244,7 @@ def uploadUserAvatar():
 
 # 对头像图片上传进行响应
 @userManage.route('/uploadImg', methods=['POST'])
+@limiter.limit("40 per hour")
 @logDanger
 def upload():
     userid = session.get("userid")

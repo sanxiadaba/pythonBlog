@@ -15,7 +15,7 @@ encoding: utf-8
 import os
 import secrets
 
-from flask import Blueprint, jsonify, request, session
+from flask import Blueprint, current_app, jsonify, request, session
 from flask_wtf.csrf import ValidationError, validate_csrf
 
 from common.auth import login_required
@@ -25,7 +25,7 @@ from common.utility import save_image_bytes
 from constant import blogLanguage
 from database.logs import Log
 from database.upload import Upload
-from extensions import csrf
+from extensions import csrf, limiter
 
 instanceUpload = Upload()
 instanceLog = Log()
@@ -44,6 +44,7 @@ imgSavePath = rootDir + "\\static\\img\\upload"
 
 # Interface for specific access
 @ueditor.route("/uedit", methods=["GET", "POST"])
+@limiter.limit("60 per hour")
 @csrf.exempt
 @logDanger
 def uedit():
@@ -72,7 +73,7 @@ def uedit():
                     result["state"] = "Exceeding the number of times limit"
                 info = f"The user with userid {userid} failed to upload because he ran out of uploads today."
                 instanceLog.insertDetail(credit=0, target=0, type="Failed to upload image", info=info)
-                listLogger(userid, info, 8)
+                listLogger(userid, info, [8])
                 return jsonify(result)
             else:
                 f = request.files.get("upfile")
@@ -82,8 +83,9 @@ def uedit():
                 newname = f"{secrets.token_hex(16)}.jpg"
                 dirInDir(myPictureName, imgSavePath)
                 source = myPicturePath + "\\" + newname
+                max_bytes = current_app.config["MAX_CONTENT_LENGTH"] or 8 * 1024 * 1024
                 try:
-                    save_image_bytes(f.stream.read(5 * 1024 * 1024 + 1), source)
+                    save_image_bytes(f.stream.read(max_bytes + 1), source, max_bytes=max_bytes)
                 except ValueError as exc:
                     return jsonify(state=str(exc)), 400
                 instanceUpload.insertDetail(imgname=source)
@@ -93,7 +95,7 @@ def uedit():
                 result = {}
                 # Returns a success status code
                 result["state"] = "SUCCESS"
-                result["url"] = f"static/img/upload/{myPictureName}/{newname}"
+                result["url"] = f"/static/img/upload/{myPictureName}/{newname}"
                 result['title'] = filename
                 result["original"] = filename
                 return jsonify(result)
@@ -106,7 +108,7 @@ def uedit():
                 if filename.lower().endswith(".png") or filename.lower().endswith(".jpg") \
                         or filename.lower().endswith(".jpeg") or filename.lower().endswith(".gif") \
                         or filename.lower().endswith(".bmp"):
-                    list.append({r"url": r"static/img/upload/%s/%s" % (myPictureName, filename)})
+                    list.append({r"url": r"/static/img/upload/%s/%s" % (myPictureName, filename)})
             result = {}
             result["state"] = "SUCCESS"
             result["list"] = list

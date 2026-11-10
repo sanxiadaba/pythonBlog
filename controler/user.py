@@ -1,12 +1,12 @@
 import hashlib
 import re
-import time
 
 from flask import Blueprint, make_response, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from common.auth import login_required, role_required
 from common.myLog import avatarPath, dirInDir, ininUserDir, listLogger, logDanger
+from common.oneTimeCode import consume, issue, revoke_subject
 from common.utility import ImageCode, gen_email_code, send_email
 from constant import (
     emailAccount,
@@ -14,7 +14,6 @@ from constant import (
     md5Salt,
     regGiveCredit,
     timeoutOfEcode,
-    whetherDistinguishCapital,
 )
 from database.credit import Credit
 from database.logs import Log
@@ -27,20 +26,13 @@ instanceUser = Users()
 user = Blueprint("user", __name__)
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+_CAPTCHA_TTL = 300
+_CAPTCHA_KIND = "captcha"
+_EMAIL_KIND = "email"
 
 
 def _valid_password(password):
     return isinstance(password, str) and 8 <= len(password) <= 128
-
-
-def _email_code_valid(email, code):
-    issued_at = session.get("ecode_issued_at", 0)
-    return (
-        code
-        and code == session.get("ecode")
-        and email == session.get("ecode_email")
-        and time.time() - issued_at <= timeoutOfEcode
-    )
 
 
 def _password_matches(user_record, raw_password):
@@ -62,7 +54,7 @@ def _password_matches(user_record, raw_password):
 @logDanger
 def vcode():
     code, image = ImageCode().get_code()
-    session["vcode"] = code if whetherDistinguishCapital else code.lower()
+    issue(_CAPTCHA_KIND, code, _CAPTCHA_TTL)
     response = make_response(image)
     response.headers["Content-Type"] = "image/jpeg"
     response.headers["Cache-Control"] = "no-store"
@@ -82,8 +74,7 @@ def ecode():
         return "email-invailid", 400
     code = gen_email_code()
     send_email(email, code, purpose)
-    session.update(ecode=code, ecode_email=email, ecode_issued_at=time.time())
-    session.permanent = True
+    issue(_EMAIL_KIND, code, timeoutOfEcode, subject=email)
     return "send-pass"
 
 
@@ -96,14 +87,17 @@ def register():
     code = (request.form.get("ecode") or "").strip()
     if not _EMAIL_RE.fullmatch(username) or not _valid_password(raw_password):
         return "up-invalid", 400
+    # Verify the code before touching the user table so the endpoint cannot be
+    # used to probe which addresses are registered.
+    if not consume(_EMAIL_KIND, code, subject=username):
+        return "ecode-error", 400
     if instanceUser.searchUserByUsername(username) is not None:
         return "user-repeated", 409
-    if not _email_code_valid(username, code):
-        return "ecode-error", 400
 
     result = instanceUser.doRegister(username, generate_password_hash(raw_password, method="scrypt"))
     session.clear()
-    session.update(islogin="true", userid=result.userid, nickname=result.nickname, role=result.role)
+    session.update(islogin="true", userid=result.userid, nickname=result.nickname, role=result.role,
+                   sv=result.session_version or 0)
     session.permanent = True
     info = f"userid is {result.userid}, nickname is {result.nickname} user registration success"
     instanceCredit.insertDetail(
@@ -122,15 +116,17 @@ def resetUserPassword():
     username = (request.form.get("username") or "").strip().lower()
     raw_password = request.form.get("password") or ""
     code = (request.form.get("ecode") or "").strip()
-    record = instanceUser.searchUserByUsername(username)
     if not _EMAIL_RE.fullmatch(username) or not _valid_password(raw_password):
         return "up-invalid", 400
+    if not consume(_EMAIL_KIND, code, subject=username):
+        return "ecode-error", 400
+    record = instanceUser.searchUserByUsername(username)
     if record is None:
         return "no-user", 404
-    if not _email_code_valid(username, code):
-        return "ecode-error", 400
     instanceUser.modifyUserPassword(record.userid, generate_password_hash(raw_password, method="scrypt"))
-    session.pop("ecode", None)
+    # A password reset must also invalidate cookies that were stolen before it.
+    instanceUser.bumpSessionVersion(record.userid)
+    revoke_subject(_EMAIL_KIND, username)
     return "fi-pass"
 
 
@@ -141,12 +137,10 @@ def login():
     username = (request.form.get("username") or "").strip().lower()
     raw_password = request.form.get("password") or ""
     captcha = (request.form.get("logincode") or "").strip()
-    if not whetherDistinguishCapital:
-        captcha = captcha.lower()
     record = instanceUser.searchUserByUsername(username)
     if record is None:
         return "login-fail", 401
-    if captcha != session.get("vcode"):
+    if not consume(_CAPTCHA_KIND, captcha):
         return "vcode-error", 400
     if record.forbidLogin == 1:
         return "forbid", 403
@@ -154,7 +148,8 @@ def login():
         return "login-fail", 401
 
     session.clear()
-    session.update(islogin="true", userid=record.userid, nickname=record.nickname, role=record.role)
+    session.update(islogin="true", userid=record.userid, nickname=record.nickname, role=record.role,
+                   sv=record.session_version or 0)
     session.permanent = True
     ininUserDir(record.userid)
     first_login = instanceCredit.whetherFirstLoginThisDay(userid=record.userid)

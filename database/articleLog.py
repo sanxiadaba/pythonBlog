@@ -15,6 +15,9 @@ from constant import maxModifyArticleNum, maxUserPostArticleNum, maxUserPostArti
 
 dbsession, md, DBase = connectDb()
 
+# Every log type that represents editing an existing article rather than posting one.
+MODIFY_TYPES = {"Modify article", "Revision Draft", "Modification failure"}
+
 
 class ArticleLog(DBase):
     __table__ = md.tables["articleLog"]
@@ -35,8 +38,7 @@ class ArticleLog(DBase):
         end = start + timedelta(days=1)
         result = dbsession.query(ArticleLog).filter(ArticleLog.userid == session.get("userid"),
                                                     ArticleLog.createtime.between(start, end),
-                                                    ArticleLog.type != "Modify article",
-                                                    ArticleLog.type != "Modification failure").count()
+                                                    ArticleLog.type.notin_(MODIFY_TYPES)).count()
         role = session.get("role")
         if (result >= maxUserPostArticleNum and role == "user") or (
                 result >= maxUserPostArticleNumOfEditor and role == "editor"):
@@ -50,7 +52,7 @@ class ArticleLog(DBase):
         end = start + timedelta(days=1)
         result = dbsession.query(ArticleLog).filter(ArticleLog.userid == session.get("userid"),
                                                     ArticleLog.createtime.between(start, end),
-                                                    ArticleLog.type == "修改文章").count()
+                                                    ArticleLog.type.in_(MODIFY_TYPES)).count()
         if result >= maxModifyArticleNum:
             return True
         else:

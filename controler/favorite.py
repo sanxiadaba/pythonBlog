@@ -23,6 +23,7 @@ from database.article import Article
 from database.favorite import Favorite
 from database.logs import Log
 from database.users import Users
+from extensions import limiter
 
 instanceArticle = Article()
 instanceFavorite = Favorite()
@@ -40,6 +41,7 @@ def require_login():
 
 # 收藏文章的函数
 @favorite.route("/favorite", methods=["POST"])
+@limiter.limit("60 per hour")
 @logDanger
 def add_favorite():
     articleid = request.form.get("articleid")
@@ -48,14 +50,14 @@ def add_favorite():
     authorid = int(instanceArticle.searchUseridByArticleid(articleid))
     authorNickname = instanceUser.searchNicknameByUserid(authorid)
     try:
-        info = f"The user with userid {userid} and nickname {nickname} has unfavored the articles with userid {authorid}, nickname {authorNickname} and articleid {articleid}."
+        info = f"The user with userid {userid} and nickname {nickname} has favorited the article with userid {authorid}, nickname {authorNickname} and articleid {articleid}."
         instanceFavorite.insertFavorite(articleid)
         # Print Log
         listLogger(userid, info, [4])
         listLogger(authorid, info, [6])
-        # Add log table
-        instanceLog.insertDetail(userid=userid, type="Add Favorite", credit=0, target=articleid)
-        instanceLog.insertDetail(userid=userid, type="Articles Bookmarked", credit=0, target=articleid)
+        # Add log table: the actor's own record, then the author's notification
+        instanceLog.insertDetail(userid=userid, type="Add Favorite", credit=0, target=articleid, info=info)
+        instanceLog.insertDetail(userid=authorid, type="Articles Bookmarked", credit=0, target=articleid, info=info)
         return "favorite-pass"
     except Exception:
         e = traceback.format_exc()
@@ -65,6 +67,7 @@ def add_favorite():
 
 # Cancel the operation of favorite articles Note that here is the delete request
 @favorite.route("/favorite/<int:articleid>", methods=["DELETE"])
+@limiter.limit("60 per hour")
 @logDanger
 def cancel_favorite(articleid):
     userid = session.get("userid")

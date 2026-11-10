@@ -50,7 +50,6 @@ def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
     database_uri = _database_uri(app)
-    is_sqlite = database_uri.startswith("sqlite:")
     secret_key = os.getenv("SECRET_KEY", "").strip()
 
     app.config.from_mapping(
@@ -58,11 +57,6 @@ def create_app(test_config=None):
         DEBUG=whetherDebug,
         SQLALCHEMY_DATABASE_URI=database_uri,
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        SQLALCHEMY_ENGINE_OPTIONS=(
-            {"connect_args": {"check_same_thread": False}}
-            if is_sqlite
-            else {"pool_pre_ping": True, "pool_recycle": 1800, "pool_size": 10, "max_overflow": 20}
-        ),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_SECURE=os.getenv("SESSION_COOKIE_SECURE", "False").lower() == "true",
@@ -71,10 +65,18 @@ def create_app(test_config=None):
         WTF_CSRF_TIME_LIMIT=3600,
         RATELIMIT_STORAGE_URI=os.getenv("RATELIMIT_STORAGE_URI", "memory://"),
         ALLOW_REMOTE_IMAGES=os.getenv("ALLOW_REMOTE_IMAGES", "False").lower() == "true",
-        AUTO_INIT_DB=os.getenv("AUTO_INIT_DB", "True").lower() == "true",
+        AUTO_INIT_DB=os.getenv("AUTO_INIT_DB", "False").lower() == "true",
     )
     if test_config:
         app.config.update(test_config)
+    # Derive the dialect from the *final* URI: a test or deployment override must not
+    # leave SQLite pragmas on a MySQL engine (or the reverse).
+    is_sqlite = app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite:")
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = (
+        {"connect_args": {"check_same_thread": False, "timeout": 30}}
+        if is_sqlite
+        else {"pool_pre_ping": True, "pool_recycle": 1800, "pool_size": 10, "max_overflow": 20}
+    )
     if not app.config["SECRET_KEY"] and (app.config["DEBUG"] or app.config.get("TESTING")):
         # Development and tests stay zero-config, but with a per-process random key
         # instead of a value that is published in this repository.
@@ -97,12 +99,14 @@ def create_app(test_config=None):
 
     with app.app_context():
         if is_sqlite:
-            def enable_sqlite_foreign_keys(connection, _record):
+            def configure_sqlite(connection, _record):
                 cursor = connection.cursor()
                 cursor.execute("PRAGMA foreign_keys=ON")
+                cursor.execute("PRAGMA busy_timeout=30000")
+                cursor.execute("PRAGMA journal_mode=WAL")
                 cursor.close()
 
-            event.listen(db.engine, "connect", enable_sqlite_foreign_keys)
+            event.listen(db.engine, "connect", configure_sqlite)
         if app.config["AUTO_INIT_DB"]:
             initialize_database()
         _register_blueprints(app)
@@ -167,7 +171,8 @@ def _register_handlers(app):
         from database.users import Users
 
         user = Users().searchUserByUserid(userid)
-        if user is None or user.forbidLogin == 1:
+        stale = user is not None and session.get("sv", 0) != (user.session_version or 0)
+        if user is None or user.forbidLogin == 1 or stale:
             session.clear()
             if request.endpoint not in {"user.login", "index.home"}:
                 abort(403)
@@ -231,8 +236,9 @@ def _register_template_helpers(app):
 def _register_cli(app):
     @app.cli.command("init-db")
     def init_db_command():
+        """Create missing tables directly, bypassing Alembic (development only)."""
         initialize_database()
-        click.echo("Database initialized.")
+        click.echo("Database initialized without a migration version. Prefer 'flask db upgrade'.")
 
     @app.cli.command("create-user")
     @click.option("--username", prompt=True)

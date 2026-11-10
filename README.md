@@ -9,6 +9,7 @@
 - `pyproject.toml` + `uv.lock` 管理和锁定依赖，自动创建项目内 `.venv`。
 - Alembic 数据库迁移、初始化与用户创建 CLI。
 - scrypt 密码哈希；旧 MD5 密码在成功登录后自动升级。
+- 验证码与登录图形码只存服务端一次性记录，会话 cookie 里只有不透明 token；重置密码会同时失效该账号的既有会话。
 - 管理员 RBAC、文章所有权、登录状态和封禁状态服务端校验。
 - 全站 CSRF、接口限流、安全响应头和生产密钥检查。
 - 文章 HTML 白名单清洗；付费正文未购买前不会下发到浏览器。
@@ -29,10 +30,14 @@
 ```powershell
 Copy-Item .env.example .env
 uv sync --frozen
-uv run flask --app app init-db
+uv run python -c "import secrets; print(secrets.token_urlsafe(48))"
+# 把上面输出的值填进 .env 的 SECRET_KEY=
+uv run flask --app app db upgrade
 uv run flask --app app create-user --username admin@example.com --role admin --nickname admin
 uv run flask --app app run --debug
 ```
+
+`create-user` 的密码是交互式提示，需要输入两次。
 
 打开 <http://127.0.0.1:5000>。数据库默认位于 `instance/pythonblog.db`，虚拟环境位于 `.venv`。`uv run` 会自动使用该虚拟环境，不需要手动激活；需要激活时可执行：
 
@@ -46,6 +51,18 @@ uv run flask --app app run --debug
 .\scripts\start.ps1 -Mode development -Port 5000
 ```
 
+### 不使用 uv 时
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m flask --app app db upgrade
+.\.venv\Scripts\python.exe -m flask --app app create-user --username admin@example.com --role admin
+.\.venv\Scripts\python.exe -m waitress --host=127.0.0.1 --port=5000 --call app:create_app
+```
+
+`requirements.txt` 与 `uv.lock` 出自同一次导出，版本一致。
+
 ## 配置
 
 `.env.example` 包含可用配置。至少应在非开发环境设置一个随机 `SECRET_KEY`：
@@ -58,9 +75,9 @@ uv run python -c "import secrets; print(secrets.token_urlsafe(48))"
 
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
-| `SECRET_KEY` | 仅开发占位值 | 会话与 CSRF 签名密钥，生产环境必须修改 |
+| `SECRET_KEY` | 空 | 会话与 CSRF 签名密钥。`DEBUG_MODE=False` 时低于 32 字符会拒绝启动；未设置时开发/测试模式使用进程内随机密钥（重启后登录态失效） |
 | `DATABASE_URL` | 空 | 空值使用 SQLite；支持 SQLAlchemy 数据库 URL |
-| `AUTO_INIT_DB` | `True` | 启动时补建缺失表；迁移管理的生产环境建议设为 `False` |
+| `AUTO_INIT_DB` | `False` | 启动时用 `create_all` 补建缺失表，会绕过 Alembic，仅建议本地临时使用；正常部署走 `flask db upgrade` |
 | `DEBUG_MODE` | `True` | 生产环境必须关闭 |
 | `SESSION_COOKIE_SECURE` | `False` | HTTPS 部署时设为 `True` |
 | `MAX_CONTENT_LENGTH_MB` | `8` | 单次请求上限 |
@@ -77,10 +94,9 @@ uv run python -c "import secrets; print(secrets.token_urlsafe(48))"
 DATABASE_URL=mysql+pymysql://blog_user:password@127.0.0.1:3306/python_blog?charset=utf8mb4
 ```
 
-新生产数据库建议使用迁移创建：
+新数据库（SQLite 或 MySQL）统一用迁移创建，`AUTO_INIT_DB` 默认已关闭：
 
 ```powershell
-$env:AUTO_INIT_DB="False"
 uv run flask --app app db upgrade
 ```
 

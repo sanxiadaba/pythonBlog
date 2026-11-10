@@ -163,11 +163,9 @@ class Credit(DBase):
         start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
         end = start + timedelta(days=1)
         result = dbsession.query(Credit).filter(Credit.userid == userid,
+                                                Credit.category == "Daily login bonus points",
                                                 Credit.createtime.between(start, end)).count()
-        if result == 0:
-            return True
-        else:
-            return False
+        return result == 0
 
     # Points breakdown
     # Back to point-related changes

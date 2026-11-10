@@ -4,7 +4,7 @@ import re
 from common.utility import sanitize_article_html, sanitize_plain_text
 from constant import md5Salt
 from extensions import db
-from tests.conftest import login_as
+from tests.conftest import login_as, seed_code
 
 
 def test_public_pages_and_security_headers(client):
@@ -66,8 +66,7 @@ def test_legacy_password_is_migrated_on_login(client, app):
         users = db.metadata.tables["users"]
         db.session.execute(users.update().where(users.c.userid == 1).values(password=legacy))
         db.session.commit()
-    with client.session_transaction() as session:
-        session["vcode"] = "abcd"
+    seed_code(app, client, "captcha", "abcd")
     response = client.post(
         "/login",
         data={"username": "owner@example.com", "password": "password123", "logincode": "abcd"},
@@ -79,6 +78,74 @@ def test_legacy_password_is_migrated_on_login(client, app):
         assert password.startswith("scrypt:")
 
 
+def test_captcha_is_single_use(client, app):
+    seed_code(app, client, "captcha", "abcd")
+    first = client.post(
+        "/login",
+        data={"username": "owner@example.com", "password": "password123", "logincode": "abcd"},
+    )
+    assert first.status_code == 200
+    # Re-arm the very same token: the row itself is gone, so it must not verify again.
+    with client.session_transaction() as session:
+        session["captcha_token"] = "test-captcha-abcd"
+    second = client.post(
+        "/login",
+        data={"username": "owner@example.com", "password": "password123", "logincode": "abcd"},
+    )
+    assert second.text == "vcode-error"
+
+
+def test_email_code_is_single_use(client, app):
+    seed_code(app, client, "email", "abc123", subject="new@example.com")
+    first = client.post(
+        "/user", data={"username": "new@example.com", "password": "password123", "ecode": "abc123"}
+    )
+    assert first.text == "reg-pass"
+    with client.session_transaction() as session:
+        session["email_token"] = "test-email-abc123"
+    second = client.post(
+        "/user", data={"username": "new@example.com", "password": "password123", "ecode": "abc123"}
+    )
+    assert second.text == "ecode-error"
+
+
+def test_password_reset_needs_the_code_that_was_mailed(client, app):
+    seed_code(app, client, "email", "realcode", subject="owner@example.com")
+    response = client.post(
+        "/resetUserPassword",
+        data={"username": "owner@example.com", "password": "Attack12345", "ecode": "guess"},
+    )
+    assert response.text == "ecode-error"
+    seed_code(app, client, "email", "realcode2", subject="other@example.com")
+    mixed = client.post(
+        "/resetUserPassword",
+        data={"username": "owner@example.com", "password": "Attack12345", "ecode": "realcode2"},
+    )
+    assert mixed.text == "ecode-error"
+
+
+def test_session_cookie_never_carries_the_code(client, app, monkeypatch):
+    import controler.user as user_module
+
+    monkeypatch.setattr(user_module, "send_email", lambda *args, **kwargs: None)
+    assert client.post("/ecode", data={"email": "owner@example.com", "n": 1}).text == "send-pass"
+    with client.session_transaction() as session:
+        assert not {"ecode", "ecode_email", "ecode_issued_at", "vcode"} & set(session.keys())
+        assert session.get("email_token")
+
+
+def test_password_reset_invalidates_existing_sessions(client, app):
+    login_as(client, 1)
+    assert client.get("/userManage").status_code == 200
+    seed_code(app, client, "email", "reset1", subject="owner@example.com")
+    response = client.post(
+        "/resetUserPassword",
+        data={"username": "owner@example.com", "password": "Newpass123", "ecode": "reset1"},
+    )
+    assert response.text == "fi-pass"
+    assert client.get("/userManage").status_code == 403
+
+
 def test_csrf_is_enabled_by_default(tmp_path):
     from app import create_app
 
@@ -88,6 +155,7 @@ def test_csrf_is_enabled_by_default(tmp_path):
             "TESTING": True,
             "SQLALCHEMY_DATABASE_URI": f"sqlite:///{database.as_posix()}",
             "RATELIMIT_ENABLED": False,
+            "AUTO_INIT_DB": True,
         }
     )
     client = app.test_client()

@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 
 from app import create_app
 from common.initDatabase import create_user
+from common.oneTimeCode import hash_code
 from extensions import db
 
 
@@ -18,6 +19,7 @@ def app(tmp_path):
             "SQLALCHEMY_DATABASE_URI": f"sqlite:///{database.as_posix()}",
             "WTF_CSRF_ENABLED": False,
             "RATELIMIT_ENABLED": False,
+            "AUTO_INIT_DB": True,
         }
     )
     with app.app_context():
@@ -37,6 +39,27 @@ def client(app):
 def login_as(client, user_id, role="user", nickname="tester"):
     with client.session_transaction() as session:
         session.update(islogin="true", userid=user_id, role=role, nickname=nickname)
+
+
+def seed_code(app, client, kind, code, ttl=300, subject=""):
+    """Insert a server-side one-time code and bind its token to the client session."""
+    token = f"test-{kind}-{code}"
+    with app.app_context():
+        codes = db.metadata.tables["one_time_code"]
+        db.session.execute(
+            codes.insert().values(
+                token=token,
+                kind=kind,
+                code_hash=hash_code(code),
+                subject=subject,
+                expires_at=datetime.now() + timedelta(seconds=ttl),
+                attempts=0,
+            )
+        )
+        db.session.commit()
+    with client.session_transaction() as session:
+        session[f"{kind}_token"] = token
+    return token
 
 
 @pytest.fixture()

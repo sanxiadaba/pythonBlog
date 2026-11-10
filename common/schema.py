@@ -31,6 +31,7 @@ def define_schema(metadata: MetaData) -> None:
         Column("apply", Integer, default=0, server_default="0"),
         Column("agreeEditor", Integer, default=0, server_default="0"),
         Column("forbidLogin", Integer, default=0, server_default="0"),
+        Column("session_version", Integer, nullable=False, default=0, server_default="0"),
     )
 
     article = Table(
@@ -72,6 +73,7 @@ def define_schema(metadata: MetaData) -> None:
         Column("createtime", DateTime),
         Column("info", String(500)),
         Index("ix_comment_article", "articleid", "hide", "replyid"),
+        Index("ix_comment_user_created", "userid", "createtime"),
     )
 
     Table(
@@ -84,6 +86,7 @@ def define_schema(metadata: MetaData) -> None:
         Column("createtime", DateTime),
         Column("updatetime", DateTime),
         UniqueConstraint("articleid", "userid", name="uq_favorite_article_user"),
+        Index("ix_favorite_user", "userid", "canceled"),
     )
 
     Table(
@@ -112,6 +115,7 @@ def define_schema(metadata: MetaData) -> None:
         Column("ipaddr", String(64)),
         Column("info", String(500)),
         Index("ix_log_user_created", "userid", "createtime"),
+        Index("ix_log_category_target", "category", "target"),
     )
 
     Table(
@@ -137,6 +141,20 @@ def define_schema(metadata: MetaData) -> None:
         Column("info", String(500)),
         Column("createtime", DateTime),
         Index("ix_article_log_user_created", "userid", "createtime"),
+    )
+
+    # Single-use secrets (email verification codes, login captchas). Only the hash
+    # is stored, the client holds nothing but an opaque token.
+    Table(
+        "one_time_code",
+        metadata,
+        Column("token", String(64), primary_key=True),
+        Column("kind", String(16), nullable=False),
+        Column("code_hash", String(64), nullable=False),
+        Column("subject", String(254)),
+        Column("expires_at", DateTime, nullable=False),
+        Column("attempts", Integer, nullable=False, server_default="0"),
+        Index("ix_one_time_code_expires", "expires_at"),
     )
 
     # Keep references alive for SQLAlchemy's dependency sorter.
