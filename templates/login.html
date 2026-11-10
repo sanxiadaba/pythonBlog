@@ -2,8 +2,8 @@
 {% block title %}登录 · {{ site.name }}{% endblock %}
 
 {% block content %}
-<div style="max-width: 360px; margin: 40px auto;">
-  <h1 style="font-size: 1.3rem; margin-bottom: 20px;">登录</h1>
+<div class="login-box">
+  <h1>登录</h1>
   <form method="post" action="{{ url_for('admin.login') }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="field">

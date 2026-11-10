@@ -10,27 +10,52 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 import mistune
+from mistune.renderers.html import HTMLRenderer
 from PIL import Image, ImageOps, UnidentifiedImageError
-
-_markdown = mistune.create_markdown(
-    escape=True,
-    plugins=["strikethrough", "table", "url"],
-)
+from pygments import highlight
+from pygments.formatters import HtmlFormatter
+from pygments.lexers import get_lexer_by_name
+from pygments.lexers.special import TextLexer
+from pygments.util import ClassNotFound
 
 _TAG_RE = re.compile(r"<[^>]+>")
-_PRE_RE = re.compile(r"<pre\b[^>]*>.*?</pre>", re.S)
+_NOISE_RE = re.compile(r"<(?:pre|table)\b.*?</(?:pre|table)>", re.S | re.I)
 _SPACE_RE = re.compile(r"\s+")
 _SCRYPT = {"n": 2**14, "r": 8, "p": 1}
 
+# 代码块在保存时就高亮成静态 HTML，页面不需要下载任何高亮脚本。
+_CODE_FORMATTER = HtmlFormatter(cssclass="highlight")
+
+
+def _render_code(code: str, lang: str) -> str:
+    try:
+        lexer = get_lexer_by_name(lang, stripnl=False) if lang else TextLexer()
+    except ClassNotFound:
+        lexer = TextLexer()
+    return highlight(code, lexer, _CODE_FORMATTER)
+
+
+class _Renderer(HTMLRenderer):
+    def block_code(self, code: str, info: str | None = None) -> str:
+        # 围栏后面的第一个词是语言名，`python title="x"` 这种也认。
+        return _render_code(code, info.split(None, 1)[0] if info else "")
+
+
+_markdown = mistune.create_markdown(
+    escape=True,
+    renderer=_Renderer(escape=True),
+    plugins=["strikethrough", "table", "url"],
+)
+
 
 def render_markdown(text: str) -> str:
-    """Markdown 转 HTML。escape=True 让正文里的原始 HTML 失效，所以不需要再做白名单清洗。"""
+    """Markdown 转 HTML。escape=True 让正文里的原始 HTML 失效，不需要再做白名单清洗。"""
     return _markdown(text or "")
 
 
 def make_summary(html_text: str, limit: int = 150) -> str:
-    """从渲染后的 HTML 里抽一段纯文本当摘要，顺手去掉代码块和实体转义。"""
-    text = _PRE_RE.sub(" ", html_text or "")
+    """从渲染后的 HTML 里抽一段纯文本当摘要。代码块和表格读起来是噪音，先扔掉。"""
+    text = _NOISE_RE.sub(" ", html_text or "")
     text = html.unescape(_SPACE_RE.sub(" ", _TAG_RE.sub(" ", text))).strip()
     return text[:limit] + "…" if len(text) > limit else text
 
@@ -46,12 +71,20 @@ def verify_password(password: str, stored: str) -> bool:
         scheme, salt, digest = (stored or "").split("$")
         if scheme != "scrypt":
             return False
-        computed = hashlib.scrypt(
-            password.encode(), salt=bytes.fromhex(salt), dklen=32, **_SCRYPT
-        )
+        computed = hashlib.scrypt(password.encode(), salt=bytes.fromhex(salt), dklen=32, **_SCRYPT)
     except (ValueError, TypeError):
         return False
     return secrets.compare_digest(computed.hex(), digest)
+
+
+def _to_rgb(image: Image.Image) -> Image.Image:
+    """转 RGB；带透明通道的图先铺白底，否则透明区域会变成黑块。"""
+    if image.mode in ("RGBA", "LA") or (image.mode == "P" and "transparency" in image.info):
+        rgba = image.convert("RGBA")
+        canvas = Image.new("RGB", rgba.size, (255, 255, 255))
+        canvas.paste(rgba, mask=rgba.getchannel("A"))
+        return canvas
+    return image.convert("RGB")
 
 
 def save_image(data: bytes, directory: Path, max_bytes: int, max_width: int = 1600) -> str:
@@ -68,7 +101,7 @@ def save_image(data: bytes, directory: Path, max_bytes: int, max_width: int = 16
             image = ImageOps.exif_transpose(image)
             if image.width < 1 or image.height < 1 or image.width * image.height > 40_000_000:
                 raise ValueError("图片尺寸不合法")
-            image = image.convert("RGB")
+            image = _to_rgb(image)
             if image.width > max_width:
                 height = max(1, round(image.height * max_width / image.width))
                 image = image.resize((max_width, height), Image.Resampling.LANCZOS)

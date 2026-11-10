@@ -2,12 +2,34 @@
 
 from flask import Blueprint, abort, flash, redirect, render_template, request, session, url_for
 from sqlalchemy import or_
+from sqlalchemy.orm import load_only
 
 from config import CATEGORIES, COMMENT_MAX_LENGTH, NICKNAME_MAX_LENGTH, PAGE_SIZE
 from extensions import limiter
 from models import Article, Comment, db
 
 blog = Blueprint("blog", __name__)
+
+# 列表只要摘要，不需要把正文和渲染结果整篇读出来。
+_LIST = load_only(
+    Article.id, Article.title, Article.category, Article.summary, Article.views, Article.created
+)
+_NEIGHBOUR = load_only(Article.id, Article.title)
+_DETAIL = load_only(
+    Article.id,
+    Article.title,
+    Article.category,
+    Article.html,
+    Article.views,
+    Article.published,
+    Article.created,
+)
+
+
+def _like(keyword: str) -> str:
+    """把用户输入当字面量匹配，`%` 和 `_` 不再当通配符。"""
+    escaped = keyword.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    return f"%{escaped}%"
 
 
 @blog.get("/")
@@ -22,20 +44,25 @@ def index():
     else:
         category = ""
     if keyword:
-        pattern = f"%{keyword}%"
-        query = query.filter(or_(Article.title.like(pattern), Article.body.like(pattern)))
+        pattern = _like(keyword)
+        query = query.filter(
+            or_(
+                Article.title.like(pattern, escape="\\"),
+                Article.body.like(pattern, escape="\\"),
+            )
+        )
 
-    pagination = query.order_by(Article.created.desc()).paginate(
-        page=max(page, 1), per_page=PAGE_SIZE, error_out=False
+    pagination = (
+        query.options(_LIST)
+        .order_by(Article.created.desc())
+        .paginate(page=max(page, 1), per_page=PAGE_SIZE, error_out=False)
     )
-    return render_template(
-        "index.html", pagination=pagination, category=category, keyword=keyword
-    )
+    return render_template("index.html", pagination=pagination, category=category, keyword=keyword)
 
 
 @blog.get("/article/<int:article_id>")
 def article(article_id):
-    article = db.session.get(Article, article_id)
+    article = db.session.get(Article, article_id, options=[_DETAIL])
     if article is None or (not article.published and not session.get("admin_id")):
         abort(404)
     # 自己预览不算阅读量。
@@ -48,12 +75,14 @@ def article(article_id):
         .all()
     )
     older = (
-        Article.query.filter(Article.published.is_(True), Article.created < article.created)
+        Article.query.options(_NEIGHBOUR)
+        .filter(Article.published.is_(True), Article.created < article.created)
         .order_by(Article.created.desc())
         .first()
     )
     newer = (
-        Article.query.filter(Article.published.is_(True), Article.created > article.created)
+        Article.query.options(_NEIGHBOUR)
+        .filter(Article.published.is_(True), Article.created > article.created)
         .order_by(Article.created.asc())
         .first()
     )
@@ -65,7 +94,7 @@ def article(article_id):
 @blog.post("/article/<int:article_id>/comment")
 @limiter.limit("5/minute")
 def add_comment(article_id):
-    article = db.session.get(Article, article_id)
+    article = db.session.get(Article, article_id, options=[_NEIGHBOUR])
     if article is None or not article.published:
         abort(404)
 

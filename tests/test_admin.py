@@ -18,9 +18,7 @@ def test_login_page_renders(client):
 
 
 def test_login_with_wrong_password_fails(client, admin_user):
-    response = client.post(
-        "/admin/login", data={"username": "admin", "password": "wrong"}
-    )
+    response = client.post("/admin/login", data={"username": "admin", "password": "wrong"})
     assert "密码不正确" in response.get_data(as_text=True)
     assert client.get("/admin/").status_code == 302
 
@@ -146,3 +144,73 @@ def test_csrf_blocks_post_without_token(tmp_path, admin_user):
             "/admin/login", data={"username": "admin", "password": "password123"}
         )
     assert response.status_code == 400
+
+
+def test_preview_returns_exactly_what_saving_would(logged_in, app):
+    body = "## 小标题\n\n```python\nprint(1)\n```\n\n正文"
+    preview = logged_in.post("/admin/preview", data={"body": body})
+    assert preview.status_code == 200
+    logged_in.post(
+        "/admin/articles/new",
+        data={"title": "同一份渲染", "body": body, "published": "on"},
+    )
+    with app.app_context():
+        assert preview.get_json()["html"] == Article.query.one().html
+
+
+def test_preview_requires_login(client):
+    assert client.post("/admin/preview", data={"body": "x"}).status_code == 302
+
+
+def test_code_block_is_highlighted_on_save(logged_in, app):
+    logged_in.post(
+        "/admin/articles/new",
+        data={"title": "代码", "body": "```python\nprint(1)\n```", "published": "on"},
+    )
+    with app.app_context():
+        html = Article.query.one().html
+    assert '<div class="highlight">' in html
+    assert '<span class="nb">print</span>' in html
+
+
+def test_summary_follows_body_when_not_overridden(logged_in, app, article):
+    logged_in.post(
+        f"/admin/articles/{article}/edit",
+        data={"title": "第一篇", "body": "换了正文内容", "category": "python", "published": "on"},
+    )
+    with app.app_context():
+        assert "换了正文内容" in db.session.get(Article, article).summary
+
+
+def test_summary_ignores_code_and_tables(logged_in, app):
+    logged_in.post(
+        "/admin/articles/new",
+        data={
+            "title": "摘要",
+            "body": "正文第一段\n\n```python\nprint(1)\n```\n\n| 列 | 值 |\n| - | - |\n| a | 1 |",
+            "published": "on",
+        },
+    )
+    with app.app_context():
+        assert Article.query.one().summary == "正文第一段"
+
+
+def test_typed_summary_is_kept(logged_in, app, article):
+    logged_in.post(
+        f"/admin/articles/{article}/edit",
+        data={
+            "title": "第一篇",
+            "body": "正文",
+            "summary": "自己写的摘要",
+            "category": "python",
+            "published": "on",
+        },
+    )
+    with app.app_context():
+        assert db.session.get(Article, article).summary == "自己写的摘要"
+
+
+def test_editor_no_longer_needs_browser_side_markdown(logged_in, article):
+    page = logged_in.get(f"/admin/articles/{article}/edit").get_data(as_text=True)
+    assert "/static/vendor/" not in page
+    assert "marked" not in page

@@ -10,15 +10,15 @@
   <div class="stat"><b>{{ pending_comments }}</b><span>已隐藏评论</span></div>
 </div>
 
-<h2 style="font-size: 1rem; margin: 0 0 10px;">最新评论</h2>
+<h2 class="subhead">最新评论</h2>
 {% if recent_comments %}
-<table class="table">
+<table class="table table-dashboard">
   <tbody>
   {% for comment in recent_comments %}
     <tr>
-      <td style="width: 120px;">{{ comment.nickname }}</td>
+      <td class="col-nickname">{{ comment.nickname }}</td>
       <td>{{ comment.body | truncate(60) }}</td>
-      <td class="meta" style="width: 130px;">{{ comment.created.strftime('%Y-%m-%d %H:%M') }}</td>
+      <td class="meta col-time">{{ comment.created.strftime('%Y-%m-%d %H:%M') }}</td>
     </tr>
   {% endfor %}
   </tbody>
@@ -27,17 +27,17 @@
 <p class="empty">还没有评论。</p>
 {% endif %}
 
-<h2 style="font-size: 1rem; margin: 28px 0 10px;">最近文章</h2>
+<h2 class="subhead subhead-gap">最近文章</h2>
 {% if recent_articles %}
-<table class="table">
+<table class="table table-dashboard">
   <tbody>
   {% for post in recent_articles %}
     <tr>
       <td><a href="{{ url_for('admin.article_edit', article_id=post.id) }}">{{ post.title }}</a></td>
-      <td style="width: 80px;">
+      <td class="col-status">
         <span class="tag {{ 'on' if post.published else 'off' }}">{{ '发布' if post.published else '隐藏' }}</span>
       </td>
-      <td class="meta" style="width: 120px;">{{ post.created.strftime('%Y-%m-%d') }}</td>
+      <td class="meta col-date">{{ post.created.strftime('%Y-%m-%d') }}</td>
     </tr>
   {% endfor %}
   </tbody>

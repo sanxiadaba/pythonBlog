@@ -441,6 +441,7 @@ dependencies = [
     { name = "flask-wtf" },
     { name = "mistune" },
     { name = "pillow" },
+    { name = "pygments" },
     { name = "python-dotenv" },
     { name = "waitress" },
 ]
@@ -459,6 +460,7 @@ requires-dist = [
     { name = "flask-wtf", specifier = ">=1.2,<2" },
     { name = "mistune", specifier = ">=3.1,<4" },
     { name = "pillow", specifier = ">=11,<13" },
+    { name = "pygments", specifier = ">=2.19,<3" },
     { name = "python-dotenv", specifier = ">=1.1,<2" },
     { name = "waitress", specifier = ">=3,<4" },
 ]

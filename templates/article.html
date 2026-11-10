@@ -45,8 +45,8 @@
   <form class="comment-form" method="post"
         action="{{ url_for('blog.add_comment', article_id=article.id) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="text" name="nickname" maxlength="30" placeholder="昵称" required>
-    <textarea name="body" rows="4" maxlength="1000" placeholder="说点什么…" required></textarea>
+    <input type="text" name="nickname" maxlength="{{ limits.nickname }}" placeholder="昵称" required>
+    <textarea name="body" rows="4" maxlength="{{ limits.comment }}" placeholder="说点什么…" required></textarea>
     <div><button class="btn btn-primary" type="submit">发布评论</button></div>
   </form>
 </section>

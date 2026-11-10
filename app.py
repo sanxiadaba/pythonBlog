@@ -13,8 +13,10 @@ from sqlalchemy import event
 from config import (
     AUTHOR,
     CATEGORIES,
+    COMMENT_MAX_LENGTH,
     EMAIL,
     MAX_UPLOAD_BYTES,
+    NICKNAME_MAX_LENGTH,
     SITE_DESCRIPTION,
     SITE_NAME,
     UPLOAD_DIR,
@@ -57,8 +59,7 @@ def create_app(test_config: dict | None = None) -> Flask:
         UPLOAD_DIR=UPLOAD_DIR,
         MAX_UPLOAD_BYTES=MAX_UPLOAD_BYTES,
         RATELIMIT_STORAGE_URI="memory://",
-        DEBUG=os.getenv("DEBUG_MODE", "True").lower() == "true",
-        SITE_NAME=SITE_NAME,
+        DEBUG=os.getenv("DEBUG_MODE", "False").lower() == "true",
     )
     if test_config:
         app.config.update(test_config)
@@ -87,6 +88,7 @@ def create_app(test_config: dict | None = None) -> Flask:
                 "email": EMAIL,
             },
             "categories": CATEGORIES,
+            "limits": {"comment": COMMENT_MAX_LENGTH, "nickname": NICKNAME_MAX_LENGTH},
         }
 
     setup_logging(BASE_DIR / "logs")
@@ -138,14 +140,10 @@ def _register_handlers(app: Flask) -> None:
         response.headers.setdefault("Referrer-Policy", "same-origin")
         response.headers.setdefault(
             "Content-Security-Policy",
-            "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+            "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; "
             "script-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
         )
         return response
-
-    @app.get("/healthz")
-    def healthz():
-        return {"status": "ok"}
 
 
 def _register_cli(app: Flask) -> None:
@@ -167,8 +165,9 @@ def _register_cli(app: Flask) -> None:
 
 
 if __name__ == "__main__":
-    create_app().run(
+    app = create_app()
+    app.run(
         host="127.0.0.1",
         port=int(os.getenv("PORT_NUM", "5000")),
-        debug=os.getenv("DEBUG_MODE", "True").lower() == "true",
+        debug=app.config["DEBUG"],
     )

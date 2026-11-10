@@ -17,8 +17,8 @@
            value="{{ article.title if article else '' }}">
   </div>
 
-  <div class="field" style="display: flex; gap: 16px; align-items: flex-end;">
-    <div style="flex: 1;">
+  <div class="field field-row">
+    <div class="grow">
       <label for="category">分类</label>
       <select id="category" name="category">
         {% for key, label in categories.items() %}
@@ -26,16 +26,15 @@
         {% endfor %}
       </select>
     </div>
-    <label style="display: flex; align-items: center; gap: 6px; margin: 0 0 8px; color: var(--text);">
+    <label class="check-label">
       <input type="checkbox" name="published" {{ 'checked' if not article or article.published }}>
       发布
     </label>
   </div>
 
   <div class="field">
-    <label for="summary">摘要（留空自动截取正文前 150 字）</label>
-    <input id="summary" type="text" name="summary" maxlength="300"
-           value="{{ article.summary if article else '' }}">
+    <label for="summary">摘要（留空就从正文自动截一段）</label>
+    <input id="summary" type="text" name="summary" maxlength="300" value="{{ summary_value }}">
   </div>
 
   <div class="field">
@@ -46,7 +45,7 @@
       <button class="btn btn-sm" type="button" data-block="## ">标题</button>
       <button class="btn btn-sm" type="button" data-block="- ">列表</button>
       <button class="btn btn-sm" type="button" data-block="> ">引用</button>
-      <button class="btn btn-sm" type="button" data-block="```python\n" data-block-end="\n```">代码块</button>
+      <button class="btn btn-sm" type="button" data-block="```python" data-block-end="```">代码块</button>
       <button class="btn btn-sm" type="button" data-link="1">链接</button>
       <button class="btn btn-sm" type="button" id="upload-image">插入图片</button>
       <span class="spacer"></span>
@@ -66,6 +65,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='vendor/marked.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/editor.js') }}"></script>
 {% endblock %}

@@ -10,7 +10,7 @@
     <a href="{{ url_for('admin.comments') }}"
        class="{{ 'active' if request.endpoint == 'admin.comments' }}">评论</a>
     <a href="{{ url_for('blog.index') }}">查看站点</a>
-    <form method="post" action="{{ url_for('admin.logout') }}" style="margin-top: 10px;">
+    <form class="admin-logout" method="post" action="{{ url_for('admin.logout') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button class="btn btn-sm" type="submit">退出登录</button>
     </form>

@@ -58,6 +58,21 @@ def test_search_matches_title(client, article):
     assert "没有找到" in client.get("/?q=不存在").get_data(as_text=True)
 
 
+def test_search_treats_wildcards_as_characters(client, app, admin_user):
+    with app.app_context():
+        db.session.add_all(
+            [
+                Article(title="50% 折扣", body="a", html="<p>a</p>"),
+                Article(title="普通文章", body="b", html="<p>b</p>"),
+            ]
+        )
+        db.session.commit()
+
+    page = client.get("/?q=%25").get_data(as_text=True)
+    assert "50% 折扣" in page
+    assert "普通文章" not in page
+
+
 def test_category_filter(client, app, admin_user):
     with app.app_context():
         db.session.add_all(
@@ -99,9 +114,7 @@ def test_comment_too_long_is_rejected(client, app, article):
 
 def test_hidden_comment_not_shown(client, app, article):
     with app.app_context():
-        db.session.add(
-            Comment(article_id=article, nickname="刷屏", body="广告", hidden=True)
-        )
+        db.session.add(Comment(article_id=article, nickname="刷屏", body="广告", hidden=True))
         db.session.commit()
     assert "广告" not in client.get(f"/article/{article}").get_data(as_text=True)
 
@@ -137,9 +150,12 @@ def test_comment_rate_limit(tmp_path):
 
     with limited.test_client() as client:
         for _ in range(5):
-            assert client.post(
-                f"/article/{article_id}/comment", data={"nickname": "路人", "body": "hi"}
-            ).status_code == 302
+            assert (
+                client.post(
+                    f"/article/{article_id}/comment", data={"nickname": "路人", "body": "hi"}
+                ).status_code
+                == 302
+            )
         response = client.post(
             f"/article/{article_id}/comment", data={"nickname": "路人", "body": "hi"}
         )

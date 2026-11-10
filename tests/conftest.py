@@ -47,7 +47,7 @@ def logged_in(client, admin_user):
 
 
 @pytest.fixture
-def article(app, admin_user):
+def article(app):
     with app.app_context():
         post = Article(
             title="第一篇",

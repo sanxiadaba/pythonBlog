@@ -1,26 +1,43 @@
-// 后台编辑器：Markdown 实时预览、工具条、图片上传。
+// 后台编辑器：Markdown 编辑、工具条、服务端预览、图片上传。
 (() => {
   const form = document.getElementById("article-form");
+  if (!form) return;
+
   const body = document.getElementById("body");
   const preview = document.getElementById("preview");
   const status = document.getElementById("editor-status");
   const fileInput = document.getElementById("image-file");
   const csrfToken = form.querySelector('input[name="csrf_token"]').value;
-
-  const render = () => {
-    preview.innerHTML = marked.parse(body.value || "");
-    preview.querySelectorAll("pre code").forEach((block) => hljs.highlightElement(block));
-  };
-
-  let timer = null;
   const draftKey = `draft:${location.pathname}`;
 
+  // 预览由服务端渲染，和保存后看到的结果完全一致。
+  let latest = 0;
+  const render = async () => {
+    const seq = ++latest;
+    const data = new FormData();
+    data.append("body", body.value);
+    try {
+      const response = await fetch("/admin/preview", {
+        method: "POST",
+        headers: { "X-CSRFToken": csrfToken },
+        body: data,
+      });
+      if (!response.ok) return;
+      const result = await response.json();
+      // 只认最后一次请求，慢的那次回来了也不覆盖。
+      if (seq === latest) preview.innerHTML = result.html;
+    } catch {
+      /* 预览失败不打断写作 */
+    }
+  };
+
+  let previewTimer = null;
+  let draftTimer = null;
   body.addEventListener("input", () => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      render();
-      localStorage.setItem(draftKey, body.value);
-    }, 150);
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(render, 250);
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(() => localStorage.setItem(draftKey, body.value), 600);
   });
   render();
 
@@ -66,24 +83,25 @@
   };
 
   document.querySelectorAll(".editor-toolbar button[data-wrap]").forEach((button) => {
-    button.addEventListener("click", () => {
-      const marker = button.dataset.wrap;
-      wrap(marker, marker);
-    });
+    button.addEventListener("click", () => wrap(button.dataset.wrap, button.dataset.wrap));
   });
 
   document.querySelectorAll(".editor-toolbar button[data-block]").forEach((button) => {
     button.addEventListener("click", () => {
-      const open = button.dataset.block;
       const close = button.dataset.blockEnd;
       if (close) {
         const start = body.selectionStart;
         const selected = body.value.slice(start, body.selectionEnd);
-        body.setRangeText(open + selected + close, start, body.selectionEnd, "end");
+        body.setRangeText(
+          `${button.dataset.block}\n${selected || ""}\n${close}`,
+          start,
+          body.selectionEnd,
+          "end",
+        );
         body.focus();
         render();
       } else {
-        prefixLines(open);
+        prefixLines(button.dataset.block);
       }
     });
   });

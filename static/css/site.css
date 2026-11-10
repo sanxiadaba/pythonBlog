@@ -233,18 +233,15 @@ a:hover {
 }
 
 .content pre {
+  margin: 20px 0;
+  padding: 14px 16px;
   background: var(--soft);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px 16px;
   overflow-x: auto;
-  line-height: 1.55;
-}
-
-.content pre code {
-  background: none;
-  padding: 0;
+  font-family: "Cascadia Mono", Consolas, "SF Mono", monospace;
   font-size: 0.88rem;
+  line-height: 1.55;
 }
 
 .content hr {
@@ -396,11 +393,14 @@ label {
   display: inline;
 }
 
-/* 代码高亮主题自带的底色会盖住 pre 的背景，去掉 */
-.content pre code.hljs,
-.preview pre code.hljs {
-  background: transparent;
-  padding: 0;
+/* 代码块：Pygments 只管配色，底色和边框跟站内其他块保持一致 */
+.content .highlight {
+  margin: 20px 0;
+  background: none;
+}
+
+.content .highlight pre {
+  margin: 0;
 }
 
 .site-footer {
@@ -602,6 +602,78 @@ body.admin .wrap {
   font-size: 0.9rem;
 }
 
+/* 表单里的并排字段 */
+.field-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.field-row .grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.check-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 9px;
+  color: var(--text);
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+/* 登录页与错误页 */
+.login-box {
+  max-width: 360px;
+  margin: 40px auto;
+}
+
+.login-box h1 {
+  font-size: 1.3rem;
+  margin: 0 0 20px;
+}
+
+.error-page {
+  padding: 60px 0;
+}
+
+.error-page h1 {
+  font-size: 1.6rem;
+  margin: 0 0 8px;
+}
+
+/* 后台小标题 */
+.subhead {
+  font-size: 1rem;
+  margin: 0 0 10px;
+}
+
+.subhead-gap {
+  margin-top: 28px;
+}
+
+.admin-logout {
+  margin-top: 10px;
+}
+
+/* 表格列宽 */
+.table-articles th:nth-child(2) { width: 90px; }
+.table-articles th:nth-child(3) { width: 70px; }
+.table-articles th:nth-child(4) { width: 100px; }
+.table-articles th:nth-child(5) { width: 170px; }
+
+.table-comments th:nth-child(1) { width: 110px; }
+.table-comments th:nth-child(3) { width: 150px; }
+.table-comments th:nth-child(4) { width: 110px; }
+.table-comments th:nth-child(5) { width: 130px; }
+
+.table-dashboard .col-nickname { width: 120px; }
+.table-dashboard .col-time { width: 155px; }
+.table-dashboard .col-status { width: 80px; }
+.table-dashboard .col-date { width: 120px; }
+
 @media (max-width: 720px) {
   .admin-shell {
     flex-direction: column;
@@ -624,5 +696,9 @@ body.admin .wrap {
 
   .site-search input {
     width: 100%;
+  }
+
+  .field-row {
+    flex-wrap: wrap;
   }
 }

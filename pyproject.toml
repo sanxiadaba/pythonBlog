@@ -10,6 +10,7 @@ dependencies = [
     "flask-wtf>=1.2,<2",
     "mistune>=3.1,<4",
     "pillow>=11,<13",
+    "pygments>=2.19,<3",
     "python-dotenv>=1.1,<2",
     "waitress>=3,<4",
 ]
