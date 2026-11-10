@@ -38,7 +38,8 @@ def article(article_id):
     article = db.session.get(Article, article_id)
     if article is None or (not article.published and not session.get("admin_id")):
         abort(404)
-    if article.published:
+    # 自己预览不算阅读量。
+    if article.published and not session.get("admin_id"):
         Article.query.filter_by(id=article.id).update({"views": Article.views + 1})
         db.session.commit()
     comments = (
@@ -46,7 +47,19 @@ def article(article_id):
         .order_by(Comment.created.asc())
         .all()
     )
-    return render_template("article.html", article=article, comments=comments)
+    older = (
+        Article.query.filter(Article.published.is_(True), Article.created < article.created)
+        .order_by(Article.created.desc())
+        .first()
+    )
+    newer = (
+        Article.query.filter(Article.published.is_(True), Article.created > article.created)
+        .order_by(Article.created.asc())
+        .first()
+    )
+    return render_template(
+        "article.html", article=article, comments=comments, older=older, newer=newer
+    )
 
 
 @blog.post("/article/<int:article_id>/comment")

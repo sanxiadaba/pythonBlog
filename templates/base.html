@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='vendor/highlight.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
 <header class="site-header">
   <div class="wrap">
     <a class="brand" href="{{ url_for('blog.index') }}">{{ site.name }}</a>

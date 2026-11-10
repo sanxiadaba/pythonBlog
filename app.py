@@ -115,6 +115,12 @@ def _register_handlers(app: Flask) -> None:
         db.session.rollback()
         return render_template("error.html", code=500, message="服务器出错了"), 500
 
+    @app.errorhandler(413)
+    def too_large(_error):
+        if request.path.startswith("/admin/upload"):
+            return jsonify(error="图片太大"), 413
+        return render_template("error.html", code=413, message="提交的内容太大"), 413
+
     @app.errorhandler(CSRFError)
     def csrf_error(error):
         if request.path.startswith("/admin/upload"):

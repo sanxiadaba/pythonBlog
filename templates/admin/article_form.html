@@ -1,6 +1,9 @@
 {% extends "admin/base.html" %}
 {% block title %}{{ '编辑文章' if article else '写文章' }} · 后台{% endblock %}
 {% block heading %}{{ '编辑文章' if article else '写文章' }}{% endblock %}
+{% block heading_extra %}
+<button class="btn btn-primary" type="submit" form="article-form">保存</button>
+{% endblock %}
 
 {% block admin %}
 <form method="post"

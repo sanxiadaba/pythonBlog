@@ -27,11 +27,11 @@ uv run flask --app app run --debug
 
 ## 日常
 
-- **写文章**：后台 → 文章 → 写文章。正文是 Markdown，Ctrl+S 保存。
-- **配图**：编辑器里点「插入图片」，图片会自动压缩并改成随机文件名。
+- **写文章**：后台 → 文章 → 写文章。正文是 Markdown，Ctrl+S 保存；写一半关掉页面，正文会自动留在浏览器里，下次打开接着写。
+- **配图**：编辑器里点「插入图片」，图片会自动压缩、改随机文件名再存。
 - **改站点信息**：`config.py` 里改站名、简介、分类、邮箱。
 - **忘了密码**：重跑 `uv run flask --app app create-admin`，输入同名账号会重置密码。
-- **备份**：拷走 `instance/blog.db` 和 `static/img/upload/`。
+- **备份**：`.\scripts\backup.ps1`，把数据库和图片按时间戳拷到 `%USERPROFILE%\blog-backup`；想换位置加 `-Destination D:\backup`。
 
 ## 结构
 
@@ -44,6 +44,7 @@ routes/        访客页与后台路由
 templates/     Jinja 模板
 static/        CSS、JS、highlight.js/marked、上传的图片
 tests/         pytest
+scripts/       启动与备份脚本
 ```
 
 ## 检查

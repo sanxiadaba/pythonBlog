@@ -13,11 +13,26 @@
   };
 
   let timer = null;
+  const draftKey = `draft:${location.pathname}`;
+
   body.addEventListener("input", () => {
     clearTimeout(timer);
-    timer = setTimeout(render, 150);
+    timer = setTimeout(() => {
+      render();
+      localStorage.setItem(draftKey, body.value);
+    }, 150);
   });
   render();
+
+  // 正文为空说明是新建文章，直接恢复上次没保存的草稿；已有内容时不动它。
+  const draft = localStorage.getItem(draftKey);
+  if (draft && !body.value.trim()) {
+    body.value = draft;
+    render();
+    status.textContent = "已恢复上次未保存的草稿";
+  }
+
+  form.addEventListener("submit", () => localStorage.removeItem(draftKey));
 
   const insert = (text) => {
     const start = body.selectionStart;

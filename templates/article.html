@@ -15,6 +15,19 @@
   <div class="content">{{ article.html | safe }}</div>
 </article>
 
+<nav class="post-nav">
+  <span>
+    {% if older %}
+    <a href="{{ url_for('blog.article', article_id=older.id) }}">← 上一篇：{{ older.title }}</a>
+    {% endif %}
+  </span>
+  <span>
+    {% if newer %}
+    <a href="{{ url_for('blog.article', article_id=newer.id) }}">下一篇：{{ newer.title }} →</a>
+    {% endif %}
+  </span>
+</nav>
+
 <section class="comments" id="comments">
   <h2>{{ comments | length }} 条评论</h2>
   {% for comment in comments %}

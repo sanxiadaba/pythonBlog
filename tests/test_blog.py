@@ -1,5 +1,7 @@
 """访客侧行为：列表、详情、搜索、评论。"""
 
+from datetime import datetime, timedelta
+
 from models import Article, Comment, db
 from tests.conftest import make_app
 
@@ -102,6 +104,27 @@ def test_hidden_comment_not_shown(client, app, article):
         )
         db.session.commit()
     assert "广告" not in client.get(f"/article/{article}").get_data(as_text=True)
+
+
+def test_admin_preview_does_not_count_views(logged_in, app, admin_user, article):
+    logged_in.get(f"/article/{article}")
+    with app.app_context():
+        assert db.session.get(Article, article).views == 0
+
+
+def test_neighbour_links(client, app, admin_user):
+    with app.app_context():
+        now = datetime.now()
+        old = Article(title="旧文章", body="a", html="<p>a</p>", created=now - timedelta(days=2))
+        new = Article(title="新文章", body="b", html="<p>b</p>", created=now)
+        middle = Article(title="中间", body="c", html="<p>c</p>", created=now - timedelta(days=1))
+        db.session.add_all([old, middle, new])
+        db.session.commit()
+        middle_id = middle.id
+
+    body = client.get(f"/article/{middle_id}").get_data(as_text=True)
+    assert "旧文章" in body
+    assert "新文章" in body
 
 
 def test_comment_rate_limit(tmp_path):
