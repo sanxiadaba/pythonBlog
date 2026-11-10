@@ -72,9 +72,9 @@ def cancel_favorite(articleid):
     authorid = int(instanceArticle.searchUseridByArticleid(articleid))
     authorNickname = instanceUser.searchNicknameByUserid(authorid)
     try:
-        instanceFavorite.cancelFavorite(articleid)
+        if not instanceFavorite.cancelFavorite(articleid):
+            return "cancel-fail"
         info = f"The user with userid {userid} and nickname {nickname} has unfavored the articles with userid {authorid}, nickname {authorNickname} and articleid {articleid}."
-        instanceFavorite.insertFavorite(articleid)
         # Print Log
         listLogger(userid, info, [4])
         listLogger(authorid, info, [6])

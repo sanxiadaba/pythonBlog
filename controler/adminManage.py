@@ -74,11 +74,10 @@ def baseAdminManage():
     webInfo["mysqlVersion"] = watchVersionOfMysql()
     webInfo["lastServeTime"] = instanceLog.searchTimeOfLastTimeServe().split("in")[-1].strip()
 
-    # First convert the data type in the list to str otherwise, because join can only splice strings
-    for i in range(len(creditListForReleaseArticle)):
-        creditListForReleaseArticle[i] = str(creditListForReleaseArticle[i])
-    for i in range(len(recommendedNumOfSide)):
-        recommendedNumOfSide[i] = str(recommendedNumOfSide[i])
+    # Render as text without touching the shared constant lists: mutating them here
+    # used to turn every credit value into a string for the whole process.
+    creditListText = " ".join(str(i) for i in creditListForReleaseArticle)
+    recommendedNumText = " ".join(str(i) for i in recommendedNumOfSide)
     webInfo["classification"] = " ".join(classification)
     webInfo["commentNum"] = commentNum
     webInfo["regGiveCredit"] = regGiveCredit
@@ -86,13 +85,13 @@ def baseAdminManage():
     webInfo["postArticleCredit"] = postArticleCredit
     webInfo["replyAndAddCommentCredit"] = replyAndAddCommentCredit
     webInfo["rateCreditForArticle"] = rateCreditForArticle
-    webInfo["creditListForReleaseArticle"] = " ".join(creditListForReleaseArticle)
+    webInfo["creditListForReleaseArticle"] = creditListText
     webInfo["howArticleInWeb"] = howArticleInWeb
     webInfo["howCommentInArticle"] = howCommentInArticle
     webInfo["maxUserPostArticleNum"] = maxUserPostArticleNum
     webInfo["maxUserPostArticleNumOfEditor"] = maxUserPostArticleNumOfEditor
     webInfo["maxModifyArticleNum"] = maxModifyArticleNum
-    webInfo["recommendedNumOfSide"] = " ".join(recommendedNumOfSide)
+    webInfo["recommendedNumOfSide"] = recommendedNumText
     webInfo["maxUploadPicNum"] = maxUploadPicNum
     webInfo["language"] = blogLanguage
 

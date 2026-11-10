@@ -245,7 +245,7 @@
                         </div>
                         <div class="col-10 comment">
                             <div class="col-12 row" style="padding: 0px">
-                                <div class="col-7 commenter">{{ comment.nickname }}&nbsp;&nbsp;&nbsp;{{ comment.createment }}</div>
+                                <div class="col-7 commenter">{{ comment.nickname }}&nbsp;&nbsp;&nbsp;{{ comment.createtime }}</div>
                                 <div class="col-5 reply">
                                     <!--                        Article authors, administrators and commenters can only reply and delete comments, not likes-->
                                     {% if article.userid==session.get("userid") or session.get("role")=="admin" or
@@ -322,7 +322,7 @@
                                 <div class="col-10 comment" style="border: solid 1px #ccc">
                                     <div class="col-12 row" style="padding-left: 15px">
                                         <div class="col-7 commenter" style="color: #337ab7">{{ reply.nickname }}&nbsp;&nbsp;Reply&nbsp;&nbsp;{{ comment.nickname }}
-                                            &nbsp;&nbsp;&nbsp;{{ reply.createment }}
+                                            &nbsp;&nbsp;&nbsp;{{ reply.createtime }}
                                         </div>
                                         <div class="col-5 reply">
                                             {#                                        The administrator or the author can choose to delete the comment if the comment#}

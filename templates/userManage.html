@@ -50,7 +50,7 @@
                     <td><input type="text" id="modifyNickname" class="form-control" value="{{ myInfo["myNickname"] }}"/>
                     </td>
                     <td>
-                        <button class="btn btn-primary" onclick="modifyNickname(this,{{ myInfo["myNickname"] }})">Save changes
+                        <button class="btn btn-primary" onclick='modifyNickname(this,{{ myInfo["myNickname"]|tojson }})'>Save changes
                         </button>
                     </td>
                 </tr>

@@ -75,11 +75,9 @@ class Comment(DBase):
 
     # Add a reply to the original comment
     def insertArticleComment(self, articleid, commentid, content, ipaddr, info=None):
-        if info is not None:
-            info = info
         now = datetime.now()
         comment = Comment(userid=session.get("userid"), articleid=articleid, content=content, ipaddr=ipaddr,
-                          replyid=commentid, createtime=now, updatetime=now, info=info)
+                          replyid=commentid, createtime=now, info=info)
         dbsession.add(comment)
         dbsession.commit()
 

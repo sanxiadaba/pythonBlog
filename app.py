@@ -1,4 +1,5 @@
 import os
+import secrets
 from collections import defaultdict
 from pathlib import Path
 
@@ -32,6 +33,10 @@ from constant import (
 )
 from extensions import csrf, db, limiter, migrate
 
+# Values that are published in this repository or trivially guessable. A session
+# signed with any of them can be forged into an administrator cookie.
+_WEAK_SECRET_KEYS = {"", "dev-only-change-me", "replace-with-a-random-secret", "changeme"}
+
 
 def _database_uri(app):
     configured = os.getenv("DATABASE_URL", "").strip()
@@ -46,7 +51,7 @@ def create_app(test_config=None):
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
     database_uri = _database_uri(app)
     is_sqlite = database_uri.startswith("sqlite:")
-    secret_key = os.getenv("SECRET_KEY", "dev-only-change-me")
+    secret_key = os.getenv("SECRET_KEY", "").strip()
 
     app.config.from_mapping(
         SECRET_KEY=secret_key,
@@ -70,8 +75,19 @@ def create_app(test_config=None):
     )
     if test_config:
         app.config.update(test_config)
-    if not app.config.get("TESTING") and not app.config["DEBUG"] and secret_key == "dev-only-change-me":
-        raise RuntimeError("SECRET_KEY must be configured outside development")
+    if not app.config["SECRET_KEY"] and (app.config["DEBUG"] or app.config.get("TESTING")):
+        # Development and tests stay zero-config, but with a per-process random key
+        # instead of a value that is published in this repository.
+        app.config["SECRET_KEY"] = secrets.token_urlsafe(48)
+    if (
+        not app.config.get("TESTING")
+        and not app.config["DEBUG"]
+        and (
+            app.config["SECRET_KEY"] in _WEAK_SECRET_KEYS
+            or len(app.config["SECRET_KEY"]) < 32
+        )
+    ):
+        raise RuntimeError("SECRET_KEY must be a random value of at least 32 characters outside development")
 
     db.init_app(app)
     define_schema(db.metadata)

@@ -3,18 +3,9 @@ from datetime import datetime
 from flask import session
 
 from common.connectDb import connectDb
+from database.article import Article
 
 dbsession, md, DBase = connectDb()
-
-
-class Article(DBase):
-    __table__ = md.tables["article"]
-
-    # Check the title according to the article id
-    def searchHeadlineByArticleId(self, articleid):
-        row = dbsession.query(Article.headline).filter_by(articleid=articleid).first()
-        return row.headline
-
 
 instanceArticle = Article()
 
@@ -37,9 +28,12 @@ class Favorite(DBase):
     def cancelFavorite(self, articleid):
         now = datetime.now()
         row = dbsession.query(Favorite).filter_by(articleid=articleid, userid=session.get("userid")).first()
+        if row is None:
+            return False
         row.canceled = 1
         row.updatetime = now
         dbsession.commit()
+        return True
 
     # Restore Collection
     def replyFavorite(self, articleid):
