@@ -1,0 +1,68 @@
+{% extends "admin/base.html" %}
+{% block title %}{{ '编辑文章' if article else '写文章' }} · 后台{% endblock %}
+{% block heading %}{{ '编辑文章' if article else '写文章' }}{% endblock %}
+
+{% block admin %}
+<form method="post"
+      action="{{ url_for('admin.article_edit', article_id=article.id) if article else url_for('admin.article_new') }}"
+      id="article-form">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div class="field">
+    <label for="title">标题</label>
+    <input id="title" type="text" name="title" maxlength="200" required
+           value="{{ article.title if article else '' }}">
+  </div>
+
+  <div class="field" style="display: flex; gap: 16px; align-items: flex-end;">
+    <div style="flex: 1;">
+      <label for="category">分类</label>
+      <select id="category" name="category">
+        {% for key, label in categories.items() %}
+        <option value="{{ key }}" {{ 'selected' if article and article.category == key }}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <label style="display: flex; align-items: center; gap: 6px; margin: 0 0 8px; color: var(--text);">
+      <input type="checkbox" name="published" {{ 'checked' if not article or article.published }}>
+      发布
+    </label>
+  </div>
+
+  <div class="field">
+    <label for="summary">摘要（留空自动截取正文前 150 字）</label>
+    <input id="summary" type="text" name="summary" maxlength="300"
+           value="{{ article.summary if article else '' }}">
+  </div>
+
+  <div class="field">
+    <div class="editor-toolbar">
+      <button class="btn btn-sm" type="button" data-wrap="**">粗体</button>
+      <button class="btn btn-sm" type="button" data-wrap="*">斜体</button>
+      <button class="btn btn-sm" type="button" data-wrap="`">行内代码</button>
+      <button class="btn btn-sm" type="button" data-block="## ">标题</button>
+      <button class="btn btn-sm" type="button" data-block="- ">列表</button>
+      <button class="btn btn-sm" type="button" data-block="> ">引用</button>
+      <button class="btn btn-sm" type="button" data-block="```python\n" data-block-end="\n```">代码块</button>
+      <button class="btn btn-sm" type="button" data-link="1">链接</button>
+      <button class="btn btn-sm" type="button" id="upload-image">插入图片</button>
+      <span class="spacer"></span>
+      <span class="meta" id="editor-status"></span>
+    </div>
+    <div class="editor-panes">
+      <textarea id="body" name="body" spellcheck="false"
+                placeholder="用 Markdown 写正文…">{{ article.body if article else '' }}</textarea>
+      <div class="preview content" id="preview"></div>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" type="submit">保存</button>
+  <a class="btn" href="{{ url_for('admin.articles') }}">返回列表</a>
+  <input type="file" id="image-file" accept="image/*" hidden>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/marked.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/editor.js') }}"></script>
+{% endblock %}

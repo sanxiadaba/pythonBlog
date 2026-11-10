@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-shell">
+  <nav class="admin-nav">
+    <a href="{{ url_for('admin.dashboard') }}"
+       class="{{ 'active' if request.endpoint == 'admin.dashboard' }}">概览</a>
+    <a href="{{ url_for('admin.articles') }}"
+       class="{{ 'active' if request.endpoint in ['admin.articles', 'admin.article_new', 'admin.article_edit'] }}">文章</a>
+    <a href="{{ url_for('admin.comments') }}"
+       class="{{ 'active' if request.endpoint == 'admin.comments' }}">评论</a>
+    <a href="{{ url_for('blog.index') }}">查看站点</a>
+    <form method="post" action="{{ url_for('admin.logout') }}" style="margin-top: 10px;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-sm" type="submit">退出登录</button>
+    </form>
+  </nav>
+  <section class="admin-main">
+    <div class="admin-head">
+      <h1>{% block heading %}{% endblock %}</h1>
+      {% block heading_extra %}{% endblock %}
+    </div>
+    {% block admin %}{% endblock %}
+  </section>
+</div>
+{% endblock %}

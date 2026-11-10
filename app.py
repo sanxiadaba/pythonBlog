@@ -1,270 +1,168 @@
+"""应用入口：create_app() 组装配置、扩展、路由和 CLI。"""
+
 import os
 import secrets
-from collections import defaultdict
 from pathlib import Path
 
 import click
-from flask import Flask, abort, jsonify, render_template, request, session
+from dotenv import load_dotenv
+from flask import Flask, jsonify, render_template, request
 from flask_wtf.csrf import CSRFError
-from markupsafe import Markup
 from sqlalchemy import event
 
-from common.initDatabase import create_user, initialize_database
-from common.myLog import ininLogDir
-from common.schema import define_schema
-from common.utility import sanitize_article_html
-from constant import (
-    classification,
-    creditListForReleaseArticle,
-    emailAccount,
-    indexAboveStr,
-    indexLogoPicture,
-    indexLogoPictureSize,
-    loginEvereDayCredit,
-    portNum,
-    postArticleCredit,
-    regGiveCredit,
-    replyAndAddCommentCredit,
-    sessionExpirationTime,
-    shufflingFigureLink,
-    shufflingFigurePicture,
-    whetherDebug,
-    whetherSaveShufflingFigure,
+from config import (
+    AUTHOR,
+    CATEGORIES,
+    EMAIL,
+    MAX_UPLOAD_BYTES,
+    SITE_DESCRIPTION,
+    SITE_NAME,
+    UPLOAD_DIR,
 )
-from extensions import csrf, db, limiter, migrate
+from extensions import csrf, limiter
+from models import Admin, db
+from utils import hash_password, setup_logging
 
-# Values that are published in this repository or trivially guessable. A session
-# signed with any of them can be forged into an administrator cookie.
-_WEAK_SECRET_KEYS = {"", "dev-only-change-me", "replace-with-a-random-secret", "changeme"}
+BASE_DIR = Path(__file__).resolve().parent
 
-
-def _database_uri(app):
-    configured = os.getenv("DATABASE_URL", "").strip()
-    if configured:
-        return configured
-    database_file = Path(app.instance_path) / "pythonblog.db"
-    return f"sqlite:///{database_file.as_posix()}"
+load_dotenv(BASE_DIR / ".env")
 
 
-def create_app(test_config=None):
+def _secret_key(instance_path: Path) -> str:
+    """优先用环境变量；本机自用没配时，生成一次存盘，重启后登录态不会丢。"""
+    key = os.getenv("SECRET_KEY", "").strip()
+    if key:
+        return key
+    key_file = instance_path / "secret_key"
+    if key_file.exists():
+        return key_file.read_text(encoding="utf-8").strip()
+    key = secrets.token_urlsafe(48)
+    key_file.write_text(key, encoding="utf-8")
+    return key
+
+
+def create_app(test_config: dict | None = None) -> Flask:
     app = Flask(__name__, instance_relative_config=True)
-    Path(app.instance_path).mkdir(parents=True, exist_ok=True)
-    database_uri = _database_uri(app)
-    secret_key = os.getenv("SECRET_KEY", "").strip()
+    instance = Path(app.instance_path)
+    instance.mkdir(parents=True, exist_ok=True)
 
     app.config.from_mapping(
-        SECRET_KEY=secret_key,
-        DEBUG=whetherDebug,
-        SQLALCHEMY_DATABASE_URI=database_uri,
+        SECRET_KEY=_secret_key(instance),
+        SQLALCHEMY_DATABASE_URI=f"sqlite:///{(instance / 'blog.db').as_posix()}",
+        SQLALCHEMY_ENGINE_OPTIONS={"connect_args": {"check_same_thread": False, "timeout": 30}},
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
-        SESSION_COOKIE_SECURE=os.getenv("SESSION_COOKIE_SECURE", "False").lower() == "true",
-        PERMANENT_SESSION_LIFETIME=sessionExpirationTime,
-        MAX_CONTENT_LENGTH=int(os.getenv("MAX_CONTENT_LENGTH_MB", "8")) * 1024 * 1024,
-        WTF_CSRF_TIME_LIMIT=3600,
-        RATELIMIT_STORAGE_URI=os.getenv("RATELIMIT_STORAGE_URI", "memory://"),
-        ALLOW_REMOTE_IMAGES=os.getenv("ALLOW_REMOTE_IMAGES", "False").lower() == "true",
-        AUTO_INIT_DB=os.getenv("AUTO_INIT_DB", "False").lower() == "true",
+        MAX_CONTENT_LENGTH=12 * 1024 * 1024,
+        UPLOAD_DIR=UPLOAD_DIR,
+        MAX_UPLOAD_BYTES=MAX_UPLOAD_BYTES,
+        RATELIMIT_STORAGE_URI="memory://",
+        DEBUG=os.getenv("DEBUG_MODE", "True").lower() == "true",
+        SITE_NAME=SITE_NAME,
     )
     if test_config:
         app.config.update(test_config)
-    # Derive the dialect from the *final* URI: a test or deployment override must not
-    # leave SQLite pragmas on a MySQL engine (or the reverse).
-    is_sqlite = app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite:")
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = (
-        {"connect_args": {"check_same_thread": False, "timeout": 30}}
-        if is_sqlite
-        else {"pool_pre_ping": True, "pool_recycle": 1800, "pool_size": 10, "max_overflow": 20}
-    )
-    if not app.config["SECRET_KEY"] and (app.config["DEBUG"] or app.config.get("TESTING")):
-        # Development and tests stay zero-config, but with a per-process random key
-        # instead of a value that is published in this repository.
-        app.config["SECRET_KEY"] = secrets.token_urlsafe(48)
-    if (
-        not app.config.get("TESTING")
-        and not app.config["DEBUG"]
-        and (
-            app.config["SECRET_KEY"] in _WEAK_SECRET_KEYS
-            or len(app.config["SECRET_KEY"]) < 32
-        )
-    ):
-        raise RuntimeError("SECRET_KEY must be a random value of at least 32 characters outside development")
-
-    # Behind nginx/IIS the client address arrives in X-Forwarded-*. Opt in explicitly,
-    # because trusting the header unconditionally lets anyone spoof their IP.
-    proxy_hops = int(os.getenv("TRUST_PROXY_HOPS", "0"))
-    if proxy_hops > 0:
-        from werkzeug.middleware.proxy_fix import ProxyFix
-
-        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=proxy_hops, x_proto=proxy_hops, x_host=proxy_hops)
 
     db.init_app(app)
-    define_schema(db.metadata)
     csrf.init_app(app)
-    migrate.init_app(app, db)
     limiter.init_app(app)
 
     with app.app_context():
-        if is_sqlite:
-            def configure_sqlite(connection, _record):
-                cursor = connection.cursor()
-                cursor.execute("PRAGMA foreign_keys=ON")
-                cursor.execute("PRAGMA busy_timeout=30000")
-                cursor.execute("PRAGMA journal_mode=WAL")
-                cursor.close()
+        event.listen(db.engine, "connect", _configure_sqlite)
+        db.create_all()
 
-            event.listen(db.engine, "connect", configure_sqlite)
-        if app.config["AUTO_INIT_DB"]:
-            initialize_database()
-        _register_blueprints(app)
+    from routes import register_routes
 
+    register_routes(app)
     _register_handlers(app)
-    _register_template_helpers(app)
     _register_cli(app)
-    ininLogDir()
+
+    @app.context_processor
+    def inject_site():
+        return {
+            "site": {
+                "name": SITE_NAME,
+                "description": SITE_DESCRIPTION,
+                "author": AUTHOR,
+                "email": EMAIL,
+            },
+            "categories": CATEGORIES,
+        }
+
+    setup_logging(BASE_DIR / "logs")
     return app
 
 
-def _register_blueprints(app):
-    from controler.adminManage import adminManage
-    from controler.article import article
-    from controler.comment import comment
-    from controler.favorite import favorite
-    from controler.index import index
-    from controler.ueditor import ueditor
-    from controler.user import user
-    from controler.userManage import userManage
-
-    for blueprint in (index, user, article, favorite, comment, ueditor, userManage, adminManage):
-        app.register_blueprint(blueprint)
+def _configure_sqlite(connection, _record):
+    cursor = connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.execute("PRAGMA busy_timeout=30000")
+    cursor.close()
 
 
-def _register_handlers(app):
+def _register_handlers(app: Flask) -> None:
     @app.errorhandler(404)
-    def page_not_found(_error):
-        return render_template("erroe-404.html", myemail=emailAccount), 404
+    def not_found(_error):
+        return render_template("error.html", code=404, message="页面不存在"), 404
+
+    @app.errorhandler(403)
+    def forbidden(_error):
+        return render_template("error.html", code=403, message="没有权限"), 403
 
     @app.errorhandler(500)
-    def internal_error(_error):
+    def server_error(_error):
         db.session.rollback()
-        return render_template("error-500.html", myemail=emailAccount), 500
+        return render_template("error.html", code=500, message="服务器出错了"), 500
 
     @app.errorhandler(CSRFError)
     def csrf_error(error):
-        return jsonify(error="csrf_failed", reason=error.description), 400
+        if request.path.startswith("/admin/upload"):
+            return jsonify(error="表单已过期，请刷新页面后重试"), 400
+        return render_template("error.html", code=400, message="表单已过期，请刷新页面后重试"), 400
 
     @app.teardown_appcontext
-    def shutdown_session(_exception=None):
+    def remove_session(_exception=None):
         db.session.remove()
 
     @app.after_request
     def security_headers(response):
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
-        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-        response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
-        if app.config["SESSION_COOKIE_SECURE"]:
-            response.headers.setdefault(
-                "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
-            )
-        if session.get("userid") and response.mimetype == "text/html":
-            # Authenticated pages must not be replayed from a shared cache.
-            response.headers.setdefault("Cache-Control", "no-store")
-
+        response.headers.setdefault("Referrer-Policy", "same-origin")
         response.headers.setdefault(
             "Content-Security-Policy",
-            "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; "
-            "script-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self'",
+            "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+            "script-src 'self'; frame-ancestors 'self'; base-uri 'self'; form-action 'self'",
         )
         return response
-
-    @app.before_request
-    def reject_blocked_sessions():
-        userid = session.get("userid")
-        if not userid:
-            return None
-        from database.users import Users
-
-        user = Users().searchUserByUserid(userid)
-        stale = user is not None and session.get("sv", 0) != (user.session_version or 0)
-        if user is None or user.forbidLogin == 1 or stale:
-            session.clear()
-            if request.endpoint not in {"user.login", "index.home"}:
-                abort(403)
-        return None
 
     @app.get("/healthz")
     def healthz():
         return {"status": "ok"}
 
-    @app.get("/toTransmitParam")
-    def transmit_parameters():
-        return {
-            "loginEvereDayCredit": loginEvereDayCredit,
-            "replyAndAddCommentCredit": replyAndAddCommentCredit,
-            "regGiveCredit": regGiveCredit,
-            "postArticleCredit": postArticleCredit,
-        }
 
-    @app.get("/replyAndAddCommentCredit")
-    def reply_credit():
-        return str(replyAndAddCommentCredit)
-
-    @app.get("/loginEvereDayCredit")
-    def login_credit():
-        return str(loginEvereDayCredit)
-
-    @app.post("/judgeAutoLogin")
-    def judge_auto_login():
-        earned = session.pop("judgeLin", "0")
-        return "1" if earned == "1" else "0"
-
-
-def _register_template_helpers(app):
-    @app.context_processor
-    def article_types():
-        return {"article_type": {str(index + 1): name for index, name in enumerate(classification)}}
-
-    @app.context_processor
-    def credits():
-        return {"listOfCredit": {value: f"{value} points" for value in creditListForReleaseArticle}}
-
-    @app.context_processor
-    def page_parameters():
-        values = defaultdict(list)
-        values["shufflingFigure"] = list(zip(shufflingFigurePicture, shufflingFigureLink, strict=False))
-        values["indexLogoPicture"].append(indexLogoPicture)
-        values["indexLogoPictureSize"].extend(indexLogoPictureSize)
-        values["indexAboveStr"].extend(indexAboveStr)
-        values["display"].append("block" if whetherSaveShufflingFigure else "none")
-        return {"manyParameter": values}
-
-    def truncate_text(value, length, end="..."):
-        value = value or ""
-        return value if len(value) <= length else value[:length] + end
-
-    app.jinja_env.filters["my_truncate"] = truncate_text
-    app.jinja_env.filters["numAddNum"] = lambda number, amount: number + amount
-    app.jinja_env.filters["safe_html"] = lambda value: Markup(sanitize_article_html(value or ""))
-
-
-def _register_cli(app):
-    @app.cli.command("init-db")
-    def init_db_command():
-        """Create missing tables directly, bypassing Alembic (development only)."""
-        initialize_database()
-        click.echo("Database initialized without a migration version. Prefer 'flask db upgrade'.")
-
-    @app.cli.command("create-user")
-    @click.option("--username", prompt=True)
+def _register_cli(app: Flask) -> None:
+    @app.cli.command("create-admin")
+    @click.option("--username", prompt=True, default="admin")
     @click.option("--password", prompt=True, hide_input=True, confirmation_prompt=True)
-    @click.option("--role", type=click.Choice(["user", "editor", "admin"]), default="user")
-    @click.option("--nickname", default=None)
-    def create_user_command(username, password, role, nickname):
-        user_id = create_user(username, password, role=role, nickname=nickname)
-        click.echo(f"Created {role} user {username} with id {user_id}.")
+    def create_admin(username, password):
+        """创建或重置管理员账号。"""
+        if len(password) < 8:
+            raise click.ClickException("密码至少 8 位")
+        admin = Admin.query.filter_by(username=username).first()
+        if admin:
+            admin.password_hash = hash_password(password)
+            click.echo(f"已重置 {username} 的密码")
+        else:
+            db.session.add(Admin(username=username, password_hash=hash_password(password)))
+            click.echo(f"已创建管理员 {username}")
+        db.session.commit()
 
 
 if __name__ == "__main__":
-    create_app().run(host="127.0.0.1", port=portNum, debug=whetherDebug)
+    create_app().run(
+        host="127.0.0.1",
+        port=int(os.getenv("PORT_NUM", "5000")),
+        debug=os.getenv("DEBUG_MODE", "True").lower() == "true",
+    )

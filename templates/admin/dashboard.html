@@ -1,0 +1,48 @@
+{% extends "admin/base.html" %}
+{% block title %}后台 · {{ site.name }}{% endblock %}
+{% block heading %}概览{% endblock %}
+
+{% block admin %}
+<div class="stats">
+  <div class="stat"><b>{{ article_count }}</b><span>文章总数</span></div>
+  <div class="stat"><b>{{ published_count }}</b><span>已发布</span></div>
+  <div class="stat"><b>{{ comment_count }}</b><span>评论总数</span></div>
+  <div class="stat"><b>{{ pending_comments }}</b><span>已隐藏评论</span></div>
+</div>
+
+<h2 style="font-size: 1rem; margin: 0 0 10px;">最新评论</h2>
+{% if recent_comments %}
+<table class="table">
+  <tbody>
+  {% for comment in recent_comments %}
+    <tr>
+      <td style="width: 120px;">{{ comment.nickname }}</td>
+      <td>{{ comment.body | truncate(60) }}</td>
+      <td class="meta" style="width: 130px;">{{ comment.created.strftime('%Y-%m-%d %H:%M') }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty">还没有评论。</p>
+{% endif %}
+
+<h2 style="font-size: 1rem; margin: 28px 0 10px;">最近文章</h2>
+{% if recent_articles %}
+<table class="table">
+  <tbody>
+  {% for post in recent_articles %}
+    <tr>
+      <td><a href="{{ url_for('admin.article_edit', article_id=post.id) }}">{{ post.title }}</a></td>
+      <td style="width: 80px;">
+        <span class="tag {{ 'on' if post.published else 'off' }}">{{ '发布' if post.published else '隐藏' }}</span>
+      </td>
+      <td class="meta" style="width: 120px;">{{ post.created.strftime('%Y-%m-%d') }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty">还没有文章，去写第一篇。</p>
+{% endif %}
+{% endblock %}

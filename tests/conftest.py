@@ -1,84 +1,70 @@
-from datetime import datetime, timedelta
+"""测试夹具：每个测试一个临时 SQLite 库。"""
 
 import pytest
+from PIL import Image
 
 from app import create_app
-from common.initDatabase import create_user
-from common.oneTimeCode import hash_code
-from extensions import db
+from models import Admin, Article, db
+from utils import hash_password
 
 
-@pytest.fixture()
+def make_app(tmp_path, **overrides):
+    config = {
+        "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": f"sqlite:///{(tmp_path / 'test.db').as_posix()}",
+        "SECRET_KEY": "test-secret-key",
+        "WTF_CSRF_ENABLED": False,
+        "RATELIMIT_ENABLED": False,
+        "UPLOAD_DIR": tmp_path / "upload",
+    }
+    config.update(overrides)
+    return create_app(config)
+
+
+@pytest.fixture
 def app(tmp_path):
-    database = tmp_path / "test.db"
-    app = create_app(
-        {
-            "TESTING": True,
-            "DEBUG": False,
-            "SECRET_KEY": "test-secret",
-            "SQLALCHEMY_DATABASE_URI": f"sqlite:///{database.as_posix()}",
-            "WTF_CSRF_ENABLED": False,
-            "RATELIMIT_ENABLED": False,
-            "AUTO_INIT_DB": True,
-        }
-    )
-    with app.app_context():
-        create_user("owner@example.com", "password123", role="user", nickname="owner")
-        create_user("other@example.com", "password123", role="user", nickname="other")
-        create_user("admin@example.com", "password123", role="admin", nickname="admin")
-        yield app
-        db.session.remove()
-        db.drop_all()
+    return make_app(tmp_path)
 
 
-@pytest.fixture()
+@pytest.fixture
 def client(app):
     return app.test_client()
 
 
-def login_as(client, user_id, role="user", nickname="tester"):
-    with client.session_transaction() as session:
-        session.update(islogin="true", userid=user_id, role=role, nickname=nickname)
-
-
-def seed_code(app, client, kind, code, ttl=300, subject=""):
-    """Insert a server-side one-time code and bind its token to the client session."""
-    token = f"test-{kind}-{code}"
+@pytest.fixture
+def admin_user(app):
     with app.app_context():
-        codes = db.metadata.tables["one_time_code"]
-        db.session.execute(
-            codes.insert().values(
-                token=token,
-                kind=kind,
-                code_hash=hash_code(code),
-                subject=subject,
-                expires_at=datetime.now() + timedelta(seconds=ttl),
-                attempts=0,
-            )
-        )
+        account = Admin(username="admin", password_hash=hash_password("password123"))
+        db.session.add(account)
         db.session.commit()
-    with client.session_transaction() as session:
-        session[f"{kind}_token"] = token
-    return token
+        return account.id
 
 
-@pytest.fixture()
-def article_id(app):
+@pytest.fixture
+def logged_in(client, admin_user):
+    client.post("/admin/login", data={"username": "admin", "password": "password123"})
+    return client
+
+
+@pytest.fixture
+def article(app, admin_user):
     with app.app_context():
-        article = db.metadata.tables["article"]
-        result = db.session.execute(
-            article.insert().values(
-                userid=1,
-                type=1,
-                headline="A test article",
-                content="article body " * 20,
-                thumbnail="default/1.jpg",
-                credit=0,
-                drafted=0,
-                checked=1,
-                createtime=datetime.now(),
-                updatetime=datetime.now(),
-            )
+        post = Article(
+            title="第一篇",
+            category="python",
+            summary="摘要",
+            body="**粗体**正文",
+            html="<p><strong>粗体</strong>正文</p>",
         )
+        db.session.add(post)
         db.session.commit()
-        return result.inserted_primary_key[0]
+        return post.id
+
+
+@pytest.fixture
+def png_bytes():
+    from io import BytesIO
+
+    buffer = BytesIO()
+    Image.new("RGB", (32, 32), (10, 20, 30)).save(buffer, format="PNG")
+    return buffer.getvalue()

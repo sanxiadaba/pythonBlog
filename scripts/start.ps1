@@ -1,24 +1,19 @@
+# 启动博客。默认开发模式（改代码自动重载）；-Mode prod 用 waitress 常驻。
 param(
-    [ValidateSet("development", "production")]
-    [string]$Mode = "development",
-    [int]$Port = 5000
+    [int]$Port = 5000,
+    [ValidateSet("dev", "prod")]
+    [string]$Mode = "dev"
 )
 
 $ErrorActionPreference = "Stop"
-$projectRoot = Split-Path -Parent $PSScriptRoot
-Set-Location -LiteralPath $projectRoot
+Set-Location $PSScriptRoot\..
 
-if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
-    throw "uv is required. Install it from https://docs.astral.sh/uv/."
+uv sync --frozen
+if ($Mode -eq "dev") {
+    $env:DEBUG_MODE = "True"
+    uv run flask --app app run --debug --port $Port
 }
-
-if ($Mode -eq "production") {
-    uv sync --frozen --no-dev
+else {
     $env:DEBUG_MODE = "False"
-    uv run flask --app app db upgrade
-    uv run waitress-serve --host=127.0.0.1 --port=$Port --call app:create_app
-} else {
-    uv sync --frozen
-    uv run flask --app app db upgrade
-    uv run flask --app app run --debug --host=127.0.0.1 --port=$Port
+    uv run python -m waitress --host=127.0.0.1 --port=$Port --call app:create_app
 }

@@ -1,0 +1,53 @@
+{% extends "admin/base.html" %}
+{% block title %}评论 · 后台{% endblock %}
+{% block heading %}评论{% endblock %}
+
+{% block admin %}
+{% if comments %}
+<table class="table">
+  <thead>
+    <tr>
+      <th style="width: 110px;">昵称</th>
+      <th>内容</th>
+      <th style="width: 150px;">文章</th>
+      <th style="width: 110px;">时间</th>
+      <th style="width: 130px;"></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for comment in comments %}
+    <tr>
+      <td>
+        {{ comment.nickname }}
+        {% if comment.hidden %}<span class="tag off">已隐藏</span>{% endif %}
+      </td>
+      <td class="comment-body">{{ comment.body | truncate(120) }}</td>
+      <td class="meta">
+        {% if comment.article_id in titles %}
+        <a href="{{ url_for('blog.article', article_id=comment.article_id) }}" target="_blank">
+          {{ titles[comment.article_id] | truncate(20) }}
+        </a>
+        {% endif %}
+      </td>
+      <td class="meta">{{ comment.created.strftime('%m-%d %H:%M') }}</td>
+      <td class="actions">
+        <form class="inline-form" method="post"
+              action="{{ url_for('admin.comment_toggle', comment_id=comment.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm" type="submit">{{ '恢复' if comment.hidden else '隐藏' }}</button>
+        </form>
+        <form class="inline-form" method="post"
+              action="{{ url_for('admin.comment_delete', comment_id=comment.id) }}"
+              data-confirm="删除这条评论？">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-danger" type="submit">删除</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty">还没有评论。</p>
+{% endif %}
+{% endblock %}

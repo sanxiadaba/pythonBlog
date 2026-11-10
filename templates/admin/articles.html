@@ -1,0 +1,50 @@
+{% extends "admin/base.html" %}
+{% block title %}文章 · 后台{% endblock %}
+{% block heading %}文章{% endblock %}
+{% block heading_extra %}
+<a class="btn btn-primary" href="{{ url_for('admin.article_new') }}">写文章</a>
+{% endblock %}
+
+{% block admin %}
+{% if articles %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>标题</th>
+      <th style="width: 90px;">分类</th>
+      <th style="width: 70px;">状态</th>
+      <th style="width: 100px;">日期</th>
+      <th style="width: 170px;"></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for post in articles %}
+    <tr>
+      <td>
+        <a href="{{ url_for('admin.article_edit', article_id=post.id) }}">{{ post.title }}</a>
+      </td>
+      <td class="meta">{{ categories.get(post.category, post.category) }}</td>
+      <td><span class="tag {{ 'on' if post.published else 'off' }}">{{ '发布' if post.published else '隐藏' }}</span></td>
+      <td class="meta">{{ post.created.strftime('%m-%d') }}</td>
+      <td class="actions">
+        <a class="btn btn-sm" href="{{ url_for('blog.article', article_id=post.id) }}" target="_blank">预览</a>
+        <form class="inline-form" method="post"
+              action="{{ url_for('admin.article_toggle', article_id=post.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm" type="submit">{{ '隐藏' if post.published else '发布' }}</button>
+        </form>
+        <form class="inline-form" method="post"
+              action="{{ url_for('admin.article_delete', article_id=post.id) }}"
+              data-confirm="删除「{{ post.title }}」？评论也会一起删掉。">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-danger" type="submit">删除</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty">还没有文章。</p>
+{% endif %}
+{% endblock %}

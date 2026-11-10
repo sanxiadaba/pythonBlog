@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ site.name }}{% endblock %}</title>
+  <meta name="description" content="{{ site.description }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/highlight.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}">
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="{{ url_for('blog.index') }}">{{ site.name }}</a>
+    <nav class="site-nav">
+      {% for key, label in categories.items() %}
+      <a href="{{ url_for('blog.index', c=key) }}"
+         class="{{ 'active' if request.args.get('c') == key and not request.args.get('q') }}">{{ label }}</a>
+      {% endfor %}
+    </nav>
+    <form class="site-search" method="get" action="{{ url_for('blog.index') }}">
+      <input type="search" name="q" value="{{ request.args.get('q', '') }}" placeholder="搜索文章">
+    </form>
+  </div>
+</header>
+
+<main class="wrap">
+  {% for kind, message in get_flashed_messages(with_categories=true) %}
+  <div class="flash {{ kind }}">{{ message }}</div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>{{ site.author }} · {{ site.description }}</span>
+    <span>
+      <a href="mailto:{{ site.email }}">{{ site.email }}</a>
+      {% if session.get('admin_id') %}
+      · <a href="{{ url_for('admin.dashboard') }}">后台</a>
+      {% else %}
+      · <a href="{{ url_for('admin.login') }}">登录</a>
+      {% endif %}
+    </span>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='vendor/highlight.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/site.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
