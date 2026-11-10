@@ -83,6 +83,7 @@ uv run python -c "import secrets; print(secrets.token_urlsafe(48))"
 | `MAX_CONTENT_LENGTH_MB` | `8` | 单次请求上限 |
 | `ALLOW_REMOTE_IMAGES` | `False` | 是否允许抓取公网文章图片，默认关闭以规避 SSRF |
 | `RATELIMIT_STORAGE_URI` | `memory://` | 单进程限流存储；多实例部署应改为共享存储 |
+| `TRUST_PROXY_HOPS` | `0` | 前面有几层反向代理（nginx/IIS 设为 1），用于正确取客户端 IP；不设则忽略 `X-Forwarded-For` |
 
 邮件注册和找回密码需要设置 `EMAIL_ACCOUNT`、`EMAIL_PASSWORD` 和 `USE_GMAIL_OR_QQMAIL`。`EMAIL_PASSWORD` 应填写邮箱服务商生成的应用授权码，而不是登录密码。
 

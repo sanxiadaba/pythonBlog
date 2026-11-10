@@ -91,6 +91,14 @@ def create_app(test_config=None):
     ):
         raise RuntimeError("SECRET_KEY must be a random value of at least 32 characters outside development")
 
+    # Behind nginx/IIS the client address arrives in X-Forwarded-*. Opt in explicitly,
+    # because trusting the header unconditionally lets anyone spoof their IP.
+    proxy_hops = int(os.getenv("TRUST_PROXY_HOPS", "0"))
+    if proxy_hops > 0:
+        from werkzeug.middleware.proxy_fix import ProxyFix
+
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=proxy_hops, x_proto=proxy_hops, x_host=proxy_hops)
+
     db.init_app(app)
     define_schema(db.metadata)
     csrf.init_app(app)
@@ -156,6 +164,14 @@ def _register_handlers(app):
         response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         response.headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+        if app.config["SESSION_COOKIE_SECURE"]:
+            response.headers.setdefault(
+                "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+            )
+        if session.get("userid") and response.mimetype == "text/html":
+            # Authenticated pages must not be replayed from a shared cache.
+            response.headers.setdefault("Cache-Control", "no-store")
+
         response.headers.setdefault(
             "Content-Security-Policy",
             "default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; "

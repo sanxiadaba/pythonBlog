@@ -146,6 +146,72 @@ def test_password_reset_invalidates_existing_sessions(client, app):
     assert client.get("/userManage").status_code == 403
 
 
+def test_reply_is_stored_and_rendered(client, app, article_id):
+    login_as(client, 1)
+    assert client.post(
+        "/comment", data={"articleid": article_id, "content": "a valid comment body"}
+    ).text == "add-pass"
+    with app.app_context():
+        comments = db.metadata.tables["comment"]
+        parent = db.session.execute(comments.select()).one()
+
+    login_as(client, 2, nickname="other")
+    reply = client.post(
+        "/reply",
+        data={"articleid": article_id, "commentid": parent.commentid, "content": "reply body text"},
+    )
+    assert reply.text == "reply-pass"
+    with app.app_context():
+        comments = db.metadata.tables["comment"]
+        rows = db.session.execute(comments.select()).all()
+        assert len(rows) == 2
+        assert any(row.replyid == parent.commentid for row in rows)
+
+    page = client.get(f"/article/{article_id}")
+    assert page.status_code == 200
+    assert "reply body text" in page.text
+
+
+def test_unfavorite_actually_cancels(client, app, article_id):
+    login_as(client, 1)
+    assert client.post("/favorite", data={"articleid": article_id}).text == "favorite-pass"
+    assert client.delete(f"/favorite/{article_id}").text == "cancel-pass"
+    with app.app_context():
+        favorites = db.metadata.tables["favorite"]
+        assert db.session.execute(favorites.select()).one().canceled == 1
+
+
+def test_user_manage_renders_with_favorites(client, app, article_id):
+    login_as(client, 1)
+    client.post("/favorite", data={"articleid": article_id})
+    assert client.get("/userManage").status_code == 200
+
+
+def test_admin_dashboard_keeps_paid_publishing_working(app, article_id):
+    from constant import creditListForReleaseArticle
+
+    admin = app.test_client()
+    login_as(admin, 3, role="admin", nickname="admin")
+    assert admin.get("/adminManage").status_code == 200
+    assert creditListForReleaseArticle == [1, 2, 5, 10, 20, 50]
+
+    author = app.test_client()
+    login_as(author, 1)
+    response = author.post(
+        "/article",
+        data={
+            "headline": "A paid article title",
+            "content": "<p>" + ("paid body " * 20) + "</p>",
+            "type": 1,
+            "credit": 1,
+            "articleid": -1,
+            "judgeType": 1,
+        },
+    )
+    assert response.status_code == 200
+    assert response.text.isdigit()
+
+
 def test_csrf_is_enabled_by_default(tmp_path):
     from app import create_app
 
@@ -167,3 +233,6 @@ def test_csrf_is_enabled_by_default(tmp_path):
 def test_sanitizers_remove_active_markup():
     assert "script" not in sanitize_article_html('<script>alert(1)</script><p class="ok">text</p>')
     assert sanitize_plain_text("<b>Hello</b>") == "Hello"
+    link = sanitize_article_html('<a href="https://example.com" target="_blank">x</a>')
+    assert 'rel="noopener noreferrer"' in link
+    assert sanitize_article_html('<a href="javascript:alert(1)">x</a>').find("javascript:") == -1

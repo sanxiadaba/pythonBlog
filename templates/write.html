@@ -166,7 +166,7 @@
                 return false;
             }
 
-            var param = "headline=" + headline;
+            var param = "headline=" + encodeURIComponent(headline);
             param += "&content=" + encodeURIComponent(UE.getEditor("content").getContent());
             param += "&type=" + $("#type").val();
             param += "&credit=" + $("#credit").val();

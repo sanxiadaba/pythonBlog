@@ -17,7 +17,7 @@ import secrets
 import traceback
 from math import ceil
 
-from flask import Blueprint, jsonify, render_template, request, session
+from flask import Blueprint, render_template, request, session
 
 from common.auth import article_owner_or_admin, login_required
 from common.myLog import allLogger, avatarPath, dirInDir, listLogger, logDanger
@@ -124,15 +124,6 @@ def baseUserManage():
                            controlBiaoNum=controlBiaoNum, myComment=myComment, allMyCommentNum=allMyCommentNum,
                            myFavo=myFavo, lenMyFavo=lenMyFavo, myLoginLog=myLoginLog,
                            allCreditChangeLog=allCreditChangeLog, emailAccount=emailAccount)
-
-
-#  Back to my profile
-# Number of articles, number of comments, total number of views, total points, my nickname, my avatar, my qq number, my role
-@userManage.route("/userInfo", methods=["GET"])
-@logDanger
-def userInfo():
-    last, most, recommended = instanceArticle.searchLastMostRecommended()
-    return jsonify(last, most, recommended)
 
 
 # 修改昵称

@@ -95,13 +95,29 @@ class Comment(DBase):
             .filter(Comment.replyid == replyid, Comment.hide == 0).all()
         return result
 
+    # Build reply lists with a single query instead of one query per comment
+    def searchRepliesWithUserByReplyid(self, replyids):
+        if not replyids:
+            return {}
+        rows = dbsession.query(Comment, Users).join(Users, Users.userid == Comment.userid) \
+            .filter(Comment.replyid.in_(replyids), Comment.hide == 0) \
+            .order_by(Comment.commentid).all()
+        grouped = {}
+        for reply, user in rows:
+            entry = {column.name: getattr(reply, column.name) for column in Comment.__table__.columns}
+            for column in Users.__table__.columns:
+                if column.name not in entry:
+                    entry[column.name] = getattr(user, column.name)
+            grouped.setdefault(reply.replyid, []).append(entry)
+        return grouped
+
     # Generate a list of associations based on original comments and replies to comments
     def searchCommentWithUser(self, articleid, start, count):
         result = self.searchUserInfoAndCommentByArticleid(articleid, start, count)
         comment_list = model_join_list(result)
+        replies = self.searchRepliesWithUserByReplyid([comment["commentid"] for comment in comment_list])
         for comment in comment_list:
-            result = self.searchReplyWithUserByReplyid(comment["commentid"])
-            comment["reply_list"] = model_join_list(result)
+            comment["reply_list"] = replies.get(comment["commentid"], [])
         return comment_list
 
     # Calculate the number of original comments for paging

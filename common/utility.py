@@ -14,6 +14,7 @@ encoding: utf-8
 
 import ipaddress
 import random
+import re
 import smtplib
 import socket
 import string
@@ -201,8 +202,23 @@ _ARTICLE_ATTRIBUTES = {
 }
 
 
+_ANCHOR_RE = re.compile(r"<a\b[^>]*>", re.IGNORECASE)
+
+
+def _force_noopener(html):
+    """Any link opened in a new tab gets rel=noopener noreferrer (reverse tabnabbing)."""
+
+    def add_rel(match):
+        tag = match.group(0)
+        if "rel=" in tag.lower():
+            return tag
+        return f'{tag[:-1]} rel="noopener noreferrer">'
+
+    return _ANCHOR_RE.sub(add_rel, html)
+
+
 def sanitize_article_html(content):
-    return bleach.clean(
+    cleaned = bleach.clean(
         content or "",
         tags=_ARTICLE_TAGS,
         attributes=_ARTICLE_ATTRIBUTES,
@@ -210,6 +226,7 @@ def sanitize_article_html(content):
         strip=True,
         strip_comments=True,
     )
+    return _force_noopener(cleaned)
 
 
 def sanitize_plain_text(content):
@@ -219,7 +236,6 @@ def sanitize_plain_text(content):
 
 # Parse the image download address in the article
 def parser_image_url(content):
-    import re
     temp_list = re.findall('<img src="(.+?)"', content)
     url_list = []
     for url in temp_list:
